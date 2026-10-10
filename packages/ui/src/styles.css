@@ -422,7 +422,7 @@ img {
   margin-bottom: 22px;
 }
 .ownership-section .eyebrow {
-  color: #527456;
+  color: #3f5c43;
 }
 .ownership-copy {
   font-size: 14px;
@@ -495,7 +495,7 @@ img {
   font-size: 10px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--copper);
+  color: var(--copper-dark);
 }
 .research-line {
   height: 1px;

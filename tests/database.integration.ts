@@ -31,8 +31,8 @@ try {
   const b = { ...a, id: randomUUID() };
   for (const actor of [a, b])
     await owner.query(
-      "INSERT INTO actors(id,realm,issuer,subject) VALUES($1,'simulation','synthetic:api-test',$1)",
-      [actor.id],
+      "INSERT INTO actors(id,realm,issuer,subject) VALUES($1::uuid,'simulation','synthetic:api-test',$2::text)",
+      [actor.id, actor.id],
     );
   const service = new ProgramService(store, 'simulation', 'simulation');
   const command = {
