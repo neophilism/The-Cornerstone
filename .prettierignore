@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.next/
+apps/*/next-env.d.ts
+test-results/
+playwright-report/
+pnpm-lock.yaml
+db/
+tests/*.sql

@@ -1,0 +1,10 @@
+packages:
+  - apps/*
+  - packages/*
+allowBuilds:
+  esbuild: true
+  sharp: true
+  '@nestjs/core': false
+overrides:
+  react: 19.3.0
+  react-dom: 19.3.0

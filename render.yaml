@@ -1,0 +1,29 @@
+# Public proposal release only. No private database credentials or real intake.
+services:
+  - type: web
+    name: cornerstone-public
+    runtime: node
+    plan: free
+    region: ohio
+    branch: main
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build:packages && pnpm --filter @cornerstone/web build
+    startCommand: pnpm --filter @cornerstone/web start
+    healthCheckPath: /api/healthz
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: NODE_VERSION
+        value: 24.19.0
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_TELEMETRY_DISABLED
+        value: '1'
+      - key: CORNERSTONE_MODE
+        value: proposal
+      - key: DATA_REALM
+        value: proposal
+      - key: SENSITIVE_INTAKE_ENABLED
+        value: 'false'
+      - key: LOCAL_AUTH_ENABLED
+        value: 'false'
+      - key: PUBLIC_ORIGIN
+        sync: false

@@ -1,0 +1,104 @@
+import pg from 'pg';
+import { readFile } from 'node:fs/promises';
+import { randomUUID, randomBytes } from 'node:crypto';
+import { strict as assert } from 'node:assert';
+import { Store } from '@cornerstone/store';
+import { ProgramService } from '../apps/api/src/service.js';
+import type { Actor } from '@cornerstone/contracts';
+if (!process.env['DATABASE_URL'] || !process.env['MIGRATION_DATABASE_URL'])
+  throw Error('Isolated runtime and migration database connections required.');
+if (process.env['DATA_REALM'] !== 'simulation')
+  throw Error('Explicit synthetic simulation realm required.');
+const owner = new pg.Client({ connectionString: process.env['MIGRATION_DATABASE_URL'] });
+await owner.connect();
+const store = new Store(process.env['DATABASE_URL'], randomBytes(32));
+try {
+  await store.verifyRole();
+  await owner.query('BEGIN');
+  await owner.query(await readFile('tests/database-policy.sql', 'utf8'));
+  await owner.query('COMMIT');
+  const a: Actor = {
+    id: randomUUID(),
+    realm: 'simulation',
+    roles: ['participant'],
+    institutionId: null,
+    jurisdiction: null,
+    assurance: 'draft',
+    assignments: [],
+    conflicts: [],
+    authenticationTime: new Date().toISOString(),
+  };
+  const b = { ...a, id: randomUUID() };
+  for (const actor of [a, b])
+    await owner.query(
+      "INSERT INTO actors(id,realm,issuer,subject) VALUES($1,'simulation','synthetic:api-test',$1)",
+      [actor.id],
+    );
+  const service = new ProgramService(store, 'simulation', 'simulation');
+  const command = {
+    kind: 'dossier',
+    title: 'Synthetic concurrent preparation',
+    input: {
+      actionDescription: 'Invented action',
+      livelihood: 'Invented work',
+      lossDescription: 'Invented loss',
+    },
+    idempotencyKey: randomUUID(),
+  };
+  const [one, two] = await Promise.all([service.create(a, command), service.create(a, command)]);
+  assert.equal(one.receipt.id, two.receipt.id);
+  assert.ok(one.record);
+  assert.equal((await store.list(b)).length, 0);
+  await assert.rejects(
+    service.create(a, { ...command, title: 'Different same-key command' }),
+    /different command/,
+  );
+  const record = one.record!;
+  const next = await service.command(a, {
+    recordId: record.id,
+    action: 'mark_ready',
+    expectedVersion: 1,
+    idempotencyKey: randomUUID(),
+    input: {},
+  });
+  assert.equal(next.record?.state, 'ready');
+  assert.equal(next.receipt.version, 2);
+  await assert.rejects(
+    service.command(a, {
+      recordId: record.id,
+      action: 'reopen',
+      expectedVersion: 1,
+      idempotencyKey: randomUUID(),
+      input: {},
+    }),
+    /changed/,
+  );
+  await assert.rejects(
+    service.command(b, {
+      recordId: record.id,
+      action: 'reopen',
+      expectedVersion: 2,
+      idempotencyKey: randomUUID(),
+      input: {},
+    }),
+    /not found/,
+  );
+  const count = await owner.query('SELECT count(*)::int n FROM receipts WHERE record_id=$1', [
+    record.id,
+  ]);
+  assert.equal(count.rows[0].n, 2);
+  const encrypted = await owner.query('SELECT payload_cipher FROM case_records WHERE id=$1', [
+    record.id,
+  ]);
+  assert.ok(!JSON.stringify(encrypted.rows).includes('Invented work'));
+  await assert.rejects(
+    owner.query('UPDATE receipts SET action=$1 WHERE id=$2', ['tampered', next.receipt.id]),
+    /Append-only/,
+  );
+  console.log(
+    'PASS: real PostgreSQL RLS, concurrency/idempotency, stale versions, ciphertext and immutable receipts.',
+  );
+} finally {
+  await store.close();
+  await owner.end();
+}
