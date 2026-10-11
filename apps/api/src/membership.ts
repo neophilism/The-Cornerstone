@@ -395,13 +395,26 @@ export class MembershipService {
       'UNIT_AUTHORITY',
       'You must hold an active unit in this resolution’s frozen roll.',
     );
+    try {
+      await tx.query('SELECT simulation_lock_voting_unit($1,$2)', [record.id, unitId]);
+    } catch (error) {
+      if (error instanceof Error && error.message === 'UNIT_AUTHORITY')
+        throw new DomainError(
+          'UNIT_AUTHORITY',
+          'This founding unit is no longer held by you.',
+          409,
+        );
+      throw error;
+    }
+    const status = (
+      await tx.query('SELECT cast_already FROM simulation_ballot_status($1) WHERE unit_id=$2', [
+        record.id,
+        unitId,
+      ])
+    ).rows[0];
+    requireCondition(status, 'UNIT_AUTHORITY', 'An active frozen founding unit is required.');
     requireCondition(
-      !(
-        await tx.query('SELECT id FROM ballots WHERE resolution_id=$1 AND unit_id=$2', [
-          record.id,
-          unitId,
-        ])
-      ).rowCount,
+      !status.cast_already,
       'DUPLICATE_BALLOT',
       'That founding unit has already voted.',
     );
@@ -508,8 +521,8 @@ export class MembershipService {
       ).rows.map((u) => u.id);
       const rows = (
         await tx.query<BallotRow>(
-          'SELECT * FROM ballots WHERE resolution_id=$1 AND unit_id=ANY($2::uuid[])',
-          [id, units],
+          'SELECT b.* FROM ballots b JOIN receipts r ON r.id=b.receipt_id WHERE b.resolution_id=$1 AND b.unit_id=ANY($2::uuid[]) AND r.actor_id=$3',
+          [id, units, actor.id],
         )
       ).rows;
       return MemberBallotViewSchema.parse({
@@ -519,6 +532,11 @@ export class MembershipService {
         rollDigest: link.roll_digest,
         closesOn: link.closes_text,
         ownUnits: units,
+        castUnits: (
+          await tx.query('SELECT unit_id FROM simulation_ballot_status($1) WHERE cast_already', [
+            id,
+          ])
+        ).rows.map((row) => row.unit_id),
         ownBallots: rows.map((row) => ({
           unitId: row.unit_id,
           choice: this.decodeBallot(row),

@@ -14,12 +14,14 @@ export function EvidencePanel({
   canAttach,
   api,
   onChanged,
+  onBusyChange,
 }: {
   record: CaseRecord;
   actorId: string;
   canAttach: boolean;
   api: (path: string, body?: unknown) => Promise<any>;
   onChanged: (result: Result) => Promise<void>;
+  onBusyChange: (busy: boolean) => void;
 }) {
   const [items, setItems] = useState<EvidenceView[]>([]),
     [enabled, setEnabled] = useState(false),
@@ -43,6 +45,8 @@ export function EvidencePanel({
     };
   }, [record.id, record.version]);
   async function run(path: string, input: object, done?: () => void) {
+    if (pending) return;
+    onBusyChange(true);
     setPending(true);
     setError('');
     setMessage('');
@@ -58,6 +62,7 @@ export function EvidencePanel({
       setError(e instanceof Error ? e.message : 'The evidence action could not be completed.');
     } finally {
       setPending(false);
+      onBusyChange(false);
     }
   }
   async function upload(e: FormEvent<HTMLFormElement>) {

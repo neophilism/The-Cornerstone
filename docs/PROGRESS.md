@@ -2,9 +2,9 @@
 
 Updated October 11, 2026. The full program is unfinished. The earlier internal planning package remains private pending separate publication approval. The unverified canonical roadmap marker in registry/roadmap.json does not imply an empty implementation or assert a total planned-PR count.
 
-Last verified merged application change: PR #9 at 0afd9bc59b9822e28b7ecf8778bf0c8db0f6b476. Its exact head 675ac5374d4755b4ad41736c055f65be3f6e9719 passed verification and database jobs in [Actions run 38159018769](https://github.com/neophilism/The-Cornerstone/actions/runs/38159018769); preview was inapplicable to that feature branch. Both unavailable-action desktop/mobile screenshots were inspected. PRs #1–#9 are merged. The deployment branch was last recorded at PR #8; a merge does not establish deployment. No independent security approval is claimed.
+Last verified merged application change: PR #10 at b5de06bae62f668163e9627ab0cfc5fe12829f6c, with the same tree as its exact tested head b1bd9f0f4016e1b333cf78fcb47138d8c72624ee. Verification and database jobs passed in [Actions run 38165726687](https://github.com/neophilism/The-Cornerstone/actions/runs/38165726687); preview was inapplicable to that feature branch. Both next-step desktop/mobile screenshots were inspected. PRs #1–#10 are merged. The deployment branch was last recorded at PR #8; a merge does not establish deployment. No independent security approval is claimed.
 
-Unavailable actions now explain missing integrations and reject direct commands before mutation. Availability-aware next-step guidance preserves draft editing and no longer promises submission for every draft. The added browser assertions require fresh CI acceptance.
+Unavailable actions explain missing integrations and reject direct commands before mutation. Availability-aware next-step guidance preserves draft editing and no longer promises submission for every draft. The added browser assertions passed in Actions 38165726687.
 
 Guided evidence selection, related-record choices, income percentages, next-step guidance and record search are verified, including the full petition-to-individual-finding browser journey and six inspected desktop/mobile captures. See GUIDED_JOURNEYS.md.
 
@@ -28,4 +28,4 @@ Personal founding consent, scoped membership inspection and private member ballo
 
 Branch protection, independent reviews, signed release provenance, Render project/environment assignment and owner retirement of the unused privileged Neon development role remain open. A successful CI run is verification evidence, not a statutory authorization or independent security assessment.
 
-Unavailable provider-dependent actions now explain their prerequisites before presenting a form. The shared release gate also rejects direct API commands after permission checks, before validating inputs or changing records. Acceptance pending.
+Post-enrollment synthetic succession and ballot-holder privacy have local PostgreSQL acceptance and a new UI journey. The 56 unit tests and production builds pass locally. Full feature CI, browser inspection and migration deployment are not yet recorded. See SUCCESSION.md. The full program remains unfinished.

@@ -388,28 +388,104 @@ export const workflows: WorkflowDefinition[] = [
   w(
     'succession',
     'Single-successor request',
-    'Preserve one undivided claim or founding unit.',
-    participant,
+    'Request one existing founding unit after a death, without another vote or account access.',
+    ['participant', 'member'],
     [
-      reference,
-      f('successorId', 'Proposed single successor actor ID'),
-      f('chain', 'Succession evidence', 'textarea'),
+      f(
+        'unitId',
+        'Existing founding unit reference',
+        'text',
+        true,
+        'Use a supplied unit reference. It does not grant access to the former holder or their private claim.',
+      ),
+      f('transferBasis', 'Succession route', 'select', true, undefined, [
+        'member_death',
+        'estate_designation',
+      ]),
+      f('capacity', 'Requested capacity', 'select', true, undefined, [
+        'designated_successor',
+        'estate_representative',
+      ]),
+      f('chain', 'Succession evidence and chain', 'textarea'),
       evidence,
     ],
     [
-      submit(),
+      action(
+        'submit',
+        'Submit my succession request',
+        ['draft'],
+        'submitted',
+        ['participant', 'member'],
+        null,
+        [
+          consent,
+          f(
+            'rightsAcknowledged',
+            'I request one undivided unit, with no extra vote, personal debt or access to a different private account',
+            'boolean',
+          ),
+        ],
+        'Only the proposed successor can personally submit. Invented development evidence is not legal proof.',
+      ),
       review('labor', 'claim'),
       action(
+        'request_changes',
+        'Request a corrected succession packet',
+        ['review'],
+        'changes_requested',
+        ['labor'],
+        'claim',
+        [reasons],
+        'Explain needed evidence or a changed holder. No unit is changed.',
+      ),
+      action(
+        'revise_request',
+        'Reopen my draft',
+        ['changes_requested'],
+        'draft',
+        ['participant', 'member'],
+        null,
+        [],
+        'Review and resubmit personally. The next review takes a fresh unit-holder snapshot.',
+      ),
+      action(
         'approve',
-        'Approve one successor',
+        'Approve one synthetic successor',
         ['review'],
         'approved',
         ['labor'],
         'claim',
-        [f('undivided', 'Exactly one undivided claim or unit is preserved', 'boolean'), reasons],
-        'No multiplication among heirs.',
+        [
+          f('undivided', 'Exactly one undivided founding unit is preserved', 'boolean'),
+          f(
+            'deathEstablished',
+            'The death of the relevant rights holder is supported by the evidence',
+            'boolean',
+          ),
+          f('identityEstablished', 'The proposed successor is the requesting person', 'boolean'),
+          f(
+            'chainEstablished',
+            'The designation or estate authority and chain are established',
+            'boolean',
+          ),
+          f(
+            'probateConsistent',
+            'The route follows uniform bylaws and the applicable probate requirements',
+            'boolean',
+          ),
+          f(
+            'competingRightsResolved',
+            'Notice, review and any competing claims have been addressed',
+            'boolean',
+          ),
+          f('legalBasis', 'Bylaw, probate, notice and review basis', 'textarea'),
+          reasons,
+          evidence,
+        ],
+        'Transfer the existing unit atomically in simulation. This does not prove real identity, effect legal succession, divide rights, reveal prior ballots or transfer an account.',
       ),
       deny('labor', 'claim'),
+      appeal(),
     ],
   ),
   w(
@@ -1566,8 +1642,18 @@ export function validateAction(
       'An association’s own material breach does not qualify.',
     );
   }
+  if (record.kind === 'succession' && key === 'submit')
+    yes('rightsAcknowledged', 'Personally acknowledge the undivided rights and limits.');
   if (record.kind === 'succession' && key === 'approve')
-    yes('undivided', 'Succession must preserve a single undivided right.');
+    for (const name of [
+      'undivided',
+      'deathEstablished',
+      'identityEstablished',
+      'chainEstablished',
+      'probateConsistent',
+      'competingRightsResolved',
+    ])
+      yes(name, 'A complete evidence-based succession finding is required.');
   if (record.kind === 'association' && key === 'close_roll') {
     yes('equalRights', 'Equal base rights and votes are required.');
     yes('voluntary', 'Participation must remain voluntary.');
