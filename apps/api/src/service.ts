@@ -265,9 +265,19 @@ export class ProgramService {
       await this.linked(tx, d['eventId'], 'event_petition', ['certified']);
     if (r.kind === 'association' && k === 'close_roll') {
       await this.linked(tx, d['eventId'], 'event_petition', ['certified']);
-      await new MembershipService(this.store, this.mode, this.realm).assertConsented(tx, r, today);
+      const largerYes = await new MembershipService(
+        this.store,
+        this.mode,
+        this.realm,
+      ).assertConsented(tx, r, today);
       const units = d['units'] as { claimId: string; personId: string }[];
       requireCondition(Array.isArray(units), 'INVALID_ROLL', 'Provide the founding roll.');
+      const largerFindings = [
+        'accessibleMeetings',
+        'accessibleVoting',
+        'accessibleRecords',
+        'practicalDeliberation',
+      ].every((key) => d[key] === true);
       validateFoundingRoll({
         units,
         pending: Number(d['pendingClaims']),
@@ -275,36 +285,56 @@ export class ProgramService {
         ...(units.length > 2500
           ? {
               largerApproval: {
-                yes: Number(d['largerYes']),
-                laborFindings: d['largerFindings'] === true,
+                yes: largerYes,
+                laborFindings: largerFindings,
               },
             }
           : {}),
       });
+      const represented = new Map<
+        string,
+        { eventId: string; firstLossDate: string; claimIds: string[] }
+      >();
+      const claims = new Map(
+        (
+          await this.store.getMany(
+            tx,
+            units.map((u) => u.claimId),
+            true,
+          )
+        ).map((claim) => [claim.id, claim]),
+      );
       for (const u of units) {
         IdSchema.parse(u.personId);
-        const claim = await this.linked(tx, u.claimId, 'claim', ['eligible'], true);
+        const claim = claims.get(u.claimId);
         requireCondition(
-          claim.data['eventId'] === d['eventId'],
-          'EVENT_MISMATCH',
-          'Every founding claim must belong to the association’s certified event.',
+          claim?.kind === 'claim' && claim.state === 'eligible' && claim.ownerId === u.personId,
+          'FOUNDING_CLAIM_REQUIRED',
+          'Every founder requires an accessible eligible claim in their own name.',
         );
-        const person = await tx.query('SELECT simulation_actor_exists($1,$2) AS valid', [
-          u.personId,
-          actor.realm,
-        ]);
-        requireCondition(
-          person.rows[0]?.valid,
-          'INVALID_UNIT',
-          'The founding person must exist in this realm.',
-        );
-        await tx.query('SELECT register_founding_unit($1,$2,$3,$4,$5)', [
-          randomUUID(),
-          actor.realm,
-          r.id,
-          u.claimId,
-          u.personId,
-        ]);
+        const eventId = IdSchema.parse(claim.data['eventId']);
+        if (!represented.has(eventId)) {
+          const event = await this.linked(tx, eventId, 'event_petition', ['certified']);
+          represented.set(eventId, {
+            eventId,
+            firstLossDate: String(event.data['firstLossDate']),
+            claimIds: [],
+          });
+        }
+        represented.get(eventId)!.claimIds.push(claim.id);
+      }
+      requireCondition(
+        represented.has(String(d['eventId'])),
+        'EVENT_NOT_REPRESENTED',
+        'The organizing event must be represented by an actual eligible founding claim.',
+      );
+      await tx.query('SELECT simulation_close_founding_units($1)', [r.id]);
+      d['representedEvents'] = [...represented.values()].sort((a, b) =>
+        a.eventId.localeCompare(b.eventId),
+      );
+      if (units.length > 2500) {
+        d['largerYes'] = largerYes;
+        d['largerFindings'] = largerFindings;
       }
       d['unitCount'] = units.length;
       d['rollClosedAt'] = today;

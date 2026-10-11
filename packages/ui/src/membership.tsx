@@ -185,7 +185,10 @@ export function FoundingConsentPanel({
   const [snapshot, setSnapshot] = useState<FoundingRollView | null>(null),
     [error, setError] = useState(''),
     [pending, setPending] = useState(false),
-    [acknowledged, setAcknowledged] = useState(false);
+    [acknowledged, setAcknowledged] = useState(false),
+    [scaleChoice, setScaleChoice] = useState<'yes' | 'no' | 'abstain'>('abstain'),
+    [visibleResponses, setVisibleResponses] = useState(50);
+  const larger = Array.isArray(record.data['units']) && record.data['units'].length > 2500;
   const generation = useRef(0),
     retry = useRef<{ input: string; key: string } | null>(null);
   async function refresh() {
@@ -193,7 +196,12 @@ export function FoundingConsentPanel({
     const result = FoundingRollViewSchema.parse(
       await api('memberships/roll?recordId=' + record.id),
     );
-    if (n === generation.current) setSnapshot(result);
+    if (n === generation.current) {
+      setSnapshot(result);
+      setScaleChoice(
+        result.invitations.find((i) => i.personId === actorId)?.ownScaleChoice ?? 'abstain',
+      );
+    }
   }
   useEffect(() => {
     void refresh().catch(() => setError('Founding responses are unavailable.'));
@@ -217,15 +225,16 @@ export function FoundingConsentPanel({
         expectedVersion: record.version,
         response,
         rightsAcknowledged: response === 'accepted' && acknowledged,
+        ...(larger ? { scaleChoice } : {}),
       };
       const encoded = JSON.stringify(input);
       if (retry.current?.input !== encoded)
         retry.current = { input: encoded, key: crypto.randomUUID() };
+      setAcknowledged(false);
       await onChanged(
         await api('memberships/respond', { ...input, idempotencyKey: retry.current.key }),
       );
       retry.current = null;
-      setAcknowledged(false);
       await refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Your response could not be saved.');
@@ -247,6 +256,7 @@ export function FoundingConsentPanel({
         </p>
       )}
       {own && <p className="badge">Your response: {own.response}</p>}
+      {larger && own?.ownScaleChoice && <p>Your recorded scale choice: {own.ownScaleChoice}</p>}
       {canRespond && (
         <>
           <p>
@@ -257,6 +267,7 @@ export function FoundingConsentPanel({
             <input
               id="founding-rights"
               type="checkbox"
+              disabled={pending}
               checked={acknowledged}
               onChange={(e) => setAcknowledged(e.target.checked)}
             />
@@ -266,6 +277,36 @@ export function FoundingConsentPanel({
               qualified work or a member franchise.
             </label>
           </div>
+          {larger && (
+            <fieldset className="structured-field">
+              <legend>Should this association have more than 2,500 founders?</legend>
+              <p className="hint">
+                This is separate from accepting membership. Approval needs more than half of all
+                proposed founders and written Labor findings about accessible participation. Your
+                personal choice stays outside the shared record.
+              </p>
+              {(['yes', 'no', 'abstain'] as const).map((choice) => (
+                <div className="check-field" key={choice}>
+                  <input
+                    id={`scale-${choice}`}
+                    type="radio"
+                    name="scaleChoice"
+                    disabled={pending}
+                    value={choice}
+                    checked={scaleChoice === choice}
+                    onChange={() => setScaleChoice(choice)}
+                  />
+                  <label htmlFor={`scale-${choice}`}>
+                    {choice === 'yes'
+                      ? 'Yes, approve this scale'
+                      : choice === 'no'
+                        ? 'No, do not approve this scale'
+                        : 'Abstain from the scale decision'}
+                  </label>
+                </div>
+              ))}
+            </fieldset>
+          )}
           <div className="record-actions">
             <button
               className="button"
@@ -274,6 +315,15 @@ export function FoundingConsentPanel({
             >
               Accept founding invitation
             </button>
+            {larger && own.response === 'accepted' && (
+              <button
+                className="button button-secondary"
+                disabled={pending || !acknowledged || own.ownScaleChoice === scaleChoice}
+                onClick={() => void respond('accepted')}
+              >
+                Save scale choice
+              </button>
+            )}
             <button
               className="button button-secondary"
               disabled={pending || own.response === 'declined'}
@@ -298,7 +348,7 @@ export function FoundingConsentPanel({
             {snapshot.invitations.length} accepted)
           </summary>
           <ol className="activity-list">
-            {snapshot.invitations.map((i) => (
+            {snapshot.invitations.slice(0, visibleResponses).map((i) => (
               <li className="activity-card" key={i.id}>
                 <p className="eyebrow">
                   {i.response} · closes {i.closesOn}
@@ -308,6 +358,14 @@ export function FoundingConsentPanel({
               </li>
             ))}
           </ol>
+          {visibleResponses < snapshot.invitations.length && (
+            <button
+              className="button button-secondary"
+              onClick={() => setVisibleResponses((n) => n + 50)}
+            >
+              Show 50 more responses
+            </button>
+          )}
         </details>
       )}
       {!own && !snapshot?.fullRoll && (

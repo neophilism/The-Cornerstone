@@ -139,6 +139,13 @@ export class Store {
     );
     return r.rows[0] ? this.decode(r.rows[0]) : null;
   }
+  async getMany(tx: Transaction, ids: string[], lock = false) {
+    const result = await tx.query<Row>(
+      `SELECT * FROM case_records WHERE id=ANY($1::uuid[]) ORDER BY id${lock ? ' FOR UPDATE' : ''}`,
+      [ids],
+    );
+    return result.rows.map((row) => this.decode(row));
+  }
   async grants(tx: Transaction, id: string) {
     return this.scopes(tx, [id]);
   }
