@@ -215,6 +215,12 @@ export function Workspace({
     [loading, setLoading] = useState(true),
     [pending, setPending] = useState(false),
     [local, setLocal] = useState(false);
+  const [evidenceBusy, setEvidenceBusy] = useState(false);
+  const evidenceBusyRef = useRef(false);
+  function evidenceBusyChanged(busy: boolean) {
+    evidenceBusyRef.current = busy;
+    setEvidenceBusy(busy);
+  }
   const [recordSearch, setRecordSearch] = useState('');
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [pagePending, setPagePending] = useState(false);
@@ -401,7 +407,7 @@ export function Workspace({
   }
   async function command(e: FormEvent<HTMLFormElement>, key: string) {
     e.preventDefault();
-    if (!selected || pending) return;
+    if (!selected || pending || evidenceBusyRef.current) return;
     const form = e.currentTarget;
     setPending(true);
     setError('');
@@ -936,6 +942,7 @@ export function Workspace({
                     record={selected}
                     actorId={session.actor.id}
                     canAttach={permitted.includes('attach_evidence')}
+                    onBusyChange={evidenceBusyChanged}
                     api={api}
                     onChanged={async (result) => {
                       setReceipt(result.receipt);
@@ -946,7 +953,12 @@ export function Workspace({
                   />
                 )}
               </div>
-              <div className="workflow-actions">
+              <fieldset
+                className="workflow-actions"
+                disabled={pending || evidenceBusy}
+                aria-busy={pending || evidenceBusy}
+                style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}
+              >
                 {workflow(selected.kind)
                   .actions.filter(
                     (a) =>
@@ -1007,7 +1019,7 @@ export function Workspace({
                       form
                     );
                   })}
-              </div>
+              </fieldset>
               {selected.kind === 'resolution' && !!selected.data['rollDigest'] && (
                 <details className="action-panel" style={{ marginTop: 25 }}>
                   <summary>Vote verification details</summary>
