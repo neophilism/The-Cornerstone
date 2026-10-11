@@ -22,6 +22,7 @@ import { canAct, digest } from '@cornerstone/security';
 import { EvidenceService } from './evidence.js';
 import { MembershipService } from './membership.js';
 import { SuccessionService } from './succession.js';
+import { ClaimSurvivalService } from './claim-survival.js';
 import { Store, type Transaction } from '@cornerstone/store';
 import {
   cents,
@@ -178,6 +179,8 @@ export class ProgramService {
       data = await this.linkedRules(tx, actor, record, command, data, now);
       if (record.kind === 'succession')
         data = await new SuccessionService().prepare(tx, actor, record, a.key, data);
+      if (record.kind === 'claim_survival')
+        data = await new ClaimSurvivalService(this.store).prepare(tx, actor, record, a.key, data);
       const ballot =
         record.kind === 'resolution' && a.key === 'record_vote'
           ? await members.prepareBallot(tx, actor, record, data, now.slice(0, 10))
@@ -211,6 +214,8 @@ export class ProgramService {
       if (record.kind === 'association' && a.key === 'submit') await members.invite(tx, next);
       if (record.kind === 'succession' && a.key === 'approve')
         await new SuccessionService().finish(tx, next, receipt);
+      if (record.kind === 'claim_survival' && a.key === 'approve')
+        await new ClaimSurvivalService(this.store).finish(tx, actor, next, receipt);
       if (ballot)
         await tx.query('SELECT simulation_cast_ballot($1,$2,$3,$4::jsonb,$5,$6)', [
           ballot.id,
@@ -271,6 +276,18 @@ export class ProgramService {
     }
     if (r.kind === 'claim' && k === 'find_eligible')
       await this.linked(tx, d['eventId'], 'event_petition', ['certified']);
+    if (r.kind === 'association' && k === 'withdraw_proposal') {
+      requireCondition(
+        actor.id === r.ownerId,
+        'ASSOCIATION_OWNER_REQUIRED',
+        'Only the proposal owner may withdraw an unclosed proposal.',
+      );
+      requireCondition(
+        !(await tx.query('SELECT id FROM founding_units WHERE association_id=$1', [r.id])).rowCount,
+        'ROLL_ALREADY_CLOSED',
+        'A closed founding unit requires the applicable member-governance process.',
+      );
+    }
     if (r.kind === 'association' && k === 'close_roll') {
       await this.linked(tx, d['eventId'], 'event_petition', ['certified']);
       const largerYes = await new MembershipService(
