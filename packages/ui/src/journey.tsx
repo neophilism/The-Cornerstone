@@ -1,5 +1,17 @@
 import type { CaseRecord } from '@cornerstone/contracts';
 const preparation: Record<string, [string, string]> = {
+  offer: [
+    'Publish complete terms before choice',
+    'Identify the currently prohibited trade and district, existing rights protected, prospective Rate Act, common calculation and bounded commercial menu. A state offer cannot choose favored workers or displace an existing lawful market.',
+  ],
+  fund_commitment: [
+    'A limited enterprise advance',
+    'Itemize formation, feasibility, licensing and training costs. Members, successors and estates take on no personal debt or guarantee. The enterprise repays the advance and fixed public return under a predetermined formula, then that repayment ends.',
+  ],
+  financial_schedule: [
+    'Protect necessary cash, then calculate the state share',
+    'Reconcile receipts, legitimate costs, prior losses, required Fund payments and documented cash protections. The rate and method come from the published offer. No positive shareable surplus means no state payment; the state receives no corporate control.',
+  ],
   event_petition: [
     'Explain the government action',
     'Describe the implemented action, the lawful industry and evidence that its destruction or material contraction was deliberate. Include contrary evidence. Unlisted and historical events may be considered with reliable proof.',

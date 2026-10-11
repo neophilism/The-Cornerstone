@@ -454,3 +454,35 @@
 .record-reference form {
   margin-top: 16px;
 }
+
+.finance-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 18px;
+}
+.finance-entries {
+  margin: 28px 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+.finance-entry {
+  margin: 14px 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+}
+.finance-entry-fields {
+  padding-top: 20px;
+}
+.calculation-summary {
+  margin: 24px 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 24px;
+  background: var(--white);
+}
+@media (max-width: 640px) {
+  .finance-grid {
+    grid-template-columns: 1fr;
+  }
+}

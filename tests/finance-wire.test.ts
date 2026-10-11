@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest';
 import { calculateWireSchedule } from '../apps/api/src/service.js';
+import { SurplusPreparationSchema } from '@cornerstone/contracts';
 const fixture = () => ({
   enterpriseId: 'synthetic-enterprise',
   year: 2026,
@@ -23,6 +24,12 @@ const fixture = () => ({
   ordinaryAnnualOperatingCosts: '0.00',
   cashCycleShortfall: '0.00',
   priorDeductionSourceIds: [],
+});
+it('preparation cannot override the compact rate, association or fiscal year', () => {
+  const { terms, enterpriseId, year, ...prepared } = fixture();
+  expect(SurplusPreparationSchema.parse(prepared).grossReceipts).toBe('1000.00');
+  for (const extra of [{ terms }, { enterpriseId }, { year }])
+    expect(() => SurplusPreparationSchema.parse({ ...prepared, ...extra })).toThrow();
 });
 it('validates the complete financial wire format before exact-cents calculation (synthetic rate)', () => {
   expect(calculateWireSchedule(fixture()).statePayment).toBe('50.00');

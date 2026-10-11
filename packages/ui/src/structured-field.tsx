@@ -3,6 +3,7 @@ import { useState } from 'react';
 import type { Field } from '@cornerstone/domain';
 import type { CaseRecord } from '@cornerstone/contracts';
 import { FoundingRoster } from './founding-roster.js';
+import { FinancialTermsEditor, ScheduleEditor } from './financial-fields.js';
 
 export const listFields = new Set([
   'evidenceIds',
@@ -182,6 +183,8 @@ export function StructuredField({
     return <RightsEditor field={field} prefix={prefix} value={value} />;
   if (field.key === 'receiptRate')
     return <FractionEditor field={field} prefix={prefix} value={value} />;
+  if (field.key === 'financialTerms') return <FinancialTermsEditor prefix={prefix} value={value} />;
+  if (field.key === 'schedule') return <ScheduleEditor prefix={prefix} value={value} />;
   const list = listFields.has(field.key);
   return (
     <div className="field">

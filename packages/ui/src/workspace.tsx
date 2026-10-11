@@ -19,6 +19,7 @@ import { EvidencePanel } from './evidence.js';
 import { MembershipPanel, FoundingConsentPanel, MemberBallotPanel } from './membership.js';
 import { EvidenceChoice, RecordChoice, IncomeShare, isRecordReference } from './record-fields.js';
 import { PreparationGuide, RecordNextStep } from './journey.js';
+import { CalculationSummary } from './financial-fields.js';
 
 type Session = { actor: Actor; csrf: string; mode: string; local: boolean };
 export function WorkflowFields({
@@ -39,6 +40,11 @@ export function WorkflowFields({
   return (
     <>
       {fields
+        .filter(
+          (f) =>
+            !fields.some((other) => other.key === 'financialTerms') ||
+            !['rateAct', 'financialVersion'].includes(f.key),
+        )
         .filter(
           (f) =>
             ![
@@ -819,6 +825,9 @@ export function Workspace({
                   </button>
                 </form>
               ) : null}
+              {selected.kind === 'financial_schedule' && (
+                <CalculationSummary value={selected.data['calculation']} />
+              )}
               <details className="saved-details" open>
                 <summary>Saved details</summary>
                 <dl className="record-data">
@@ -852,6 +861,16 @@ export function Workspace({
                               <summary>
                                 Inspect {v.length}{' '}
                                 {k === 'units' ? 'founding entries' : 'represented events'}
+                              </summary>
+                              <pre style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
+                                {JSON.stringify(v, null, 2)}
+                              </pre>
+                            </details>
+                          ) : ['schedule', 'calculation', 'financialTerms'].includes(k) &&
+                            typeof v === 'object' ? (
+                            <details>
+                              <summary>
+                                Inspect saved {k === 'financialTerms' ? 'financial terms' : k}
                               </summary>
                               <pre style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
                                 {JSON.stringify(v, null, 2)}
@@ -927,27 +946,40 @@ export function Workspace({
                       permitted.includes(a.key) &&
                       !(selected.kind === 'resolution' && a.key === 'record_vote'),
                   )
-                  .map((a) => (
-                    <form
-                      key={`${a.key}:${selected.version}`}
-                      className="action-panel form-stack"
-                      onSubmit={(e) => void command(e, a.key)}
-                    >
-                      <h2>{a.label}</h2>
-                      <p className="muted">{a.help}</p>
-                      <WorkflowFields
-                        fields={a.fields}
-                        prefix={a.key}
-                        records={records}
-                        record={selected}
-                        api={api}
-                        values={{ evidenceIds: selected.data['evidenceIds'] }}
-                      />
-                      <button className="button" disabled={pending}>
-                        {pending ? 'Submitting…' : a.label}
-                      </button>
-                    </form>
-                  ))}
+                  .map((a) => {
+                    const form = (
+                      <form
+                        key={`${a.key}:${selected.version}`}
+                        className="action-panel form-stack"
+                        onSubmit={(e) => void command(e, a.key)}
+                      >
+                        <h2>{a.label}</h2>
+                        <p className="muted">{a.help}</p>
+                        <WorkflowFields
+                          fields={a.fields}
+                          prefix={a.key}
+                          records={records}
+                          record={selected}
+                          api={api}
+                          values={{
+                            evidenceIds: selected.data['evidenceIds'],
+                            ...(a.key === 'correct' ? { schedule: selected.data['schedule'] } : {}),
+                          }}
+                        />
+                        <button className="button" disabled={pending}>
+                          {pending ? 'Submitting…' : a.label}
+                        </button>
+                      </form>
+                    );
+                    return selected.kind === 'financial_schedule' && a.key === 'correct' ? (
+                      <details className="saved-details" key={`${a.key}:${selected.version}`}>
+                        <summary>Prepare a calculation correction</summary>
+                        {form}
+                      </details>
+                    ) : (
+                      form
+                    );
+                  })}
               </div>
               {selected.kind === 'resolution' && !!selected.data['rollDigest'] && (
                 <details className="action-panel" style={{ marginTop: 25 }}>
