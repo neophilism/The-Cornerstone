@@ -45,6 +45,7 @@ test('a surviving claimant obtains only the continuing claim file after a separa
     const original = await claimFixture(w, worker, labor, event);
     const unrelated = await claimFixture(w, worker, labor, event);
     const origin = await signIn(page, 'successor');
+    await page.getByRole('link', { name: 'Prepare & participate', exact: true }).click();
     await page
       .locator('.workflow-card')
       .filter({ has: page.getByRole('heading', { name: 'Surviving claim request', exact: true }) })

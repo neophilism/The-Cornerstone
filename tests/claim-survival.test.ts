@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { randomUUID } from 'node:crypto';
 import type { CaseRecord } from '@cornerstone/contracts';
-import { parseFields, validateAction, workflow } from '@cornerstone/domain';
+import {
+  parseFields,
+  validateAction,
+  workflow,
+  workflows,
+  workflowGroups,
+} from '@cornerstone/domain';
 const claim: CaseRecord = {
   id: randomUUID(),
   kind: 'claim_survival',
@@ -28,6 +34,11 @@ const findings = {
   eligibilitySeparate: true,
 };
 describe('case-specific claim survival', () => {
+  it('keeps every available workflow in exactly one navigation group', () => {
+    const grouped = workflowGroups.flatMap((group) => [...group.kinds]);
+    expect(new Set(grouped).size).toBe(grouped.length);
+    expect([...grouped].sort()).toEqual(workflows.map((item) => item.kind).sort());
+  });
   it('requires each substantive finding including narrow case access and separate eligibility', () => {
     for (const key of Object.keys(findings))
       expect(() =>

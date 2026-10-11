@@ -1854,7 +1854,15 @@ export function validateAction(
 export const workflowGroups = [
   {
     label: 'Prepare & participate',
-    kinds: ['dossier', 'organizing_group', 'event_petition', 'claim', 'hearing', 'succession'],
+    kinds: [
+      'dossier',
+      'organizing_group',
+      'event_petition',
+      'claim',
+      'hearing',
+      'succession',
+      'claim_survival',
+    ],
   },
   {
     label: 'Members & enterprise',
