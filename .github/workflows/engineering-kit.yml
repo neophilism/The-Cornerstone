@@ -7,35 +7,27 @@ permissions:
   contents: read
 jobs:
   bundle:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
+          ref: e1ca0d8d70aefafce23fe46f309fbc31cc2cac27
           persist-credentials: false
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
-        with:
-          node-version-file: .node-version
-      - run: corepack enable && pnpm install --frozen-lockfile && pnpm build:packages
-      - name: Package tracked public sources and offline tooling only
+      - name: Package exact tracked source only
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p /tmp/cornerstone-kit
-          git archive --format=tar HEAD | gzip > /tmp/cornerstone-kit/source.tar.gz
-          cp "$(command -v node)" /tmp/cornerstone-kit/node
-          cli=$(find "$HOME/.cache/node/corepack" -type f -name pnpm.cjs -print -quit)
-          test -n "$cli"
-          cp -a "$(dirname "$(dirname "$cli")")" /tmp/cornerstone-kit/pnpm
-          printf 'node_modules\0' > /tmp/dependency-paths
-          find apps packages -mindepth 2 -maxdepth 2 -type d \( -name node_modules -o -name dist \) -print0 >> /tmp/dependency-paths
-          tar --exclude='*.woff' --exclude='*.woff2' --exclude='*.ttf' --exclude='*.otf' --null -czf /tmp/cornerstone-kit/dependencies.tar.gz -T /tmp/dependency-paths
-          git rev-parse HEAD > /tmp/cornerstone-kit/COMMIT
-          cd /tmp/cornerstone-kit
-          sha256sum source.tar.gz dependencies.tar.gz node > SHA256SUMS
+          test "$(git rev-parse HEAD)" = e1ca0d8d70aefafce23fe46f309fbc31cc2cac27
+          mkdir -p /tmp/cornerstone-source
+          git archive --format=tar HEAD | gzip -n > /tmp/cornerstone-source/source.tar.gz
+          git rev-parse HEAD > /tmp/cornerstone-source/COMMIT
+          git rev-parse 'HEAD^{tree}' > /tmp/cornerstone-source/TREE
+          cd /tmp/cornerstone-source
+          sha256sum source.tar.gz COMMIT TREE > SHA256SUMS
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: offline-engineering-kit
-          path: /tmp/cornerstone-kit
+          name: claim-survival-source
+          path: /tmp/cornerstone-source
           retention-days: 1
-          compression-level: 0
+          if-no-files-found: error
