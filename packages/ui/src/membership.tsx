@@ -46,7 +46,7 @@ export function MembershipPanel({
 }: {
   records: CaseRecord[];
   api: Api;
-  onOpen: (r: CaseRecord) => void;
+  onOpen: (id: string) => void;
   onRefresh: () => Promise<unknown>;
 }) {
   const [snapshot, setSnapshot] = useState<MembershipSnapshot | null>(null),
@@ -103,8 +103,8 @@ export function MembershipPanel({
                 </p>
                 <button
                   className="button button-secondary"
-                  disabled={!r}
-                  onClick={() => r && onOpen(r)}
+                  disabled={pending}
+                  onClick={() => onOpen(i.associationId)}
                 >
                   Review association
                 </button>
@@ -132,8 +132,8 @@ export function MembershipPanel({
                 <CopyId value={u.unitId} label="Copy founding unit ID" />
                 <button
                   className="button button-secondary"
-                  disabled={!r}
-                  onClick={() => r && onOpen(r)}
+                  disabled={pending}
+                  onClick={() => onOpen(u.associationId)}
                 >
                   Inspect association
                 </button>
@@ -159,14 +159,17 @@ export function MembershipPanel({
                   {String(r.data['decision']).replaceAll('_', ' ')} · {Number(r.data['unitCount'])}{' '}
                   frozen units
                 </p>
-                <button className="button button-secondary" onClick={() => onOpen(r)}>
+                <button className="button button-secondary" onClick={() => onOpen(r.id)}>
                   Review decision
                 </button>
               </li>
             ))}
         </ol>
       ) : (
-        <p className="muted">No open or tallied member decisions are available.</p>
+        <p className="muted">
+          No open or tallied member decisions appear in your loaded records. Use My records to
+          browse older decisions.
+        </p>
       )}
     </section>
   );

@@ -493,8 +493,8 @@ export function Workspace({
   const labels = selected
     ? new Map(
         [
-          ...workflow(selected.kind).createFields,
           ...workflow(selected.kind).actions.flatMap((a) => a.fields),
+          ...workflow(selected.kind).createFields,
         ].map((f) => [f.key, f.label]),
       )
     : new Map<string, string>();
@@ -708,7 +708,7 @@ export function Workspace({
               records={records}
               api={api}
               onRefresh={refresh}
-              onOpen={(r) => void openRecord(r.id)}
+              onOpen={(id) => void openRecord(id)}
             />
           )}
           {receipt ? (
