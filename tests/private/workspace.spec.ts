@@ -126,6 +126,7 @@ test('assigned support can answer a request and the participant can see the pers
   await page.getByRole('button', { name: 'Submit for review', exact: true }).click();
   await expect(page.getByText('Simulation receipt · version 2', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Sign out', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Your private workspace.' })).toBeVisible();
   await signIn(page, 'support', true);
   await open(page, title);
   await page
@@ -142,6 +143,7 @@ test('assigned support can answer a request and the participant can see the pers
     fullPage: true,
   });
   await page.getByRole('button', { name: 'Sign out', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Your private workspace.' })).toBeVisible();
   await signIn(page, 'participant');
   await open(page, title);
   await expect(
@@ -295,6 +297,9 @@ test('a synthetic attachment stays quarantined until text validation and downloa
   await page.getByLabel('Established livelihood', { exact: true }).fill('Invented primary job');
   await page.getByLabel('Direct loss', { exact: true }).fill('Invented direct livelihood loss');
   await page.getByRole('button', { name: 'Save synthetic draft', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Evidence & sources', exact: true })).toHaveCount(
+    1,
+  );
   await page.getByText('Attach a synthetic text file', { exact: true }).click();
   const body = Buffer.from('Invented evidence only. Café and plain UTF-8 text.\n');
   await page

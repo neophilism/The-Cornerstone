@@ -609,7 +609,7 @@ export function Workspace({
               </form>
             </>
           ) : selected ? (
-            <>
+            <div className="record-view" key={selected.id}>
               <div className="workspace-heading">
                 <div>
                   <p className="eyebrow">
@@ -680,21 +680,22 @@ export function Workspace({
                     </div>
                   ))}
               </dl>
-              {!['sealed_ranking', 'draw', 'round'].includes(selected.kind) && (
-                <EvidencePanel
-                  key={selected.id}
-                  record={selected}
-                  actorId={session.actor.id}
-                  canAttach={permitted.includes('attach_evidence')}
-                  api={api}
-                  onChanged={async (result) => {
-                    setReceipt(result.receipt);
-                    setSelected(result.record);
-                    setEditing(false);
-                    await refresh();
-                  }}
-                />
-              )}
+              <div className="record-evidence">
+                {!['sealed_ranking', 'draw', 'round'].includes(selected.kind) && (
+                  <EvidencePanel
+                    record={selected}
+                    actorId={session.actor.id}
+                    canAttach={permitted.includes('attach_evidence')}
+                    api={api}
+                    onChanged={async (result) => {
+                      setReceipt(result.receipt);
+                      setSelected(result.record);
+                      setEditing(false);
+                      await refresh();
+                    }}
+                  />
+                )}
+              </div>
               <div className="workflow-actions">
                 {workflow(selected.kind)
                   .actions.filter(
@@ -735,7 +736,7 @@ export function Workspace({
                     }}
                   />
                 )}
-            </>
+            </div>
           ) : ['activity', 'account'].includes(view) ? null : (
             <>
               <div className="workspace-heading">
