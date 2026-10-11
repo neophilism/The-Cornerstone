@@ -1,0 +1,11 @@
+# Existing-claim succession acceptance
+
+The feature head `e1ca0d8d70aefafce23fe46f309fbc31cc2cac27` passed GitHub Actions run [38173253104](https://github.com/neophilism/The-Cornerstone/actions/runs/38173253104). Its pull-request merge tree includes main `6baeef992e567ada42b3f684d1b0ae480e4b74de`, preserving the approved public tracking baseline.
+
+The `verify` job passed installation, boundaries, approved-source and secret checks, formatting, unit tests, all production builds and public browser tests. The `database` job passed fresh PostGIS migration, restricted runtime setup, existing integration suites, the new claim-survival integration, private application builds and the desktop/mobile private browser suites. The branch-specific public-preview job was skipped and is not counted as a successful deployment check.
+
+The new integration covers original receipt reconstruction, exact claim and holder versions, stale rollback, estate-to-unit capacity, competing consent and enrollment races, assigned unconflicted decisions and unrelated-record denial. The browser journey submits a personal request, validates supporting synthetic evidence, obtains an assigned review, opens the same continuing claim and verifies refusal before approval. Six request/review/continuation screenshots from the private-browser-verification artifact were inspected at desktop and mobile sizes, including expanded record details and evidence controls. These checks are not an independent legal, identity, probate, security or accessibility assessment.
+
+A source-only artifact independently binds the reviewed feature checkout to tree `df5708dd12f5b596308aa9fddaabd035ea0b8dad`. It contains tracked source, not user records or credentials. The screenshots and checks use invented development people and evidence.
+
+Migration 013 has passed the disposable CI database. That is not evidence of an applied Neon migration or a deployed private application. The supplied production branch is unchanged and protected intake remains disabled. New filings for deceased workers without an existing assigned claim, contested-estate procedures and real institutional acceptance remain separate work. Merge, deployment and institutional authorization are distinct gates.
