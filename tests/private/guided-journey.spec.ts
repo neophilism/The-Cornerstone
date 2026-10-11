@@ -2,8 +2,16 @@ import { test, expect, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 async function login(page: Page, persona: 'participant' | 'labor') {
   await page.goto(persona === 'labor' ? 'http://127.0.0.1:3002' : 'http://127.0.0.1:3001');
+  await expect(
+    page.getByRole('heading', {
+      name: /^(Your private workspace\.|Your next step, made clear\.)$/,
+    }),
+  ).toBeVisible();
   if (await page.getByRole('button', { name: 'Sign out', exact: true }).count()) {
     await page.getByRole('button', { name: 'Sign out', exact: true }).click();
+    await expect(
+      page.getByRole('heading', { name: 'Your private workspace.', exact: true }),
+    ).toBeVisible();
   }
   await page
     .getByRole('button', { name: `${persona} · synthetic development`, exact: true })
