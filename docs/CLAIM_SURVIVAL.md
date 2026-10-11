@@ -26,7 +26,7 @@ A designated successor or one pending estate representative carries the appropri
 
 `node --import tsx tests/claim-survival.integration.ts` creates actual synthetic event, claim, consent and review journeys. It checks missing evidence/findings, unauthorized ownership writes, conflicts, idempotent and stale decisions, historical receipts, unrelated-file denial, delegate revocation, immutable history, estate designation, pending eligibility, and an enrollment-versus-control race. An additional estate-to-unit journey checks that final unit designation does not automatically convey the private claim file.
 
-`tests/private/claim-survival.spec.ts` follows personal request, evidence upload, assigned review and reopening the same continuing claim in desktop and mobile browsers. It checks refusal before approval, unchanged eligibility, unrelated-file denial and loss of the previous holder's claim access. Accessibility assertions and six screenshots accompany that journey. See PROGRESS.md and the PR's exact CI run for which revision has passed; the existence of a test is not a passing result.
+`tests/private/claim-survival.spec.ts` starts from Prepare & participate and follows personal request, evidence upload, assigned review and reopening the same continuing claim in desktop and mobile browsers. It checks refusal before approval, unchanged eligibility, unrelated-file denial and loss of the previous holder's claim access. A unit test requires every workflow to appear in exactly one navigation group. Accessibility assertions and six screenshots accompany the browser journey. See PROGRESS.md and the PR's exact CI run for which revision has passed; the existence of a test is not a passing result.
 
 ## Remaining boundaries
 
