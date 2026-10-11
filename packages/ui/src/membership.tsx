@@ -230,11 +230,11 @@ export function FoundingConsentPanel({
       const encoded = JSON.stringify(input);
       if (retry.current?.input !== encoded)
         retry.current = { input: encoded, key: crypto.randomUUID() };
+      setAcknowledged(false);
       await onChanged(
         await api('memberships/respond', { ...input, idempotencyKey: retry.current.key }),
       );
       retry.current = null;
-      setAcknowledged(false);
       await refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Your response could not be saved.');
@@ -267,6 +267,7 @@ export function FoundingConsentPanel({
             <input
               id="founding-rights"
               type="checkbox"
+              disabled={pending}
               checked={acknowledged}
               onChange={(e) => setAcknowledged(e.target.checked)}
             />
@@ -290,6 +291,7 @@ export function FoundingConsentPanel({
                     id={`scale-${choice}`}
                     type="radio"
                     name="scaleChoice"
+                    disabled={pending}
                     value={choice}
                     checked={scaleChoice === choice}
                     onChange={() => setScaleChoice(choice)}
