@@ -1,0 +1,40 @@
+name: source-evidence
+on:
+  pull_request:
+  push:
+    branches: [main, feat/cs12-acceptance-and-release-evidence]
+permissions:
+  contents: read
+concurrency:
+  group: source-evidence-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  source-snapshot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+      - run: node scripts/check-secrets.mjs
+      - name: Bind tracked public source to its exact commit and tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          output="$RUNNER_TEMP/source-evidence"
+          mkdir -p "$output"
+          git rev-parse HEAD > "$output/COMMIT"
+          git rev-parse 'HEAD^{tree}' > "$output/TREE"
+          git archive --format=tar HEAD | gzip -n > "$output/source.tar.gz"
+          printf '%s\n' 'Source snapshot only: not a test result, signature, security approval, or authorization.' > "$output/SCOPE"
+          cd "$output"
+          sha256sum COMMIT TREE SCOPE source.tar.gz > SHA256SUMS
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: source-evidence-${{ github.sha }}
+          path: ${{ runner.temp }}/source-evidence/
+          if-no-files-found: error
+          retention-days: 7

@@ -78,6 +78,7 @@ jobs:
       - run: pnpm build:packages
       - run: node --import tsx scripts/create-runtime-role.ts
       - run: pnpm db:migrate
+      - run: node --import tsx tests/migrations.integration.ts
       - run: pnpm db:seed:simulation
       - run: node scripts/test-field-key.mjs
       - run: pnpm test:db
