@@ -1,6 +1,8 @@
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { Module } from '@nestjs/common';
+import type { NestExpressApplication } from '@nestjs/platform-express';
+import { FinanceError } from '@cornerstone/finance';
 import helmet from 'helmet';
 import { parseCookie, stringifySetCookie } from 'cookie';
 import * as oidc from 'openid-client';
@@ -19,7 +21,7 @@ import {
   decrypt,
   type Envelope,
 } from '@cornerstone/security';
-import { Store } from '@cornerstone/store';
+import { Store, PersistenceError } from '@cornerstone/store';
 import { ProgramService } from './service.js';
 
 class ApplicationModule {}
@@ -49,10 +51,11 @@ if (env['DATABASE_URL']) {
   await store.verifyRole();
   service = new ProgramService(store, mode, realm);
 }
-const app = await NestFactory.create(ApplicationModule, {
+const app = await NestFactory.create<NestExpressApplication>(ApplicationModule, {
   logger: ['warn', 'error'],
   bodyParser: true,
 });
+app.useBodyParser('json', { limit: '2mb' });
 app.enableShutdownHooks();
 app.use(
   helmet({
@@ -141,9 +144,15 @@ function route(
     try {
       await fn(req, res);
     } catch (e) {
-      const known = e instanceof DomainError;
+      const known =
+        e instanceof DomainError || e instanceof PersistenceError || e instanceof FinanceError;
       const z = e instanceof Error && e.name === 'ZodError';
-      const status = known ? e.status : z ? 422 : 500;
+      const status =
+        e instanceof DomainError || e instanceof PersistenceError
+          ? e.status
+          : e instanceof FinanceError || z
+            ? 422
+            : 500;
       res.status(status).json({
         code: known ? e.code : z ? 'INVALID_INPUT' : 'REQUEST_FAILED',
         message: known

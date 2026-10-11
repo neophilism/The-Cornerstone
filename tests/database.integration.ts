@@ -54,15 +54,27 @@ try {
     /different command/,
   );
   const record = one.record!;
+  const edited = await service.command(a, {
+    recordId: record.id,
+    action: 'save_draft',
+    expectedVersion: 1,
+    idempotencyKey: randomUUID(),
+    input: { ...command.input, lossDescription: 'Corrected invented loss' },
+  });
+  assert.equal(edited.record?.state, 'draft');
+  assert.equal(edited.record?.data['lossDescription'], 'Corrected invented loss');
   const next = await service.command(a, {
     recordId: record.id,
     action: 'mark_ready',
-    expectedVersion: 1,
+    expectedVersion: 2,
     idempotencyKey: randomUUID(),
     input: {},
   });
   assert.equal(next.record?.state, 'ready');
-  assert.equal(next.receipt.version, 2);
+  assert.equal(next.receipt.version, 3);
+  const replay = await service.create(a, command);
+  assert.equal(replay.receipt.id, one.receipt.id);
+  assert.deepEqual(replay.record, one.record);
   await assert.rejects(
     service.command(a, {
       recordId: record.id,
@@ -77,7 +89,7 @@ try {
     service.command(b, {
       recordId: record.id,
       action: 'reopen',
-      expectedVersion: 2,
+      expectedVersion: 3,
       idempotencyKey: randomUUID(),
       input: {},
     }),
@@ -86,7 +98,7 @@ try {
   const count = await owner.query('SELECT count(*)::int n FROM receipts WHERE record_id=$1', [
     record.id,
   ]);
-  assert.equal(count.rows[0].n, 2);
+  assert.equal(count.rows[0].n, 3);
   const encrypted = await owner.query('SELECT payload_cipher FROM case_records WHERE id=$1', [
     record.id,
   ]);

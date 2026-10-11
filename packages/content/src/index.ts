@@ -92,7 +92,7 @@ export const faqs = [
   {
     question: 'How would the funding work?',
     answer:
-      'A limited Founding Fund advance would cover approved preparation, formation, feasibility, licensing, and training costs. The enterprise repays the advance plus a fixed public return; that obligation then ends. A separate state share applies only to positive shareable surplus.',
+      'A limited Founding Fund advance would cover approved formation, feasibility, licensing, and training costs. The enterprise repays the advance plus a fixed public return; that obligation then ends. A separate state share applies only to positive shareable surplus.',
     source: 'Federal draft, section 8; state draft, section 5',
   },
   {

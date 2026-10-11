@@ -6,7 +6,7 @@ A public policy website and scoped application for private preparation and synth
 
 Use Node 24 and the pinned pnpm version. Run `pnpm install --frozen-lockfile`, `pnpm build`, then `pnpm dev`. The public site uses port 3000, portal 3001, staff 3002, and API 4010. Copy `.env.example` to `.env` and configure a local PostgreSQL/PostGIS database before persistent workflows. Never use real private data in simulation.
 
-`pnpm test` checks policy guards, matching, finance, security, and API behavior. `pnpm test:db` requires an isolated PostgreSQL/PostGIS database and separate restricted-runtime credentials. `pnpm test:e2e` runs browser journeys. Database migrations use a separate owner connection. No command wipes a database.
+`pnpm test` checks policy guards, matching, finance, security, and API behavior. `pnpm test:db` requires an isolated PostgreSQL/PostGIS database and separate restricted-runtime credentials. `pnpm test:e2e` runs public browser journeys; `pnpm test:private` runs synthetic portal and staff journeys after building and seeding the isolated database. Database migrations use a separate owner connection. No command wipes a database.
 
 ## Deployment
 

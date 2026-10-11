@@ -1,16 +1,32 @@
 'use client';
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import type { Actor, CaseRecord, Kind, Receipt } from '@cornerstone/contracts';
 import { workflows, workflowGroups, workflow, type Field } from '@cornerstone/domain';
+import { StructuredField, listFields } from './structured-field.js';
 
 type Session = { actor: Actor; csrf: string; mode: string; local: boolean };
-export function WorkflowFields({ fields, prefix }: { fields: Field[]; prefix: string }) {
+export function WorkflowFields({
+  fields,
+  prefix,
+  values = {},
+}: {
+  fields: Field[];
+  prefix: string;
+  values?: Record<string, unknown>;
+}) {
   return (
     <>
       {fields.map((f) =>
-        f.type === 'boolean' ? (
+        f.type === 'json' ? (
+          <StructuredField key={f.key} field={f} prefix={prefix} value={values[f.key]} />
+        ) : f.type === 'boolean' ? (
           <div className="check-field" key={f.key}>
-            <input type="checkbox" name={f.key} id={`${prefix}-${f.key}`} />
+            <input
+              type="checkbox"
+              name={f.key}
+              id={`${prefix}-${f.key}`}
+              defaultChecked={values[f.key] === true}
+            />
             <label htmlFor={`${prefix}-${f.key}`}>
               {f.label}
               {f.required ? ' (required finding)' : ''}
@@ -23,7 +39,12 @@ export function WorkflowFields({ fields, prefix }: { fields: Field[]; prefix: st
               {!f.required ? ' (optional)' : ''}
             </label>
             {f.type === 'select' ? (
-              <select id={`${prefix}-${f.key}`} name={f.key} required={f.required}>
+              <select
+                id={`${prefix}-${f.key}`}
+                name={f.key}
+                required={f.required}
+                defaultValue={String(values[f.key] ?? '')}
+              >
                 <option value="">Choose an option</option>
                 {f.options?.map((o) => (
                   <option value={o} key={o}>
@@ -31,14 +52,13 @@ export function WorkflowFields({ fields, prefix }: { fields: Field[]; prefix: st
                   </option>
                 ))}
               </select>
-            ) : ['textarea', 'json'].includes(f.type) ? (
+            ) : f.type === 'textarea' ? (
               <textarea
                 id={`${prefix}-${f.key}`}
                 name={f.key}
                 required={f.required}
-                rows={f.type === 'json' ? 4 : 3}
-                spellCheck={f.type !== 'json'}
-                placeholder={f.type === 'json' ? 'Structured synthetic data (JSON)' : ''}
+                rows={3}
+                defaultValue={String(values[f.key] ?? '')}
               />
             ) : (
               <input
@@ -49,13 +69,13 @@ export function WorkflowFields({ fields, prefix }: { fields: Field[]; prefix: st
                 min={f.type === 'number' ? 0 : undefined}
                 step={f.type === 'number' ? 'any' : undefined}
                 inputMode={f.type === 'money' ? 'decimal' : undefined}
+                pattern={f.type === 'money' ? '(0|[1-9][0-9]*)(\\.[0-9]{2})?' : undefined}
+                defaultValue={String(values[f.key] ?? '')}
               />
             )}
             <span className="hint">
               {f.help ||
-                (f.type === 'json'
-                  ? 'Development structured input. Real intake requires a reviewed guided interface.'
-                  : '')}
+                (f.type === 'money' ? 'Use USD, with two digits for cents when included.' : '')}
             </span>
           </div>
         ),
@@ -73,7 +93,17 @@ function formInput(form: HTMLFormElement, fields: Field[]) {
       continue;
     }
     if (typeof v !== 'string' || !v.trim()) continue;
-    input[f.key] = f.type === 'number' ? Number(v) : f.type === 'json' ? JSON.parse(v) : v;
+    input[f.key] =
+      f.type === 'number'
+        ? Number(v)
+        : f.type === 'json'
+          ? listFields.has(f.key)
+            ? v
+                .split(/\r?\n/)
+                .map((s) => s.trim())
+                .filter(Boolean)
+            : JSON.parse(v)
+          : v;
   }
   return input;
 }
@@ -92,12 +122,22 @@ export function Workspace({ staff = false }: { staff?: boolean }) {
     [records, setRecords] = useState<CaseRecord[]>([]),
     [view, setView] = useState<string>('home'),
     [selected, setSelected] = useState<CaseRecord | null>(null),
+    [editing, setEditing] = useState(false),
     [creating, setCreating] = useState<Kind | null>(null),
     [error, setError] = useState(''),
     [receipt, setReceipt] = useState<Receipt | null>(null),
     [loading, setLoading] = useState(true),
     [pending, setPending] = useState(false),
     [local, setLocal] = useState(false);
+  const retries = useRef(new Map<string, { input: string; key: string }>());
+  function requestKey(slot: string, input: unknown) {
+    const encoded = JSON.stringify(input),
+      previous = retries.current.get(slot);
+    if (previous?.input === encoded) return previous.key;
+    const key = crypto.randomUUID();
+    retries.current.set(slot, { input: encoded, key });
+    return key;
+  }
   async function api(path: string, body?: unknown) {
     const response = await fetch(`/api/private/${path}`, {
       method: body === undefined ? 'GET' : 'POST',
@@ -111,7 +151,15 @@ export function Workspace({ staff = false }: { staff?: boolean }) {
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
     });
     const data = await response.json();
-    if (!response.ok) throw Error(data.message || 'The request could not be completed.');
+    if (!response.ok) {
+      if (response.status === 401) {
+        setSession(null);
+        setRecords([]);
+        setSelected(null);
+        setReceipt(null);
+      }
+      throw Error(data.message || 'The request could not be completed.');
+    }
     return data;
   }
   async function refresh() {
@@ -146,6 +194,11 @@ export function Workspace({ staff = false }: { staff?: boolean }) {
       });
       const r = await response.json();
       if (!response.ok) throw Error(r.message);
+      setSelected(null);
+      setCreating(null);
+      setReceipt(null);
+      setEditing(false);
+      retries.current.clear();
       await refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Sign-in unavailable.');
@@ -161,12 +214,16 @@ export function Workspace({ staff = false }: { staff?: boolean }) {
     setError('');
     try {
       const wf = workflow(creating);
-      const result = await api('records', {
+      const input = {
         kind: creating,
         title: String(new FormData(form).get('title')),
         input: formInput(form, wf.createFields),
-        idempotencyKey: crypto.randomUUID(),
+      };
+      const result = await api('records', {
+        ...input,
+        idempotencyKey: requestKey('create', input),
       });
+      retries.current.delete('create');
       setReceipt(result.receipt);
       setSelected(result.record);
       setCreating(null);
@@ -184,16 +241,21 @@ export function Workspace({ staff = false }: { staff?: boolean }) {
     setPending(true);
     setError('');
     try {
-      const a = workflow(selected.kind).actions.find((a) => a.key === key)!;
-      const result = await api('commands', {
+      const wf = workflow(selected.kind);
+      const fields =
+        key === 'save_draft' ? wf.createFields : wf.actions.find((a) => a.key === key)!.fields;
+      const input = {
         recordId: selected.id,
         action: key,
         expectedVersion: selected.version,
-        idempotencyKey: crypto.randomUUID(),
-        input: formInput(form, a.fields),
-      });
+        input: formInput(form, fields),
+      };
+      const slot = `${selected.id}:${key}`;
+      const result = await api('commands', { ...input, idempotencyKey: requestKey(slot, input) });
+      retries.current.delete(slot);
       setReceipt(result.receipt);
       setSelected(result.record);
+      setEditing(false);
       await refresh();
       form.reset();
     } catch (e) {
@@ -322,6 +384,10 @@ export function Workspace({ staff = false }: { staff?: boolean }) {
                   await api('auth/logout', {});
                   setSession(null);
                   setRecords([]);
+                  setSelected(null);
+                  setCreating(null);
+                  setReceipt(null);
+                  retries.current.clear();
                 } catch (e) {
                   setError(String(e));
                 }
@@ -391,6 +457,12 @@ export function Workspace({ staff = false }: { staff?: boolean }) {
                 </button>
               </div>
               <div className="record-links">
+                {selected.state === 'draft' &&
+                workflow(selected.kind).createRoles.some((r) => session.actor.roles.includes(r)) ? (
+                  <button className="button button-secondary" onClick={() => setEditing(!editing)}>
+                    {editing ? 'Cancel editing' : 'Edit draft'}
+                  </button>
+                ) : null}
                 <button
                   className="button button-secondary"
                   onClick={() => download(selected, 'cornerstone-synthetic-record.json')}
@@ -401,6 +473,27 @@ export function Workspace({ staff = false }: { staff?: boolean }) {
                   Print record
                 </button>
               </div>
+              {editing ? (
+                <form
+                  key={`${selected.id}:${selected.version}`}
+                  className="action-panel form-stack"
+                  onSubmit={(e) => void command(e, 'save_draft')}
+                >
+                  <h2>Continue your draft</h2>
+                  <p className="muted">
+                    Saving preserves the previous version and creates a new receipt. It does not
+                    submit the record for review.
+                  </p>
+                  <WorkflowFields
+                    fields={workflow(selected.kind).createFields}
+                    prefix="edit"
+                    values={selected.data}
+                  />
+                  <button className="button" disabled={pending}>
+                    {pending ? 'Saving…' : 'Save draft changes'}
+                  </button>
+                </form>
+              ) : null}
               <dl className="record-data">
                 {Object.entries(selected.data)
                   .filter(([k]) => k !== 'history')
@@ -496,6 +589,7 @@ export function Workspace({ staff = false }: { staff?: boolean }) {
                             className="button button-secondary"
                             onClick={() => {
                               setSelected(r);
+                              setEditing(false);
                               setError('');
                             }}
                           >

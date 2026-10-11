@@ -9,6 +9,7 @@ import {
   workflows,
   validateAction,
   parseFields,
+  workflow,
 } from '@cornerstone/domain';
 import { encrypt, decrypt, canRead, localAuthAllowed } from '@cornerstone/security';
 import { assertAuthority, prerequisites, type Authority } from '@cornerstone/policy';
@@ -174,6 +175,29 @@ describe('policy and privacy boundaries', () => {
         '2026-10-10',
       ),
     ).toThrow(/findings/);
+  });
+  it('accepts a full default founding roll and rejects malformed rights references', () => {
+    const units = Array.from({ length: 2500 }, () => ({
+      claimId: randomUUID(),
+      personId: randomUUID(),
+    }));
+    const parsed = parseFields(workflow('association').createFields, {
+      eventId: randomUUID(),
+      units,
+      rollOpened: '2026-10-10',
+      constitution: 'Invented equal rights constitution',
+    });
+    expect((parsed['units'] as unknown[]).length).toBe(2500);
+    expect(() =>
+      parseFields([{ key: 'evidenceIds', label: 'Evidence', type: 'json', required: true }], {
+        evidenceIds: { private: 'not an ID list' },
+      }),
+    ).toThrow();
+    expect(() =>
+      parseFields([{ key: 'units', label: 'Units', type: 'json', required: true }], {
+        units: [{ claimId: randomUUID(), personId: 'invented-text' }],
+      }),
+    ).toThrow();
   });
   it('never enables a hosted local-auth back door', () => {
     const env = {

@@ -3,6 +3,17 @@ import type { Actor, CaseRecord, Receipt } from '@cornerstone/contracts';
 import { encrypt, decrypt, digest, type Envelope } from '@cornerstone/security';
 import { randomUUID } from 'node:crypto';
 
+export class PersistenceError extends Error {
+  constructor(
+    readonly code: string,
+    message: string,
+    readonly status = 409,
+  ) {
+    super(message);
+    this.name = 'PersistenceError';
+  }
+}
+
 export type Transaction = {
   query<T extends pg.QueryResultRow = pg.QueryResultRow>(
     sql: string,
@@ -67,11 +78,17 @@ export class Store {
     }
   }
   decode(row: Row): CaseRecord {
-    const privateData = decrypt<{ title: string; data: Record<string, unknown> }>(
-      row.payload_cipher,
-      this.key,
-      `cornerstone:record:${row.id}:${row.version}`,
-    );
+    const privateData = decrypt<{
+      title: string;
+      data: Record<string, unknown>;
+      metadata?: {
+        institutionId: string | null;
+        jurisdiction: string | null;
+        policyVersion: string;
+        createdAt: string;
+        updatedAt: string;
+      };
+    }>(row.payload_cipher, this.key, `cornerstone:record:${row.id}:${row.version}`);
     return {
       id: row.id,
       realm: row.realm,
@@ -82,9 +99,11 @@ export class Store {
       institutionId: row.institution_id,
       jurisdiction: row.jurisdiction,
       policyVersion: row.policy_version,
-      ...privateData,
+      title: privateData.title,
+      data: privateData.data,
       createdAt: row.created_at.toISOString(),
       updatedAt: row.updated_at.toISOString(),
+      ...privateData.metadata,
     };
   }
   async get(tx: Transaction, id: string, lock = false) {
@@ -101,6 +120,13 @@ export class Store {
       );
       return r.rows.map((row) => this.decode(row));
     });
+  }
+  async getVersion(tx: Transaction, id: string, version: number) {
+    const r = await tx.query<Row>(
+      'SELECT c.id,c.kind,c.owner_id,c.institution_id,c.jurisdiction,c.policy_version,c.created_at,v.realm,v.state,v.version,v.payload_cipher,v.created_at AS updated_at FROM case_records c JOIN case_versions v ON v.record_id=c.id WHERE c.id=$1 AND v.version=$2',
+      [id, version],
+    );
+    return r.rows[0] ? this.decode(r.rows[0]) : null;
   }
   async grants(tx: Transaction, id: string) {
     const r = await tx.query(
@@ -130,10 +156,10 @@ export class Store {
     );
     if (!r.rows[0]) return null;
     if (r.rows[0].request_digest !== requestDigest)
-      throw Object.assign(new Error('Idempotency key already binds a different command.'), {
-        code: 'IDEMPOTENCY_CONFLICT',
-        status: 409,
-      });
+      throw new PersistenceError(
+        'IDEMPOTENCY_CONFLICT',
+        'Idempotency key already binds a different command.',
+      );
     return this.receipt(r.rows[0]);
   }
   private receipt(row: pg.QueryResultRow): Receipt {
@@ -163,7 +189,17 @@ export class Store {
     isNew = false,
   ) {
     const envelope = encrypt(
-      { title: record.title, data: record.data },
+      {
+        title: record.title,
+        data: record.data,
+        metadata: {
+          institutionId: record.institutionId,
+          jurisdiction: record.jurisdiction,
+          policyVersion: record.policyVersion,
+          createdAt: record.createdAt,
+          updatedAt: record.updatedAt,
+        },
+      },
       this.key,
       'development-field-v1',
       `cornerstone:record:${record.id}:${record.version}`,
@@ -198,10 +234,7 @@ export class Store {
         ],
       );
       if (r.rowCount !== 1)
-        throw Object.assign(new Error('Record changed; reload before submitting.'), {
-          code: 'STALE_VERSION',
-          status: 409,
-        });
+        throw new PersistenceError('STALE_VERSION', 'Record changed; reload before submitting.');
     }
     await tx.query(
       'INSERT INTO case_versions(record_id,version,realm,state,payload_cipher,actor_id,action) VALUES($1,$2,$3,$4,$5,$6,$7)',

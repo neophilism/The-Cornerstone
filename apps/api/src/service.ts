@@ -1,6 +1,11 @@
 import { randomUUID } from 'node:crypto';
 import type { Actor, CaseRecord, Command, Mode, Realm } from '@cornerstone/contracts';
-import { CreateRecordSchema, CommandSchema, IdSchema } from '@cornerstone/contracts';
+import {
+  CreateRecordSchema,
+  CommandSchema,
+  IdSchema,
+  SurplusScheduleSchema,
+} from '@cornerstone/contracts';
 import {
   workflow,
   parseFields,
@@ -63,7 +68,10 @@ export class ProgramService {
         requestDigest,
       );
       if (previous)
-        return { receipt: previous, record: await this.store.get(tx, previous.recordId) };
+        return {
+          receipt: previous,
+          record: await this.store.getVersion(tx, previous.recordId, previous.version),
+        };
       const record: CaseRecord = {
         id: randomUUID(),
         realm: actor.realm,
@@ -103,14 +111,18 @@ export class ProgramService {
         requestDigest,
       );
       if (previous)
-        return { receipt: previous, record: await this.store.get(tx, previous.recordId) };
+        return {
+          receipt: previous,
+          record: await this.store.getVersion(tx, previous.recordId, previous.version),
+        };
       const record = await this.store.get(tx, command.recordId, true);
       if (!record) throw new DomainError('NOT_FOUND', 'Record not found.', 404);
-      requireCondition(
-        record.version === command.expectedVersion,
-        'STALE_VERSION',
-        'This record changed. Reload before submitting.',
-      );
+      if (record.version !== command.expectedVersion)
+        throw new DomainError(
+          'STALE_VERSION',
+          'This record changed. Reload before submitting.',
+          409,
+        );
       const wf = workflow(record.kind),
         a =
           command.action === 'save_draft'
@@ -302,8 +314,15 @@ export class ProgramService {
       d['yes'] = yes;
       d['approved'] = majorityOfAll(yes, Number(d['unitCount']));
     }
-    if (r.kind === 'offer' && k === 'publish')
+    if (r.kind === 'offer' && k === 'publish') {
       await this.linked(tx, d['authorityId'], 'state_authority', ['verified']);
+      const terms = d['financialTerms'] as { version: string; rateActId: string };
+      requireCondition(
+        terms.version === d['financialVersion'] && terms.rateActId === d['rateAct'],
+        'PUBLISHED_FINANCIAL_METHOD',
+        'The published rate act and method version must match the financial terms.',
+      );
+    }
     if (r.kind === 'compact' && k === 'publish') {
       const offer = await this.linked(tx, d['offerId'], 'offer', ['published']);
       await this.linked(tx, d['associationId'], 'association', ['ready', 'provisional']);
@@ -509,7 +528,7 @@ export function calculateWireSchedule(raw: unknown) {
       return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, convert(x, k)]));
     return v;
   };
-  const input = convert(raw) as SurplusInput;
+  const input = convert(SurplusScheduleSchema.parse(raw)) as SurplusInput;
   requireCondition(
     input &&
       input.terms &&

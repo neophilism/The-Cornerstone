@@ -1,24 +1,22 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-test('public pages are usable, truthful, accessible and do not overflow', async ({
-  page,
-}, info) => {
-  const errors: string[] = [];
-  page.on('pageerror', (e) => errors.push(e.message));
-  for (const route of [
-    '/',
-    '/how-it-works',
-    '/participate',
-    '/events',
-    '/opportunities',
-    '/public-record',
-    '/policy',
-    '/help',
-    '/privacy',
-    '/accessibility',
-    '/workspace',
-    '/es',
-  ]) {
+for (const route of [
+  '/',
+  '/how-it-works',
+  '/participate',
+  '/events',
+  '/opportunities',
+  '/public-record',
+  '/policy',
+  '/help',
+  '/privacy',
+  '/accessibility',
+  '/workspace',
+  '/es',
+]) {
+  test(`${route} is usable, accessible and does not overflow`, async ({ page }, info) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(e.message));
     const response = await page.goto(route);
     expect(response?.status()).toBe(200);
     await expect(page.locator('main')).toBeVisible();
@@ -31,11 +29,14 @@ test('public pages are usable, truthful, accessible and do not overflow', async 
     expect(
       results.violations.map((v) => ({ id: v.id, nodes: v.nodes.map((n) => n.target) })),
     ).toEqual([]);
-    if (route === '/')
-      await page.screenshot({ path: `test-results/home-${info.project.name}.png`, fullPage: true });
-  }
-  expect(errors).toEqual([]);
-});
+    if (['/', '/workspace', '/participate'].includes(route))
+      await page.screenshot({
+        path: `test-results/${route === '/' ? 'home' : route.slice(1)}-${info.project.name}.png`,
+        fullPage: true,
+      });
+    expect(errors).toEqual([]);
+  });
+}
 test('the starting guide never claims eligibility and sends no answers', async ({ page }) => {
   const posts: string[] = [];
   page.on('request', (r) => {

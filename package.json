@@ -14,6 +14,7 @@
     "test": "pnpm build:packages && vitest run",
     "test:db": "node --import tsx tests/database.integration.ts",
     "test:e2e": "playwright test",
+    "test:private": "playwright test --config playwright.private.config.ts",
     "check:boundaries": "node scripts/check-boundaries.mjs",
     "check:secrets": "node scripts/check-secrets.mjs",
     "format": "prettier --write apps packages infra scripts tests docs .github *.json *.yaml *.md *.ts",

@@ -1,5 +1,14 @@
 import type { CaseRecord, Kind, Role } from '@cornerstone/contracts';
-import { DateSchema, MoneySchema } from '@cornerstone/contracts';
+import {
+  DateSchema,
+  MoneySchema,
+  IdSchema,
+  FoundingUnitsSchema,
+  FundBudgetSchema,
+  FractionSchema,
+  InvestorRightsSchema,
+  StateTermsSchema,
+} from '@cornerstone/contracts';
 import {
   type Field,
   type ActionDefinition,
@@ -1435,11 +1444,29 @@ export function parseFields(
       out[field.key] = value;
     } else if (field.type === 'json') {
       requireCondition(
-        typeof value === 'object' && JSON.stringify(value).length <= 100000,
+        typeof value === 'object' &&
+          JSON.stringify(value).length <= (field.key === 'units' ? 1000000 : 100000),
         'INVALID_FIELD',
         `${field.label} must be structured data.`,
       );
-      out[field.key] = value;
+      if (
+        [
+          'evidenceIds',
+          'offerIds',
+          'associationIds',
+          'witnesses',
+          'tieOrder',
+          'permitIds',
+        ].includes(field.key)
+      ) {
+        requireCondition(Array.isArray(value), 'INVALID_REFERENCES', 'Use a list of record IDs.');
+        out[field.key] = value.map((id) => IdSchema.parse(id));
+      } else if (field.key === 'units') out[field.key] = FoundingUnitsSchema.parse(value);
+      else if (field.key === 'budget') out[field.key] = FundBudgetSchema.parse(value);
+      else if (field.key === 'receiptRate') out[field.key] = FractionSchema.parse(value);
+      else if (field.key === 'investorRights') out[field.key] = InvestorRightsSchema.parse(value);
+      else if (field.key === 'financialTerms') out[field.key] = StateTermsSchema.parse(value);
+      else out[field.key] = value;
     } else {
       requireCondition(
         typeof value === 'string' && value.trim().length > 0 && value.length <= 12000,

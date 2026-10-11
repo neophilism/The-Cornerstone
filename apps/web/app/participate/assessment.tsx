@@ -42,7 +42,7 @@ export default function Assessment() {
     <div className="tool-panel">
       {q ? (
         <>
-          <div className="progress-track" aria-label={`Step ${step + 1} of 3`}>
+          <div className="progress-track" role="group" aria-label={`Step ${step + 1} of 3`}>
             {questions.map((_, i) => (
               <span key={i} className={i <= step ? 'done' : ''} />
             ))}

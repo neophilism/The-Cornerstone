@@ -33,6 +33,129 @@ export const DateSchema = z
     return !Number.isNaN(d.valueOf()) && d.toISOString().slice(0, 10) === v;
   }, 'Use a valid calendar date');
 export const MoneySchema = z.string().regex(/^(0|[1-9]\d{0,17})(\.\d{2})?$/);
+const LedgerIdSchema = z.string().min(1).max(200);
+export const FractionSchema = z
+  .object({
+    numerator: z.string().regex(/^(0|[1-9]\d{0,17})$/),
+    denominator: z.string().regex(/^[1-9]\d{0,17}$/),
+  })
+  .strict()
+  .refine((r) => BigInt(r.numerator) <= BigInt(r.denominator), 'A fraction cannot exceed one');
+export const StateTermsSchema = z
+  .object({
+    version: z.string().min(1).max(100),
+    rateActId: LedgerIdSchema,
+    rate: FractionSchema.refine(
+      (r) => BigInt(r.numerator) > 0n,
+      'A prospective state rate must be published',
+    ),
+    workingCapitalMonths: z.literal(6),
+    ordinaryHorizonMonths: z.literal(36),
+    growthLimit: z.object({ numerator: z.literal('1'), denominator: z.literal('2') }).strict(),
+  })
+  .strict();
+export const FoundingUnitsSchema = z.array(
+  z.object({ claimId: IdSchema, personId: IdSchema }).strict(),
+);
+export const FundBudgetSchema = z
+  .array(
+    z
+      .object({
+        kind: z.enum(['formation', 'feasibility', 'licensing', 'training']),
+        amount: MoneySchema,
+      })
+      .strict(),
+  )
+  .min(1);
+export const InvestorRightsSchema = z
+  .object({
+    investorVotes: z.boolean(),
+    boardSeat: z.boolean(),
+    governanceVeto: z.boolean(),
+    unitPledge: z.boolean(),
+    compactForeclosure: z.boolean(),
+  })
+  .strict();
+export const SurplusScheduleSchema = z
+  .object({
+    enterpriseId: LedgerIdSchema,
+    year: z.number().int().min(1).max(9999),
+    yearEnd: DateSchema,
+    terms: StateTermsSchema,
+    grossReceipts: MoneySchema,
+    financingProceeds: MoneySchema,
+    refunds: MoneySchema,
+    collectedTaxes: MoneySchema,
+    recoveriesAndReleasedAllowances: MoneySchema,
+    ordinaryAnnualOperatingCosts: MoneySchema,
+    cashCycleShortfall: MoneySchema,
+    priorDeductionSourceIds: z.array(LedgerIdSchema),
+    costs: z.array(
+      z
+        .object({
+          id: LedgerIdSchema,
+          sourceId: LedgerIdSchema,
+          kind: z.enum([
+            'operating',
+            'wages',
+            'tax',
+            'interest',
+            'fund',
+            'debt_principal',
+            'distribution',
+            'depreciation',
+            'amortization',
+            'state_share',
+          ]),
+          paid: MoneySchema,
+          reserved: MoneySchema.optional(),
+          eligibleAmount: MoneySchema,
+          fundFinanced: z.boolean(),
+          previouslyDeducted: z.boolean(),
+          required: z.boolean(),
+          armLength: z.boolean(),
+          irrevocablyReserved: z.boolean(),
+        })
+        .strict(),
+    ),
+    losses: z.array(
+      z
+        .object({
+          id: LedgerIdSchema,
+          year: z.number().int().min(1).max(9999),
+          original: MoneySchema,
+          remaining: MoneySchema,
+          enterpriseId: LedgerIdSchema,
+        })
+        .strict(),
+    ),
+    allowances: z.array(
+      z
+        .object({
+          id: LedgerIdSchema,
+          sourceId: LedgerIdSchema,
+          kind: z.enum([
+            'working_capital',
+            'liability_reserve',
+            'required_capital',
+            'productive_investment',
+          ]),
+          addition: MoneySchema,
+          target: MoneySchema,
+          existingDedicated: MoneySchema,
+          insuranceGrantsOtherFinance: MoneySchema,
+          deadline: DateSchema,
+          originalDeadline: DateSchema,
+          documented: z.boolean(),
+          verified: z.boolean(),
+          restricted: z.boolean(),
+          legallyRequiredLonger: z.boolean(),
+          legalRequiredAmount: MoneySchema,
+        })
+        .strict(),
+    ),
+  })
+  .strict();
 export const RatioSchema = z
   .object({ numerator: z.number().int().nonnegative(), denominator: z.number().int().positive() })
   .strict();
