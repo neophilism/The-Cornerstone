@@ -1,0 +1,18 @@
+services:
+  postgres:
+    image: postgis/postgis:18-3.6
+    environment:
+      POSTGRES_DB: cornerstone
+      POSTGRES_USER: cornerstone_migration
+      POSTGRES_PASSWORD: ${LOCAL_DATABASE_PASSWORD:?Set a unique local-only password}
+    ports:
+      - '127.0.0.1:5432:5432'
+    volumes:
+      - cornerstone_pg:/var/lib/postgresql
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U cornerstone_migration -d cornerstone']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+volumes:
+  cornerstone_pg:

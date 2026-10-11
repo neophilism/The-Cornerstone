@@ -1,0 +1,15 @@
+# Synthetic evidence preparation
+
+Migration 007 supports a bounded plain-text development adapter. Explicitly set EVIDENCE_STORAGE_PROVIDER=synthetic-postgres in isolated simulation. Default configuration disables uploads; protected production intake remains closed. No cloud object-storage, antivirus, external custody or legal-acceptance provider is connected.
+
+An owner or a delegate with attachment scope can add an invented UTF-8 .txt file to an ordinary draft. Maximum size is 256 KiB, with ten attachments per record. State, source description, optional source URL/date, byte count and a hash of the supplied bytes are preserved. URLs are recorded without server fetching. No identity, source credibility, factual injury or eligibility finding follows from an upload.
+
+Upload creates a quarantined object and immutable encrypted body, updates the record version and selected evidence IDs, and commits a receipt, audit and activity event atomically. Metadata and body use the synthetic server-field encryption adapter with separate record/object bindings. It is server-decryptable encryption at rest, not E2EE. Paths are opaque identifiers; user filenames cannot select filesystem paths or inject response headers. SQL RLS independently checks record/realm access.
+
+The uploader or record owner can explicitly validate an attachment while it remains a draft. The bounded check verifies stored cryptographic integrity, strict UTF-8 encoding and permitted text controls. It does not execute markup, inspect external content or perform a malware scan. Validated text becomes available for permission-checked attachment download. Invalid text is rejected; quarantined or rejected files cannot be downloaded. Every view reports securityScan=not_performed and legalAcceptance=false. The internal clean state means only this synthetic text check.
+
+Drafts can be saved before attachments exist. Submission of a workflow with an evidence list, and actions requiring evidence findings, require a nonempty, unique list of validated items attached to that record. Integrity is checked again before those actions. Typed or invented UUIDs cannot substitute for available evidence. Saving a draft may change which existing attachments are cited; it does not erase immutable bodies or histories.
+
+Read-only delegates can inspect and download available attachments, but cannot upload or validate them. Revocation, expiry and conflict rules remove future access to attachments as well as records. Download responses force a text attachment, prevent MIME sniffing and use no-store. Both private website proxies bound request bodies to two MiB before forwarding them.
+
+This slice provides preparation and development verification. General document types, real quarantine/scanning workers, independently approved object custody, recipient encryption, review endpoints, legal holds, retention/erasure procedures and operational recovery remain protected-release requirements. See SECURITY_SCOPE.md. PostgreSQL integration, browser downloads, negative permission paths and rendering evidence are tracked in PROGRESS.md.

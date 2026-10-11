@@ -1,0 +1,46 @@
+{
+  "name": "cornerstone",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@11.25.0",
+  "engines": {
+    "node": ">=24.13 <25"
+  },
+  "scripts": {
+    "dev": "pnpm build:packages && node --env-file-if-exists=.env scripts/dev.mjs",
+    "build:packages": "pnpm -r --filter './packages/*' build",
+    "build": "pnpm build:packages && pnpm -r --filter './apps/*' build",
+    "typecheck": "pnpm build:packages && pnpm -r typecheck",
+    "test": "pnpm build:packages && vitest run",
+    "test:db": "node --import tsx tests/database.integration.ts",
+    "test:e2e": "playwright test",
+    "test:private": "playwright test --config playwright.private.config.ts",
+    "check:boundaries": "node scripts/check-boundaries.mjs",
+    "check:secrets": "node scripts/check-secrets.mjs",
+    "format": "prettier --write apps packages infra scripts tests docs .github *.json *.yaml *.md *.ts",
+    "format:check": "prettier --check apps packages infra scripts tests docs .github *.json *.yaml *.md *.ts",
+    "db:migrate": "node --env-file-if-exists=.env --import tsx scripts/migrate.ts",
+    "db:seed:simulation": "node --env-file-if-exists=.env --import tsx scripts/seed-simulation.ts"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.62.1",
+    "@types/node": "24.10.1",
+    "@types/pg": "8.15.6",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.2.2",
+    "prettier": "3.8.3",
+    "tsx": "4.21.0",
+    "typescript": "5.9.3",
+    "vitest": "5.0.3",
+    "pg": "8.23.1",
+    "@axe-core/playwright": "4.13.0",
+    "@cornerstone/contracts": "workspace:*",
+    "@cornerstone/domain": "workspace:*",
+    "@cornerstone/finance": "workspace:*",
+    "@cornerstone/matching": "workspace:*",
+    "@cornerstone/policy": "workspace:*",
+    "@cornerstone/security": "workspace:*",
+    "@cornerstone/store": "workspace:*"
+  },
+  "type": "module"
+}

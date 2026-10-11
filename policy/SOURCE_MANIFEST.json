@@ -1,0 +1,60 @@
+{
+  "prepared": "2026-10-10",
+  "status": "planning baseline; no certification or enacted authority inferred",
+  "sources": [
+    {
+      "path": "policy/Speech.srt",
+      "original_filename": "The Cornerstone(1).srt",
+      "role": "supporting explanation",
+      "bytes": 10007,
+      "sha256": "5c2492ac6b164ba1af597594348c5559c3c0e3f9802806d5b16c870b10b500ce"
+    },
+    {
+      "path": "policy/Policy_Paper.docx",
+      "original_filename": "The Cornerstone - Policy Paper(3).docx",
+      "role": "controlling design source",
+      "bytes": 2202955,
+      "sha256": "7906b4a6eb526074978e19e0757c2552511a3d8818ea42050892671bcb879627"
+    },
+    {
+      "path": "policy/Design_Commentary.docx",
+      "original_filename": "The Cornerstone - Design Commentary(1)(1).docx",
+      "role": "controlling design source",
+      "bytes": 2201213,
+      "sha256": "3fbfda34fb41fdac25cb7a30e6517827199efcd2cb103f21b77d6a3daa4cf6e3"
+    },
+    {
+      "path": "policy/Displacement_Event_Census.docx",
+      "original_filename": "Cornerstone Displacement Event Census(2)(1).docx",
+      "role": "research evidence only",
+      "bytes": 98577,
+      "sha256": "45eda31b23c0c7201b3d880705960a3f855db63706c1f8ba4b77c3fccc2c4ecc"
+    },
+    {
+      "path": "policy/Event_Evidence.xlsx",
+      "original_filename": "Cornerstone Event Evidence(2)(1).xlsx",
+      "role": "research evidence only; six workbook sheets",
+      "bytes": 134769,
+      "sha256": "967e3346d8685cfbe74363202b062a88b757664acb49eb8a1b43b10acae68a1f"
+    },
+    {
+      "path": "policy/Federal_Cornerstone_Bill.docx",
+      "original_filename": "Federal_Cornerstone_Bill.docx",
+      "role": "proposed federal workflow baseline; not enacted law",
+      "bytes": 50748,
+      "sha256": "3207269d4740cef865035f4a7cb1450242cf367ba15d7eec14499889514d939b"
+    },
+    {
+      "path": "policy/Model_State_Cornerstone_Enabling_Act.docx",
+      "original_filename": "Model_State_Cornerstone_Enabling_Act.docx",
+      "role": "proposed state workflow baseline; not enacted law",
+      "bytes": 48708,
+      "sha256": "5e4232f6d8bb235ad539ce3f0243fdc992817fb1e8148ef0b24762de885f83bb"
+    }
+  ],
+  "publication": {
+    "approved": "2026-10-11",
+    "scope": "five supplied sources and paired draft acts",
+    "status": "public originals; research is not certification; acts are proposals"
+  }
+}

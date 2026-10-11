@@ -1,0 +1,22 @@
+{
+  "name": "@cornerstone/web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "build": "next build --webpack",
+    "start": "next start -H 0.0.0.0 -p ${PORT:-3000}",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "16.4.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "@cornerstone/ui": "workspace:*",
+    "@cornerstone/i18n": "workspace:*",
+    "@cornerstone/content": "workspace:*",
+    "@cornerstone/contracts": "workspace:*",
+    "@cornerstone/domain": "workspace:*"
+  }
+}

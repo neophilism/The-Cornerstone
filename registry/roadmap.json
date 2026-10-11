@@ -5,6 +5,13 @@
   "planVerified": false,
   "plannedPrCount": 0,
   "milestones": [],
-  "verificationNeeded": "Only a .gitignore is committed; no original Cornerstone development plan exists in the repository.",
-  "sourceFiles": []
+  "verificationNeeded": "The full earlier internal development plan remains private pending separate publication approval. Do not assert its PR count or completeness. Public implementation and actual verification evidence are documented separately.",
+  "sourceFiles": [],
+  "implementation": {
+    "status": "working initial release; full program unfinished",
+    "progressFile": "docs/PROGRESS.md",
+    "verifiedFunctionalCommit": "a0da54a50908333bb601d7557b1262f16d484faf",
+    "verificationRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/38125509319",
+    "publicWebsite": "https://cornerstone-policy-preview.onrender.com/"
+  }
 }

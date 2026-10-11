@@ -1,0 +1,15 @@
+# Implementation progress
+
+Updated October 11, 2026. The full program is unfinished. The earlier internal planning package remains private pending separate publication approval. The unverified canonical roadmap marker in registry/roadmap.json does not imply an empty implementation or assert a total planned-PR count.
+
+Last verified functional commit: a0da54a50908333bb601d7557b1262f16d484faf. All three jobs passed in [Actions run 38125509319](https://github.com/neophilism/The-Cornerstone/actions/runs/38125509319): 46 unit tests, 36 public and 12 private browser checks, actual PostgreSQL record/worker/session/delegation/evidence tests, production builds and exact-commit Render verification. Desktop and mobile activity, account, sharing and evidence views were inspected. PR #1 reconciles the implementation with the existing main-branch roadmap marker; no independent security approval is claimed.
+
+The public website explains the policy, provides a starting guide and help, and offers research search, chronology and evidence pages. Seven approved source originals are downloadable and byte-verified. All six workbook sheets and 231 census IDs reconcile. Research entries never supply an event or individual finding, and the register remains open to unlisted events.
+
+Private development includes versioned synthetic drafts, receipts and exports; assigned support; role/RLS denial; bounded finance and deterministic matching; a restricted durable activity worker; calendar helpers; self-service session revocation; and bounded owner-managed draft access. Synthetic text attachments use encrypted immutable bodies, quarantine, format validation, provenance and scoped byte-preserving download. Evidence-bearing submission and findings reject empty, unavailable, duplicate or corrupt attachment references. Format validation is not an antivirus scan, credibility finding or legal acceptance.
+
+Seven additive migrations are applied and checksummed on the Neon development branch only. The supplied production branch has not been migrated. The public Render service has no private database credentials.
+
+Consent-based membership, private member voting, complete guided finance and additional full journeys remain in development. Protected identity/encryption/recovery, actual document custody, independent ranking custodians, legal notices, Treasury and external authority integrations remain separate prerequisites. Real private intake, legal action, payment execution and real rankings remain disabled.
+
+Branch protection, independent reviews, signed release provenance, Render project/environment assignment and owner retirement of the unused privileged Neon development role remain open. A successful CI run is verification evidence, not a statutory authorization or independent security assessment.

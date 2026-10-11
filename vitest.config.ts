@@ -1,0 +1,9 @@
+import { defineConfig } from 'vitest/config';
+export default defineConfig({
+  test: {
+    include: ['tests/**/*.test.ts', 'packages/**/*.test.ts'],
+    testTimeout: 10000,
+    pool: 'forks',
+    maxWorkers: 2,
+  },
+});

@@ -1,0 +1,16 @@
+{
+  "researchEvents": 231,
+  "censusIDsReconciled": true,
+  "sheets": {
+    "Event evidence": 231,
+    "Citation audit": 231,
+    "Workforce evidence": 128,
+    "Worksites": 120,
+    "Method": 17,
+    "Coverage audit": 37
+  },
+  "sourceHashesVerified": 7,
+  "certificationsCreated": 0,
+  "citationsReverifiedByImport": false,
+  "geocodingPerformed": false
+}

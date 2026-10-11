@@ -1,0 +1,33 @@
+{
+  "name": "@cornerstone/api",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch --import tsx src/main.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/main.js",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@cornerstone/contracts": "workspace:*",
+    "@cornerstone/domain": "workspace:*",
+    "@cornerstone/policy": "workspace:*",
+    "@cornerstone/security": "workspace:*",
+    "@cornerstone/store": "workspace:*",
+    "@cornerstone/finance": "workspace:*",
+    "@cornerstone/matching": "workspace:*",
+    "@cornerstone/content": "workspace:*",
+    "@nestjs/core": "12.1.2",
+    "@nestjs/common": "12.1.2",
+    "@nestjs/platform-express": "12.1.2",
+    "reflect-metadata": "0.2.2",
+    "rxjs": "7.8.2",
+    "openid-client": "6.8.8",
+    "helmet": "8.3.0",
+    "cookie": "2.0.1"
+  },
+  "devDependencies": {
+    "@types/express": "5.0.6"
+  }
+}
