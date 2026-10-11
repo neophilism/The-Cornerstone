@@ -22,6 +22,7 @@ const env = {
 };
 // Never propagate owner credentials into an application process.
 delete env['MIGRATION_DATABASE_URL'];
+delete env['WORKER_DATABASE_URL'];
 const commands = [
   ['node', ['apps/api/dist/main.js'], { NODE_ENV: 'development', PORT: '4010' }],
   [
@@ -55,9 +56,36 @@ const commands = [
     { NODE_ENV: 'production' },
   ],
 ];
-const children = commands.map(([command, args, overrides]) =>
-  spawn(command, args, { stdio: 'inherit', env: { ...env, ...overrides } }),
+const uiEnv = Object.fromEntries(
+  [
+    'PATH',
+    'API_INTERNAL_URL',
+    'PORTAL_ORIGIN',
+    'STAFF_ORIGIN',
+    'PUBLIC_ORIGIN',
+    'INTERNAL_API_KEY',
+    'NEXT_TELEMETRY_DISABLED',
+  ]
+    .filter((k) => env[k])
+    .map((k) => [k, env[k]]),
 );
+const children = commands.map(([command, args, overrides], index) =>
+  spawn(command, args, { stdio: 'inherit', env: { ...(index === 0 ? env : uiEnv), ...overrides } }),
+);
+if (process.env['WORKER_DATABASE_URL'])
+  children.push(
+    spawn('node', ['apps/worker/dist/main.js'], {
+      stdio: 'inherit',
+      env: {
+        PATH: process.env['PATH'],
+        NODE_ENV: 'development',
+        CORNERSTONE_MODE: 'simulation',
+        DATA_REALM: 'simulation',
+        WORKER_DATABASE_URL: process.env['WORKER_DATABASE_URL'],
+        NOTIFICATION_PROVIDER: 'in-app',
+      },
+    }),
+  );
 let stopping = false;
 function stop() {
   if (stopping) return;

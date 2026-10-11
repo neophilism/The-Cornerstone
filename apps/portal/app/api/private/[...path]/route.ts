@@ -6,6 +6,8 @@ const allowed = new Set([
   'workflows',
   'records',
   'commands',
+  'notifications',
+  'notifications/read',
   'auth/local',
   'auth/logout',
   'auth/start',

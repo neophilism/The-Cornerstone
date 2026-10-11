@@ -1,5 +1,10 @@
 import pg from 'pg';
-import type { Actor, CaseRecord, Receipt } from '@cornerstone/contracts';
+import {
+  ActivityNotificationSchema,
+  type Actor,
+  type CaseRecord,
+  type Receipt,
+} from '@cornerstone/contracts';
 import { encrypt, decrypt, digest, type Envelope } from '@cornerstone/security';
 import { randomUUID } from 'node:crypto';
 
@@ -287,5 +292,35 @@ export class Store {
   }
   async close() {
     await this.pool.end();
+  }
+  async notifications(actor: Actor) {
+    return this.transaction(actor, async (tx) => {
+      const r = await tx.query(
+        'SELECT * FROM activity_notifications ORDER BY created_at DESC,id LIMIT 100',
+      );
+      return r.rows.map((n) =>
+        ActivityNotificationSchema.parse({
+          id: n.id,
+          recordId: n.record_id,
+          receiptId: n.receipt_id,
+          version: n.record_version,
+          action: n.action,
+          createdAt: n.created_at.toISOString(),
+          readAt: n.read_at?.toISOString() ?? null,
+          classification: 'activity',
+          channel: 'in_app',
+          legalService: false,
+          realm: n.realm,
+        }),
+      );
+    });
+  }
+  async markActivityRead(actor: Actor, ids: string[]) {
+    return this.transaction(actor, async (tx) => {
+      await tx.query(
+        'UPDATE activity_notifications SET read_at=COALESCE(read_at,now()) WHERE id=ANY($1::uuid[])',
+        [ids],
+      );
+    });
   }
 }

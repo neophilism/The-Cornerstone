@@ -17,6 +17,19 @@ try {
     );
     console.log('Created restricted synthetic runtime role.');
   } else console.log('Runtime role already exists; credentials and privileges were not changed.');
+  if (process.env['WORKER_DATABASE_URL']) {
+    const worker = new URL(process.env['WORKER_DATABASE_URL']);
+    if (worker.username !== 'cornerstone_worker' || !worker.password)
+      throw Error('A separately authenticated cornerstone_worker role is required.');
+    const existing = await client.query(
+      "SELECT 1 FROM pg_roles WHERE rolname='cornerstone_worker'",
+    );
+    if (!existing.rowCount)
+      await client.query(
+        'CREATE ROLE cornerstone_worker LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOBYPASSRLS PASSWORD ' +
+          client.escapeLiteral(decodeURIComponent(worker.password)),
+      );
+  }
 } finally {
   await client.end();
 }

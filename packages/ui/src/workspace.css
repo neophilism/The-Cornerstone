@@ -362,3 +362,20 @@
     padding: 20px;
   }
 }
+
+.activity-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 18px;
+  margin-top: 26px;
+}
+.activity-card {
+  background: var(--white);
+  border: 1px solid var(--line);
+  padding: 24px;
+  border-radius: 12px;
+}
+.activity-card h2 {
+  font-size: 28px;
+}

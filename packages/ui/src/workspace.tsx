@@ -1,6 +1,13 @@
 'use client';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import type { Actor, CaseRecord, Kind, Receipt } from '@cornerstone/contracts';
+import {
+  ActivityNotificationSchema,
+  type ActivityNotification,
+  type Actor,
+  type CaseRecord,
+  type Kind,
+  type Receipt,
+} from '@cornerstone/contracts';
 import { workflows, workflowGroups, workflow, type Field } from '@cornerstone/domain';
 import { StructuredField, listFields } from './structured-field.js';
 
@@ -126,6 +133,7 @@ export function Workspace({
 }) {
   const [session, setSession] = useState<Session | null>(null),
     [records, setRecords] = useState<CaseRecord[]>([]),
+    [notifications, setNotifications] = useState<ActivityNotification[]>([]),
     [view, setView] = useState<string>('home'),
     [selected, setSelected] = useState<CaseRecord | null>(null),
     [editing, setEditing] = useState(false),
@@ -161,6 +169,7 @@ export function Workspace({
       if (response.status === 401) {
         setSession(null);
         setRecords([]);
+        setNotifications([]);
         setSelected(null);
         setReceipt(null);
       }
@@ -174,6 +183,8 @@ export function Workspace({
       setSession(me);
       const list = await api('records');
       setRecords(list.records);
+      const inbox = await api('notifications');
+      setNotifications(ActivityNotificationSchema.array().parse(inbox.notifications));
       return list.records as CaseRecord[];
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Unavailable');
@@ -204,6 +215,7 @@ export function Workspace({
       setCreating(null);
       setReceipt(null);
       setEditing(false);
+      setNotifications([]);
       retries.current.clear();
       await refresh();
     } catch (e) {
@@ -393,6 +405,20 @@ export function Workspace({
             >
               My records
             </a>
+            <a
+              href="#workspace"
+              aria-current={view === 'activity' ? 'page' : undefined}
+              onClick={() => {
+                setView('activity');
+                setSelected(null);
+                setCreating(null);
+              }}
+            >
+              Activity
+              {notifications.some((n) => !n.readAt)
+                ? ` (${notifications.filter((n) => !n.readAt).length} unread)`
+                : ''}
+            </a>
           </nav>
         </aside>
         <section className="workspace-main" id="workspace">
@@ -407,6 +433,7 @@ export function Workspace({
                   await api('auth/logout', {});
                   setSession(null);
                   setRecords([]);
+                  setNotifications([]);
                   setSelected(null);
                   setCreating(null);
                   setReceipt(null);
@@ -424,6 +451,91 @@ export function Workspace({
               {error}
             </p>
           ) : null}
+          {view === 'activity' && !selected && !creating && (
+            <section className="activity-inbox">
+              <p className="eyebrow">Your workspace</p>
+              <h1>Activity updates.</h1>
+              <p className="muted">
+                These updates report record changes. They are not legal service and do not start a
+                legal response deadline.
+              </p>
+              <button
+                className="button button-secondary"
+                disabled={pending}
+                onClick={() => void refresh()}
+              >
+                Refresh updates
+              </button>
+              {notifications.length ? (
+                <ol className="activity-list">
+                  {notifications.map((n) => {
+                    const record = records.find((r) => r.id === n.recordId);
+                    const label =
+                      n.action === 'create'
+                        ? 'Draft saved'
+                        : n.action === 'save_draft'
+                          ? 'Draft changes saved'
+                          : record
+                            ? workflow(record.kind).actions.find((a) => a.key === n.action)?.label
+                            : null;
+                    return (
+                      <li className="activity-card" key={n.id}>
+                        <p className="eyebrow">{n.readAt ? 'Read' : 'Unread'} · simulation</p>
+                        <h2>{record?.title || 'Record update'}</h2>
+                        <p>
+                          {label || 'Record changed'} · version {n.version}
+                        </p>
+                        <p className="hint">{new Date(n.createdAt).toLocaleString()}</p>
+                        <div className="record-actions">
+                          <button
+                            className="button button-secondary"
+                            disabled={!record}
+                            onClick={() => {
+                              if (record) {
+                                setSelected(record);
+                                setView('records');
+                              }
+                            }}
+                          >
+                            Open record
+                          </button>
+                          {!n.readAt && (
+                            <button
+                              className="quiet-button"
+                              disabled={pending}
+                              onClick={async () => {
+                                setPending(true);
+                                setError('');
+                                try {
+                                  await api('notifications/read', { ids: [n.id] });
+                                  await refresh();
+                                } catch (e) {
+                                  setError(
+                                    e instanceof Error
+                                      ? e.message
+                                      : 'Update could not be marked read.',
+                                  );
+                                } finally {
+                                  setPending(false);
+                                }
+                              }}
+                            >
+                              Mark read
+                            </button>
+                          )}
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ol>
+              ) : (
+                <div className="info-card">
+                  <h2>No activity updates yet.</h2>
+                  <p>Your records and their version history remain available.</p>
+                </div>
+              )}
+            </section>
+          )}
           {receipt ? (
             <div className="receipt" role="status">
               <strong>Simulation receipt · version {receipt.version}</strong>
@@ -568,7 +680,7 @@ export function Workspace({
                 </pre>
               </details>
             </>
-          ) : (
+          ) : view === 'activity' ? null : (
             <>
               <div className="workspace-heading">
                 <div>

@@ -8,7 +8,12 @@ import { parseCookie, stringifySetCookie } from 'cookie';
 import * as oidc from 'openid-client';
 import { randomUUID } from 'node:crypto';
 import type { Request, Response, NextFunction } from 'express';
-import { ActorSchema, ModeSchema, RealmSchema } from '@cornerstone/contracts';
+import {
+  ActorSchema,
+  ModeSchema,
+  RealmSchema,
+  MarkActivityReadSchema,
+} from '@cornerstone/contracts';
 import { DomainError, workflows } from '@cornerstone/domain';
 import {
   readKey,
@@ -86,17 +91,32 @@ http.use((req: Request, res: Response, next: NextFunction) => {
     return res
       .status(403)
       .json({ code: 'ORIGIN_REQUIRED', message: 'Submit from the approved website origin.' });
-  if (counts.size > 10000) for (const [k, v] of counts) if (v.until < Date.now()) counts.delete(k);
-  const key = req.ip || 'unknown';
-  let count = counts.get(key);
-  if (!count || count.until < Date.now()) {
-    count = { count: 0, until: Date.now() + 60000 };
-    counts.set(key, count);
-  }
-  if (++count.count > 120)
+  const now = Date.now();
+  const consume = (key: string, limit: number) => {
+    let count = counts.get(key);
+    if (!count || count.until < now) {
+      if (counts.size >= 10000) for (const [k, v] of counts) if (v.until < now) counts.delete(k);
+      if (!count && counts.size >= 10000) return false;
+      count = { count: 0, until: now + 60000 };
+      counts.set(key, count);
+    }
+    return ++count.count <= limit;
+  };
+  const ip = req.ip || 'unknown';
+  const token = parseCookie(req.headers.cookie || '')[
+    production ? '__Host-cornerstone-session' : 'cornerstone-session'
+  ];
+  // The BFF shares an address. Bound total traffic and each opaque session separately;
+  // an invented token never bypasses the address ceiling or normal authentication.
+  if (
+    !consume(`address:${ip}`, 600) ||
+    !consume(token ? `session:${digest(token)}` : `anonymous:${ip}`, 120)
+  ) {
+    res.setHeader('Retry-After', '60');
     return res
       .status(429)
       .json({ code: 'RATE_LIMIT', message: 'Too many requests. Wait a minute and retry.' });
+  }
   next();
 });
 const cookieName = production ? '__Host-cornerstone-session' : 'cornerstone-session',
@@ -192,6 +212,21 @@ route('get', '/workflows', async (req, res) => {
 route('get', '/records', async (req, res) =>
   res.json({ records: await requireStore().list(await actor(req)) }),
 );
+route('get', '/notifications', async (req, res) =>
+  res.json({ notifications: await requireStore().notifications(await actor(req)) }),
+);
+route('post', '/notifications/read', async (req, res) => {
+  const a = await actor(req, true);
+  if (mode !== 'simulation' || realm !== 'simulation')
+    throw new DomainError(
+      'INTAKE_DISABLED',
+      'Activity updates are limited to synthetic development.',
+      503,
+    );
+  const input = MarkActivityReadSchema.parse(req.body);
+  await requireStore().markActivityRead(a, input.ids);
+  res.json({ read: true, legalService: false });
+});
 route('post', '/records', async (req, res) => {
   const a = await actor(req, true);
   if (!service)

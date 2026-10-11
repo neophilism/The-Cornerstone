@@ -63,6 +63,7 @@ test('a private draft survives editing and reloading, with versioned receipts', 
   await expect(page.getByText('Simulation receipt · version 3', { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Edit draft', exact: true })).toHaveCount(0);
   await accessible(page);
+  await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({
     path: `test-results/private-dossier-${info.project.name}.png`,
     fullPage: true,
@@ -70,6 +71,33 @@ test('a private draft survives editing and reloading, with versioned receipts', 
   const download = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Download receipt', exact: true }).click();
   expect((await download).suggestedFilename()).toBe('cornerstone-simulation-receipt.json');
+  await page.getByRole('button', { name: /^Activity/ }).click();
+  await expect(page.getByRole('heading', { name: 'Activity updates.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Start a new record', exact: true })).toHaveCount(
+    0,
+  );
+  await expect(async () => {
+    await page.getByRole('button', { name: 'Refresh updates', exact: true }).click();
+    await expect(page.locator('.activity-card').filter({ hasText: title })).not.toHaveCount(0);
+  }).toPass({ timeout: 10000 });
+  const update = page.locator('.activity-card').filter({ hasText: title }).first();
+  await update.getByRole('button', { name: 'Mark read', exact: true }).click();
+  await expect(update.getByText('Read · simulation', { exact: true })).toBeVisible();
+  await accessible(page);
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.screenshot({
+    path: `test-results/private-activity-${info.project.name}.png`,
+    fullPage: true,
+  });
+  await page.reload();
+  await page.getByRole('button', { name: /^Activity/ }).click();
+  await expect(
+    page
+      .locator('.activity-card')
+      .filter({ hasText: title })
+      .first()
+      .getByText('Read · simulation', { exact: true }),
+  ).toBeVisible();
   expect(await page.evaluate(() => localStorage.length)).toBe(0);
   await page.getByRole('button', { name: 'Sign out', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Your private workspace.' })).toBeVisible();
@@ -101,6 +129,7 @@ test('assigned support can answer a request and the participant can see the pers
   await page.getByRole('button', { name: 'Provide a response', exact: true }).click();
   await expect(page.getByText('Simulation receipt · version 3', { exact: true })).toBeVisible();
   await accessible(page);
+  await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({
     path: `test-results/private-support-${info.project.name}.png`,
     fullPage: true,

@@ -1,16 +1,10 @@
 import type { CaseRecord, Kind, Role } from '@cornerstone/contracts';
+import { DomainError } from './errors.js';
+import { addCalendarDays as ruleDays, anniversary as ruleAnniversary } from './calendar.js';
+export { DomainError } from './errors.js';
+export { localDate, deadlineDate } from './calendar.js';
 export { workflows, workflow, parseFields, validateAction, workflowGroups } from './workflows.js';
 
-export class DomainError extends Error {
-  constructor(
-    public readonly code: string,
-    message: string,
-    public readonly status = 422,
-  ) {
-    super(message);
-    this.name = 'DomainError';
-  }
-}
 export function requireCondition(value: unknown, code: string, message: string): asserts value {
   if (!value) throw new DomainError(code, message);
 }
@@ -140,27 +134,14 @@ export function assertTransition(record: CaseRecord, action: Pick<ActionDefiniti
   );
 }
 export function addCalendarDays(date: string, days: number): string {
-  const d = new Date(`${date}T00:00:00Z`);
-  requireCondition(
-    !Number.isNaN(d.valueOf()) && d.toISOString().slice(0, 10) === date && Number.isInteger(days),
-    'INVALID_DATE',
-    'A valid legal date and day count are required.',
-  );
-  d.setUTCDate(d.getUTCDate() + days);
-  return d.toISOString().slice(0, 10);
+  return ruleDays(date, days);
 }
-export function anniversary(date: string, years: number): string {
-  const d = new Date(`${date}T00:00:00Z`);
-  const y = d.getUTCFullYear() + years;
-  requireCondition(
-    !Number.isNaN(d.valueOf()) && d.toISOString().slice(0, 10) === date && Number.isInteger(years),
-    'INVALID_DATE',
-    'A valid calendar date and whole year count are required.',
-  );
-  const m = d.getUTCMonth();
-  const day = d.getUTCDate();
-  const last = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
-  return new Date(Date.UTC(y, m, Math.min(day, last))).toISOString().slice(0, 10);
+export function anniversary(
+  date: string,
+  years: number,
+  leapRule: 'february-28' | 'march-1' = 'february-28',
+): string {
+  return ruleAnniversary(date, years, leapRule);
 }
 export function renewal(input: {
   effectiveDate: string;

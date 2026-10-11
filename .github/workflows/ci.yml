@@ -63,6 +63,7 @@ jobs:
     env:
       MIGRATION_DATABASE_URL: postgresql://cornerstone_migration:synthetic_ci_only@localhost:5432/cornerstone_test
       DATABASE_URL: postgresql://cornerstone_runtime:synthetic_ci_runtime_only@localhost:5432/cornerstone_test
+      WORKER_DATABASE_URL: postgresql://cornerstone_worker:synthetic_ci_worker_only@localhost:5432/cornerstone_test
       DATA_REALM: simulation
       CORNERSTONE_MODE: simulation
       NODE_ENV: development
@@ -79,7 +80,8 @@ jobs:
       - run: pnpm db:migrate
       - run: pnpm db:seed:simulation
       - run: pnpm test:db
-      - run: pnpm -r --filter @cornerstone/api --filter @cornerstone/portal --filter @cornerstone/staff build
+      - run: node --import tsx tests/activity.integration.ts
+      - run: pnpm -r --filter @cornerstone/api --filter @cornerstone/portal --filter @cornerstone/staff --filter @cornerstone/worker build
         env:
           NODE_ENV: production
       - run: pnpm exec playwright install --with-deps chromium

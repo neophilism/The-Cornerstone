@@ -25,6 +25,23 @@ export const RoleSchema = z.enum([
 export type Role = z.infer<typeof RoleSchema>;
 export const IdSchema = z.string().uuid();
 export const InstantSchema = z.string().datetime({ offset: true });
+export const ActivityNotificationSchema = z
+  .object({
+    id: IdSchema,
+    recordId: IdSchema,
+    receiptId: IdSchema,
+    version: z.number().int().positive(),
+    action: z.string().regex(/^[a-z][a-z0-9_]{0,99}$/),
+    createdAt: InstantSchema,
+    readAt: InstantSchema.nullable(),
+    classification: z.literal('activity'),
+    channel: z.literal('in_app'),
+    legalService: z.literal(false),
+    realm: z.literal('simulation'),
+  })
+  .strict();
+export type ActivityNotification = z.infer<typeof ActivityNotificationSchema>;
+export const MarkActivityReadSchema = z.object({ ids: z.array(IdSchema).min(1).max(100) }).strict();
 export const DateSchema = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/)
