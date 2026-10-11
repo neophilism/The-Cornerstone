@@ -165,3 +165,5 @@ export function renewal(input: {
     return { state: 'nonrenewal_review', end: initialEnd };
   return { state: 'renewed', end: finalEnd }; // A missed agency review does not prevent renewal.
 }
+
+export { actionUnavailable } from './availability.js';

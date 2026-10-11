@@ -11,7 +11,13 @@ import {
   type Kind,
   type Receipt,
 } from '@cornerstone/contracts';
-import { workflows, workflowGroups, workflow, type Field } from '@cornerstone/domain';
+import {
+  workflows,
+  workflowGroups,
+  workflow,
+  actionUnavailable,
+  type Field,
+} from '@cornerstone/domain';
 import { StructuredField, listFields } from './structured-field.js';
 import { AccountPanel } from './account.js';
 import { DraftAccessPanel } from './draft-access.js';
@@ -947,6 +953,25 @@ export function Workspace({
                       !(selected.kind === 'resolution' && a.key === 'record_vote'),
                   )
                   .map((a) => {
+                    const unavailable = actionUnavailable(selected.kind, a.key);
+                    if (unavailable)
+                      return (
+                        <section
+                          className="action-panel"
+                          key={a.key}
+                          aria-labelledby={`unavailable-${a.key}`}
+                        >
+                          <h2 id={`unavailable-${a.key}`}>{a.label}</h2>
+                          <p>
+                            <strong>Not available in this release</strong>
+                          </p>
+                          <p>{unavailable.message}</p>
+                          <p className="hint">
+                            You can keep preparing this synthetic record. This action cannot be
+                            submitted, and no completed action or external acceptance is recorded.
+                          </p>
+                        </section>
+                      );
                     const form = (
                       <form
                         key={`${a.key}:${selected.version}`}

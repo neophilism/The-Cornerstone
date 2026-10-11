@@ -8,6 +8,7 @@ import {
 } from '@cornerstone/contracts';
 import {
   workflow,
+  actionUnavailable,
   parseFields,
   validateAction,
   assertTransition,
@@ -164,6 +165,8 @@ export class ProgramService {
           jurisdiction: record.jurisdiction,
           policyVersion: record.policyVersion,
         });
+      const unavailable = actionUnavailable(record.kind, a.key);
+      if (unavailable) throw new DomainError(unavailable.code, unavailable.message, 503);
       const input = parseFields(a.fields, command.input);
       const retained = { ...record.data };
       if (a.key === 'save_draft') for (const field of wf.createFields) delete retained[field.key];
@@ -491,34 +494,6 @@ export class ProgramService {
       };
       d['calculation'] = calculateWireSchedule(wire);
     }
-    // Protected adapters are intentionally unavailable. Never convert a request into a fake external receipt.
-    if (
-      ['sealed_ranking', 'draw', 'round'].includes(r.kind) &&
-      ['seal', 'replace', 'publish', 'open', 'close', 'compute'].includes(k)
-    )
-      throw new DomainError(
-        'CUSTODY_REVIEW_REQUIRED',
-        'Independently reviewed ranking custody and witnessed draw providers are not installed.',
-        503,
-      );
-    if (r.kind === 'match' && k === 'accept')
-      throw new DomainError(
-        'EXCHANGE_RESULT_REQUIRED',
-        'A verified exchange result and unique active-match transaction are required.',
-        503,
-      );
-    if (k === 'confirm_transfer' || (r.kind === 'land_acquisition' && k === 'settle'))
-      throw new DomainError(
-        'TREASURY_ADAPTER_REQUIRED',
-        'An independently confirmed Treasury or settlement integration is not installed. No payment receipt has been issued.',
-        503,
-      );
-    if (r.kind === 'succession' && k === 'approve')
-      throw new DomainError(
-        'SUCCESSION_REVIEW_REQUIRED',
-        'The single-successor identity, grant and immutable unit transfer must be independently reviewed before activation.',
-        503,
-      );
     return d;
   }
 }
