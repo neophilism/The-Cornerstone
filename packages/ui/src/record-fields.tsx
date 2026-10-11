@@ -103,6 +103,9 @@ const referenceKinds: Record<string, string[]> = {
   resolutionId: ['resolution'],
   roundId: ['round'],
   matchId: ['match'],
+  fundId: ['fund_commitment'],
+  authorityId: ['state_authority'],
+  memberResolutionId: ['resolution'],
 };
 export function isRecordReference(key: string) {
   return key in referenceKinds || key === 'referenceId';

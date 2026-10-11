@@ -8,6 +8,7 @@ import {
   FractionSchema,
   InvestorRightsSchema,
   StateTermsSchema,
+  SurplusPreparationSchema,
 } from '@cornerstone/contracts';
 import {
   type Field,
@@ -1499,6 +1500,7 @@ export function parseFields(
       else if (field.key === 'receiptRate') out[field.key] = FractionSchema.parse(value);
       else if (field.key === 'investorRights') out[field.key] = InvestorRightsSchema.parse(value);
       else if (field.key === 'financialTerms') out[field.key] = StateTermsSchema.parse(value);
+      else if (field.key === 'schedule') out[field.key] = SurplusPreparationSchema.parse(value);
       else out[field.key] = value;
     } else {
       requireCondition(

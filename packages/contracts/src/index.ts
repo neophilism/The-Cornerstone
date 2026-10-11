@@ -394,6 +394,11 @@ export const SurplusScheduleSchema = z
     ),
   })
   .strict();
+export const SurplusPreparationSchema = SurplusScheduleSchema.omit({
+  enterpriseId: true,
+  year: true,
+  terms: true,
+});
 export const RatioSchema = z
   .object({ numerator: z.number().int().nonnegative(), denominator: z.number().int().positive() })
   .strict();
