@@ -1,0 +1,37 @@
+name: isolated-database-kit
+on:
+  push:
+    branches: [cornerstone/engineering-kit]
+    paths: [.github/workflows/database-kit.yml]
+permissions:
+  contents: read
+jobs:
+  runtime:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - name: Export test executables and their libraries, never data or credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          image=postgis/postgis:18-3.6
+          docker pull "$image"
+          id=$(docker create --entrypoint sleep "$image" infinity)
+          trap 'docker rm -f "$id" >/dev/null' EXIT
+          docker start "$id" >/dev/null
+          mkdir -p /tmp/database-kit
+          docker image inspect --format '{{index .RepoDigests 0}}' "$image" > /tmp/database-kit/IMAGE
+          docker exec "$id" cat /etc/os-release > /tmp/database-kit/OS
+          docker exec "$id" sh -c 'printf "%s\n" /usr/lib/postgresql/18 /usr/share/postgresql/18 /usr/share/proj; ldd /usr/lib/postgresql/18/bin/* /usr/lib/postgresql/18/lib/*.so 2>/dev/null | awk '\''$1 ~ /^\// {print $1} $2 == "=>" && $3 ~ /^\// {print $3}'\''' | sed 's,^/,,' | sort -u > /tmp/database-kit/FILES
+          ! grep -E '(^|/)(var|etc|home|root|data|pgdata)(/|$)' /tmp/database-kit/FILES
+          docker cp /tmp/database-kit/FILES "$id":/tmp/FILES
+          docker exec "$id" tar -h -C / -czf - -T /tmp/FILES > /tmp/database-kit/runtime.tar.gz
+          printf '%s\n' 'Disposable offline test runtime only. No database clusters, user records, credentials, configuration or production approval are included.' > /tmp/database-kit/SCOPE
+          cd /tmp/database-kit
+          sha256sum IMAGE OS FILES runtime.tar.gz SCOPE > SHA256SUMS
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: isolated-postgis-test-runtime
+          path: /tmp/database-kit/
+          retention-days: 1
+          if-no-files-found: error
