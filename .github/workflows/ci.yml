@@ -86,6 +86,7 @@ jobs:
       - run: node --import tsx tests/evidence.integration.ts
       - run: node --import tsx tests/membership.integration.ts
       - run: node --import tsx tests/association-scale.integration.ts
+      - run: node --import tsx tests/record-pages.integration.ts
       - run: pnpm -r --filter @cornerstone/api --filter @cornerstone/portal --filter @cornerstone/staff --filter @cornerstone/worker build
         env:
           NODE_ENV: production

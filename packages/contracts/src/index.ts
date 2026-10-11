@@ -25,6 +25,28 @@ export const RoleSchema = z.enum([
 export type Role = z.infer<typeof RoleSchema>;
 export const IdSchema = z.string().uuid();
 export const InstantSchema = z.string().datetime({ offset: true });
+export const RecordPageQuerySchema = z
+  .object({
+    limit: z.coerce.number().int().min(1).max(200).default(200),
+    cursor: z
+      .string()
+      .min(1)
+      .max(2048)
+      .regex(/^[A-Za-z0-9_-]+$/)
+      .optional(),
+  })
+  .strict();
+export const RecordQuerySchema = z.union([
+  z.object({ recordId: IdSchema }).strict(),
+  RecordPageQuerySchema,
+]);
+export const RecordCursorSchema = z
+  .object({
+    version: z.literal(1),
+    id: IdSchema,
+    updatedAt: InstantSchema,
+  })
+  .strict();
 export const WorkspaceSessionSchema = z
   .object({
     id: IdSchema,

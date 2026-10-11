@@ -10,6 +10,8 @@ Association development includes cross-event claim preservation and private pros
 
 Roster preparation now includes staged CSV import, duplicate checks, a paged editor and named accessible-claim selection. Five parser tests pass locally (51 unit tests total); its browser acceptance is pending. See ROSTER_PREPARATION.md.
 
+Private record browsing now has authenticated continuation pages, older-record loading and permission-checked reference lookup. Local unit/build verification passes; its database and browser acceptance is pending. See RECORD_BROWSING.md.
+
 The public website explains the policy, provides a starting guide and help, and offers research search, chronology and evidence pages. Seven approved source originals are downloadable and byte-verified. All six workbook sheets and 231 census IDs reconcile. Research entries never supply an event or individual finding, and the register remains open to unlisted events.
 
 Private development includes versioned synthetic drafts, receipts and exports; assigned support; role/RLS denial; bounded finance and deterministic matching; a restricted durable activity worker; calendar helpers; self-service session revocation; and bounded owner-managed draft access. Synthetic text attachments use encrypted immutable bodies, quarantine, format validation, provenance and scoped byte-preserving download. Evidence-bearing submission and findings reject empty, unavailable, duplicate or corrupt attachment references. Format validation is not an antivirus scan, credibility finding or legal acceptance.
