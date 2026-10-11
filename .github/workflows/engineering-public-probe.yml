@@ -1,0 +1,45 @@
+name: engineering-public-probe
+on:
+  push:
+    branches: [cornerstone/engineering-kit]
+    paths: [.github/workflows/engineering-public-probe.yml]
+permissions:
+  contents: read
+jobs:
+  public-health:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: '24.19.0'
+      - name: Read only the fixed public homepage and health route
+        run: |
+          node --input-type=module <<'JS'
+          import { writeFile } from 'node:fs/promises';
+          import { setTimeout as sleep } from 'node:timers/promises';
+          const origin = 'https://cornerstone-policy-preview.onrender.com';
+          let last;
+          for (let attempt = 0; attempt < 8; attempt++) {
+            try {
+              const healthResponse = await fetch(origin + '/api/healthz', { redirect: 'error', signal: AbortSignal.timeout(15000), cache: 'no-store' });
+              const health = await healthResponse.json();
+              if (!healthResponse.ok || health.status !== 'ok' || health.mode !== 'proposal' || health.protectedIntake !== false || !/^[a-f0-9]{40}$/.test(health.commit)) throw Error('Public-only health contract failed');
+              const home = await fetch(origin, { redirect: 'error', signal: AbortSignal.timeout(15000), cache: 'no-store' });
+              const body = await home.text();
+              const csp = home.headers.get('content-security-policy') || '';
+              if (!home.ok || !body.includes('When policy takes') || !csp.includes("'strict-dynamic'")) throw Error('Public homepage or CSP contract failed');
+              const result = { checkedAt: new Date().toISOString(), origin, commit: health.commit, status: health.status, mode: health.mode, protectedIntake: health.protectedIntake, homepageStatus: home.status, cspVerified: true };
+              await writeFile('/tmp/public-health.json', JSON.stringify(result, null, 2) + '\n');
+              console.log(JSON.stringify(result, null, 2));
+              process.exit(0);
+            } catch (error) { last = error.message; }
+            await sleep(5000);
+          }
+          throw Error(last || 'Public deployment could not be verified');
+          JS
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: public-health-evidence
+          path: /tmp/public-health.json
+          retention-days: 7
