@@ -21,8 +21,21 @@ jobs:
           TRANSPORT_TOKEN: ${{ github.token }}
         run: |
           python3 - <<'PY'
-          import hashlib, json, os, pathlib, re, subprocess, urllib.request
-          request = json.loads(pathlib.Path('engineering/edits.json').read_text())
+          import base64, hashlib, json, os, pathlib, re, subprocess, urllib.request, zlib
+          wire = pathlib.Path('engineering/edits.json').read_bytes()
+          assert len(wire) <= 5000000
+          request = json.loads(wire)
+          if 'compression' in request:
+              assert set(request) == {'compression', 'payloadSha256', 'payload'}
+              assert request['compression'] == 'gzip-base64'
+              assert re.fullmatch(r'[a-f0-9]{64}', request['payloadSha256'])
+              compressed = base64.b64decode(request['payload'], validate=True)
+              assert len(compressed) <= 1000000
+              decoder = zlib.decompressobj(16 + zlib.MAX_WBITS)
+              expanded = decoder.decompress(compressed, 5000001)
+              assert len(expanded) <= 5000000 and decoder.eof and not decoder.unconsumed_tail and not decoder.unused_data
+              assert hashlib.sha256(expanded).hexdigest() == request['payloadSha256']
+              request = json.loads(expanded)
           target, base = request['target'], request['base']
           assert re.fullmatch(r'cornerstone/[a-z0-9-]+', target)
           assert target not in ('cornerstone/engineering-kit', 'cornerstone/application')
@@ -46,7 +59,7 @@ jobs:
               assert re.fullmatch(r'[A-Za-z0-9_./\[\]-]+', name) and '..' not in name.split('/')
               assert name not in names
               names.add(name)
-              assert name.startswith(('apps/', 'packages/', 'tests/', 'docs/', 'db/', 'scripts/', 'registry/')) or name in ('README.md', 'package.json', 'pnpm-lock.yaml', 'pnpm-workspace.yaml', 'vitest.config.ts', 'playwright.config.ts', 'playwright.private.config.ts', '.env.example')
+              assert name.startswith(('apps/', 'packages/', 'tests/', 'docs/', 'db/', 'scripts/', 'registry/')) or name in ('README.md', 'package.json', 'pnpm-lock.yaml', 'pnpm-workspace.yaml', 'vitest.config.ts', 'playwright.config.ts', 'playwright.private.config.ts', '.env.example', '.github/workflows/ci.yml')
               assert '/AGENTS.md' not in name and '/.env' not in name and name != 'registry/roadmap.json'
               path = pathlib.Path(name)
               if change['beforeSha256'] is None:
