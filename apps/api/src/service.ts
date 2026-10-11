@@ -156,7 +156,9 @@ export class ProgramService {
           policyVersion: record.policyVersion,
         });
       const input = parseFields(a.fields, command.input);
-      let data = validateAction(record, a.key, input, now.slice(0, 10));
+      const retained = { ...record.data };
+      if (a.key === 'save_draft') for (const field of wf.createFields) delete retained[field.key];
+      let data = validateAction({ ...record, data: retained }, a.key, input, now.slice(0, 10));
       data = await this.linkedRules(tx, actor, record, command, data, now);
       const history = Array.isArray(record.data['history']) ? record.data['history'] : [];
       data['history'] = [

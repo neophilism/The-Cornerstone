@@ -347,7 +347,10 @@ route('get', '/auth/callback', async (req, res) => {
 http.use((_req: Request, res: Response) =>
   res.status(404).json({ code: 'NOT_FOUND', message: 'Endpoint not found.' }),
 );
-await app.listen(Number(env['PORT'] || env['API_PORT'] || 4010), '0.0.0.0');
+await app.listen(
+  Number(env['PORT'] || env['API_PORT'] || 4010),
+  production ? '0.0.0.0' : '127.0.0.1',
+);
 const shutdown = async () => {
   await store?.close();
   await app.close();

@@ -75,6 +75,32 @@ try {
   const replay = await service.create(a, command);
   assert.equal(replay.receipt.id, one.receipt.id);
   assert.deepEqual(replay.record, one.record);
+  const claimInput = {
+    eventId: randomUUID(),
+    workerType: 'employee',
+    earnedIncomeShare: 0.75,
+    annualHours: 1200,
+    injuryDescription: 'Invented primary-job loss',
+    lossDate: '2000-01-01',
+    evidenceIds: [randomUUID()],
+  };
+  const claimDraft = await service.create(a, {
+    kind: 'claim',
+    title: 'Invented editable optional baseline',
+    input: claimInput,
+    idempotencyKey: randomUUID(),
+  });
+  const { earnedIncomeShare: removed, ...withoutShare } = claimInput;
+  const cleared = await service.command(a, {
+    recordId: claimDraft.record!.id,
+    action: 'save_draft',
+    expectedVersion: 1,
+    input: withoutShare,
+    idempotencyKey: randomUUID(),
+  });
+  assert.equal(removed, 0.75);
+  assert.equal('earnedIncomeShare' in cleared.record!.data, false);
+  assert.equal(cleared.record!.data['annualHours'], 1200);
   await assert.rejects(
     service.command(a, {
       recordId: record.id,
