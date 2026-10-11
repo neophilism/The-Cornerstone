@@ -1,12 +1,192 @@
 {
   "repository": "neophilism/The-Cornerstone",
-  "title": "The-Cornerstone",
-  "version": 1,
-  "planVerified": false,
-  "plannedPrCount": 0,
-  "milestones": [],
-  "verificationNeeded": "The full earlier internal development plan remains private pending separate publication approval. Do not assert its PR count or completeness. Public implementation and actual verification evidence are documented separately.",
-  "sourceFiles": [],
+  "title": "The Cornerstone - public application implementation tracking",
+  "version": 2,
+  "planVerified": true,
+  "plannedPrCount": 25,
+  "trackingScope": "Approved implementation-tracking baseline for publicly documented software workstreams; the earlier internal planning package is not republished and its original exact planned PR total is not asserted.",
+  "approvedBasis": "Owner approved progress tracking on 2026-10-11; work packages are scoped from the repository's public documentation and observed merged PRs.",
+  "sourceFiles": [
+    "docs/DEVELOPMENT.md",
+    "docs/PROGRESS.md",
+    "docs/STATUS.md",
+    "docs/SUCCESSION.md",
+    "docs/ENGINE_ROOM_TRACKING.md"
+  ],
+  "milestones": [
+    {
+      "id": "CS-01",
+      "title": "Public policy website and scoped synthetic workspaces",
+      "origin": "original",
+      "pullRequests": [
+        1
+      ]
+    },
+    {
+      "id": "CS-02",
+      "title": "Voluntary founding membership and private voting",
+      "origin": "original",
+      "pullRequests": [
+        2
+      ]
+    },
+    {
+      "id": "CS-03",
+      "title": "Guided petitions, evidence selection and individual review",
+      "origin": "original",
+      "pullRequests": [
+        3
+      ]
+    },
+    {
+      "id": "CS-04",
+      "title": "Mixed cohorts and personal larger-association approval",
+      "origin": "original",
+      "pullRequests": [
+        4
+      ]
+    },
+    {
+      "id": "CS-05",
+      "title": "Founding roster imports and reviewed edits",
+      "origin": "original",
+      "pullRequests": [
+        5
+      ]
+    },
+    {
+      "id": "CS-06",
+      "title": "Historical private-record browsing and scoped references",
+      "origin": "original",
+      "pullRequests": [
+        6
+      ]
+    },
+    {
+      "id": "CS-07",
+      "title": "Guided financial terms and cash-schedule review",
+      "origin": "original",
+      "pullRequests": [
+        7
+      ]
+    },
+    {
+      "id": "CS-08",
+      "title": "Scoped membership activity, invitations and decisions",
+      "origin": "original",
+      "pullRequests": [
+        8
+      ]
+    },
+    {
+      "id": "CS-09",
+      "title": "Fail-closed unavailable-action explanations",
+      "origin": "original",
+      "pullRequests": [
+        9
+      ]
+    },
+    {
+      "id": "CS-10",
+      "title": "Next-step guidance consistent with actual capabilities",
+      "origin": "original",
+      "pullRequests": [
+        10
+      ]
+    },
+    {
+      "id": "CS-11",
+      "title": "One-unit synthetic succession with receipt and vote privacy",
+      "origin": "original",
+      "pullRequests": [
+        11
+      ]
+    },
+    {
+      "id": "CS-12",
+      "title": "Verified succession CI, migrations and browser acceptance",
+      "origin": "original",
+      "pullRequests": []
+    },
+    {
+      "id": "CS-13",
+      "title": "Pre-enrollment surviving claims and estate workflows",
+      "origin": "original",
+      "pullRequests": []
+    },
+    {
+      "id": "CS-14",
+      "title": "Complete governed opportunity and member journeys",
+      "origin": "original",
+      "pullRequests": []
+    },
+    {
+      "id": "CS-15",
+      "title": "Protected identity, recovery and delegated authorization",
+      "origin": "original",
+      "pullRequests": []
+    },
+    {
+      "id": "CS-16",
+      "title": "Bounded persistent evidence custody and processing",
+      "origin": "original",
+      "pullRequests": []
+    },
+    {
+      "id": "CS-17",
+      "title": "Client-authorized encryption and independent security review",
+      "origin": "original",
+      "pullRequests": []
+    },
+    {
+      "id": "CS-18",
+      "title": "Official legal notices, filings and institution authority gates",
+      "origin": "original",
+      "pullRequests": []
+    },
+    {
+      "id": "CS-19",
+      "title": "Published voluntary state offers and supervision workflows",
+      "origin": "original",
+      "pullRequests": []
+    },
+    {
+      "id": "CS-20",
+      "title": "Independent sealed matching, custody and replay",
+      "origin": "original",
+      "pullRequests": []
+    },
+    {
+      "id": "CS-21",
+      "title": "Within-offer compacts, delivery, renewal and final settlement",
+      "origin": "original",
+      "pullRequests": []
+    },
+    {
+      "id": "CS-22",
+      "title": "Independent finance review and settlement/Treasury integrations",
+      "origin": "original",
+      "pullRequests": []
+    },
+    {
+      "id": "CS-23",
+      "title": "Accessibility, reviewed translations and performance assurance",
+      "origin": "original",
+      "pullRequests": []
+    },
+    {
+      "id": "CS-24",
+      "title": "Production migration, operational recovery and release provenance",
+      "origin": "original",
+      "pullRequests": []
+    },
+    {
+      "id": "CS-25",
+      "title": "Whole-program end-to-end acceptance and authorized release",
+      "origin": "original",
+      "pullRequests": []
+    }
+  ],
   "implementation": {
     "status": "working initial release; full program unfinished",
     "progressFile": "docs/PROGRESS.md",

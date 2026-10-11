@@ -1,6 +1,6 @@
 # Implementation progress
 
-Updated October 11, 2026. The full program is unfinished. The earlier internal planning package remains private pending separate publication approval. The unverified canonical roadmap marker in registry/roadmap.json does not imply an empty implementation or assert a total planned-PR count.
+Updated October 11, 2026. The full program is unfinished. The earlier internal planning package remains private pending separate publication approval. The approved `registry/roadmap.json` now records a public-implementation tracking baseline of 25 work units, of which 11 have explicit verified merged PR associations. This is a scoped reporting denominator, not an assertion of the earlier unpublished complete internal plan's exact size or whole-program acceptance.
 
 Last verified merged application change: PR #10 at b5de06bae62f668163e9627ab0cfc5fe12829f6c, with the same tree as its exact tested head b1bd9f0f4016e1b333cf78fcb47138d8c72624ee. Verification and database jobs passed in [Actions run 38165726687](https://github.com/neophilism/The-Cornerstone/actions/runs/38165726687); preview was inapplicable to that feature branch. Both next-step desktop/mobile screenshots were inspected. PRs #1–#10 are merged. The deployment branch was last recorded at PR #8; a merge does not establish deployment. No independent security approval is claimed.
 

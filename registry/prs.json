@@ -1,26 +1,229 @@
 {
   "schemaVersion": 1,
   "repository": "neophilism/The-Cornerstone",
-  "roadmapVersion": 1,
-  "planVerified": false,
-  "plannedPrCount": 0,
-  "observedAt": "2026-10-11T17:41:31.656Z",
-  "units": [],
+  "roadmapVersion": 2,
+  "planVerified": true,
+  "plannedPrCount": 25,
+  "observedAt": "2026-10-11T20:20:45.125Z",
+  "units": [
+    {
+      "id": "CS-01",
+      "title": "Public policy website and scoped synthetic workspaces",
+      "origin": "original",
+      "prs": [
+        1
+      ]
+    },
+    {
+      "id": "CS-02",
+      "title": "Voluntary founding membership and private voting",
+      "origin": "original",
+      "prs": [
+        2
+      ]
+    },
+    {
+      "id": "CS-03",
+      "title": "Guided petitions, evidence selection and individual review",
+      "origin": "original",
+      "prs": [
+        3
+      ]
+    },
+    {
+      "id": "CS-04",
+      "title": "Mixed cohorts and personal larger-association approval",
+      "origin": "original",
+      "prs": [
+        4
+      ]
+    },
+    {
+      "id": "CS-05",
+      "title": "Founding roster imports and reviewed edits",
+      "origin": "original",
+      "prs": [
+        5
+      ]
+    },
+    {
+      "id": "CS-06",
+      "title": "Historical private-record browsing and scoped references",
+      "origin": "original",
+      "prs": [
+        6
+      ]
+    },
+    {
+      "id": "CS-07",
+      "title": "Guided financial terms and cash-schedule review",
+      "origin": "original",
+      "prs": [
+        7
+      ]
+    },
+    {
+      "id": "CS-08",
+      "title": "Scoped membership activity, invitations and decisions",
+      "origin": "original",
+      "prs": [
+        8
+      ]
+    },
+    {
+      "id": "CS-09",
+      "title": "Fail-closed unavailable-action explanations",
+      "origin": "original",
+      "prs": [
+        9
+      ]
+    },
+    {
+      "id": "CS-10",
+      "title": "Next-step guidance consistent with actual capabilities",
+      "origin": "original",
+      "prs": [
+        10
+      ]
+    },
+    {
+      "id": "CS-11",
+      "title": "One-unit synthetic succession with receipt and vote privacy",
+      "origin": "original",
+      "prs": [
+        11
+      ]
+    },
+    {
+      "id": "CS-12",
+      "title": "Verified succession CI, migrations and browser acceptance",
+      "origin": "original",
+      "prs": []
+    },
+    {
+      "id": "CS-13",
+      "title": "Pre-enrollment surviving claims and estate workflows",
+      "origin": "original",
+      "prs": []
+    },
+    {
+      "id": "CS-14",
+      "title": "Complete governed opportunity and member journeys",
+      "origin": "original",
+      "prs": []
+    },
+    {
+      "id": "CS-15",
+      "title": "Protected identity, recovery and delegated authorization",
+      "origin": "original",
+      "prs": []
+    },
+    {
+      "id": "CS-16",
+      "title": "Bounded persistent evidence custody and processing",
+      "origin": "original",
+      "prs": []
+    },
+    {
+      "id": "CS-17",
+      "title": "Client-authorized encryption and independent security review",
+      "origin": "original",
+      "prs": []
+    },
+    {
+      "id": "CS-18",
+      "title": "Official legal notices, filings and institution authority gates",
+      "origin": "original",
+      "prs": []
+    },
+    {
+      "id": "CS-19",
+      "title": "Published voluntary state offers and supervision workflows",
+      "origin": "original",
+      "prs": []
+    },
+    {
+      "id": "CS-20",
+      "title": "Independent sealed matching, custody and replay",
+      "origin": "original",
+      "prs": []
+    },
+    {
+      "id": "CS-21",
+      "title": "Within-offer compacts, delivery, renewal and final settlement",
+      "origin": "original",
+      "prs": []
+    },
+    {
+      "id": "CS-22",
+      "title": "Independent finance review and settlement/Treasury integrations",
+      "origin": "original",
+      "prs": []
+    },
+    {
+      "id": "CS-23",
+      "title": "Accessibility, reviewed translations and performance assurance",
+      "origin": "original",
+      "prs": []
+    },
+    {
+      "id": "CS-24",
+      "title": "Production migration, operational recovery and release provenance",
+      "origin": "original",
+      "prs": []
+    },
+    {
+      "id": "CS-25",
+      "title": "Whole-program end-to-end acceptance and authorized release",
+      "origin": "original",
+      "prs": []
+    }
+  ],
   "pullRequests": [
+    {
+      "id": 4821655321,
+      "number": 11,
+      "title": "Preserve one founding unit through personally requested synthetic succession",
+      "url": "https://github.com/neophilism/The-Cornerstone/pull/11",
+      "state": "closed",
+      "draft": false,
+      "createdAt": "2026-10-11T19:19:12.000Z",
+      "updatedAt": "2026-10-11T20:02:16.000Z",
+      "closedAt": "2026-10-11T20:02:16.000Z",
+      "mergedAt": "2026-10-11T20:02:16.000Z",
+      "headSha": "e467b5dffe17f212443409490eb33d5e5c326ae6",
+      "baseRef": "main",
+      "mergeCommitSha": "f948607412830a73a98d549c06a945c8f70b2320"
+    },
+    {
+      "id": 4821482168,
+      "number": 10,
+      "title": "Align next-step guidance with actual action availability",
+      "url": "https://github.com/neophilism/The-Cornerstone/pull/10",
+      "state": "closed",
+      "draft": false,
+      "createdAt": "2026-10-11T18:53:42.000Z",
+      "updatedAt": "2026-10-11T19:00:53.000Z",
+      "closedAt": "2026-10-11T19:00:53.000Z",
+      "mergedAt": "2026-10-11T19:00:53.000Z",
+      "headSha": "b1bd9f0f4016e1b333cf78fcb47138d8c72624ee",
+      "baseRef": "main",
+      "mergeCommitSha": "b5de06bae62f668163e9627ab0cfc5fe12829f6c"
+    },
     {
       "id": 4820868546,
       "number": 9,
       "title": "Explain unavailable actions before asking for input",
       "url": "https://github.com/neophilism/The-Cornerstone/pull/9",
-      "state": "open",
-      "draft": true,
+      "state": "closed",
+      "draft": false,
       "createdAt": "2026-10-11T17:17:25.000Z",
-      "updatedAt": "2026-10-11T17:17:25.000Z",
-      "closedAt": null,
-      "mergedAt": null,
+      "updatedAt": "2026-10-11T18:36:37.000Z",
+      "closedAt": "2026-10-11T18:36:37.000Z",
+      "mergedAt": "2026-10-11T18:36:37.000Z",
       "headSha": "675ac5374d4755b4ad41736c055f65be3f6e9719",
       "baseRef": "main",
-      "mergeCommitSha": "7e078e617a5224f681cc5f9d910dfe47cf412a8d"
+      "mergeCommitSha": "0afd9bc59b9822e28b7ecf8778bf0c8db0f6b476"
     },
     {
       "id": 4820474121,
