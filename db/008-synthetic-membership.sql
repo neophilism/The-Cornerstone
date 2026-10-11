@@ -65,10 +65,18 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path=public,pg_temp AS $$
  FROM case_records c WHERE simulation_member_record(c.id)
 $$;
 
+CREATE FUNCTION simulation_assigned_labor(record_in uuid) RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path=public,pg_temp AS $$
+ SELECT context_realm()='simulation' AND EXISTS(
+ SELECT 1 FROM case_records c JOIN actors a ON a.id=context_subject() AND a.realm=c.realm
+ WHERE c.id=record_in AND c.realm='simulation' AND a.assurance='privileged' AND 'labor'=ANY(a.roles)
+ AND a.institution_id=c.institution_id AND c.id=ANY(a.assignments) AND NOT c.id=ANY(a.conflicts))
+$$;
+
 ALTER TABLE founding_invitations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE founding_invitations FORCE ROW LEVEL SECURITY;
 CREATE POLICY invitations_read ON founding_invitations FOR SELECT USING(realm=context_realm() AND readable_record(association_id) AND (
- person_id=context_subject() OR EXISTS(SELECT 1 FROM case_records c WHERE c.id=association_id AND (c.owner_id=context_subject() OR c.institution_id IS NOT NULL AND EXISTS(SELECT 1 FROM actors a WHERE a.id=context_subject() AND a.assurance='privileged' AND 'labor'=ANY(a.roles) AND a.institution_id=c.institution_id AND c.id=ANY(a.assignments) AND NOT c.id=ANY(a.conflicts))))
+ person_id=context_subject() OR EXISTS(SELECT 1 FROM case_records c WHERE c.id=association_id AND (c.owner_id=context_subject() OR simulation_assigned_labor(c.id)))
 ));
 ALTER TABLE resolution_links ENABLE ROW LEVEL SECURITY;
 ALTER TABLE resolution_links FORCE ROW LEVEL SECURITY;
@@ -78,7 +86,7 @@ ALTER TABLE resolution_roll FORCE ROW LEVEL SECURITY;
 CREATE POLICY resolution_roll_read ON resolution_roll FOR SELECT USING(realm=context_realm() AND readable_record(resolution_id));
 CREATE POLICY ballots_read ON ballots FOR SELECT USING(realm=context_realm() AND readable_record(resolution_id) AND (
  EXISTS(SELECT 1 FROM founding_units u WHERE u.id=unit_id AND u.active AND COALESCE(u.successor_id,u.person_id)=context_subject())
- OR EXISTS(SELECT 1 FROM case_records c JOIN actors a ON a.id=context_subject() AND a.realm=c.realm WHERE c.id=resolution_id AND a.assurance='privileged' AND 'labor'=ANY(a.roles) AND a.institution_id=c.institution_id AND c.id=ANY(a.assignments) AND NOT c.id=ANY(a.conflicts))
+ OR simulation_assigned_labor(resolution_id)
 ));
 
 CREATE FUNCTION simulation_invite_founders(association_in uuid,units_in jsonb,digest_in text,closes_in date) RETURNS void
@@ -157,5 +165,5 @@ END $$;
 
 REVOKE ALL ON founding_invitations,resolution_links,resolution_roll FROM PUBLIC;
 GRANT SELECT ON founding_invitations,resolution_links,resolution_roll,ballots TO cornerstone_runtime;
-REVOKE ALL ON FUNCTION simulation_member_record(uuid),simulation_member_scopes(),simulation_invite_founders(uuid,jsonb,text,date),simulation_respond_invitation(uuid,text,text),simulation_link_resolution(uuid,uuid),simulation_freeze_resolution(uuid,date),simulation_cast_ballot(uuid,uuid,uuid,jsonb,text,uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION simulation_member_record(uuid),simulation_member_scopes(),simulation_invite_founders(uuid,jsonb,text,date),simulation_respond_invitation(uuid,text,text),simulation_link_resolution(uuid,uuid),simulation_freeze_resolution(uuid,date),simulation_cast_ballot(uuid,uuid,uuid,jsonb,text,uuid) TO cornerstone_runtime;
+REVOKE ALL ON FUNCTION simulation_assigned_labor(uuid),simulation_member_record(uuid),simulation_member_scopes(),simulation_invite_founders(uuid,jsonb,text,date),simulation_respond_invitation(uuid,text,text),simulation_link_resolution(uuid,uuid),simulation_freeze_resolution(uuid,date),simulation_cast_ballot(uuid,uuid,uuid,jsonb,text,uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION simulation_assigned_labor(uuid),simulation_member_record(uuid),simulation_member_scopes(),simulation_invite_founders(uuid,jsonb,text,date),simulation_respond_invitation(uuid,text,text),simulation_link_resolution(uuid,uuid),simulation_freeze_resolution(uuid,date),simulation_cast_ballot(uuid,uuid,uuid,jsonb,text,uuid) TO cornerstone_runtime;
