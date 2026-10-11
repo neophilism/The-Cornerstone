@@ -39,6 +39,17 @@
 .workspace-main {
   min-width: 0;
 }
+.record-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 16px 0;
+}
+.workspace-main button:disabled,
+.login-card button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 .journey-guide {
   border-left: 4px solid var(--copper);
   background: #f0eee5;
@@ -72,6 +83,21 @@
 }
 .reference-toggle {
   justify-self: start;
+}
+.roster-import {
+  margin: 20px 0;
+}
+.roster-import input {
+  max-width: 100%;
+  margin: 12px 0;
+}
+.roster-entry {
+  border-top: 1px solid var(--line);
+  margin-top: 20px;
+  padding-top: 12px;
+}
+.roster-entry h3 {
+  font-size: 16px;
 }
 .record-search {
   margin: 18px 0;

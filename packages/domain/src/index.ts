@@ -2,6 +2,7 @@ import type { CaseRecord, Kind, Role } from '@cornerstone/contracts';
 import { DomainError } from './errors.js';
 import { addCalendarDays as ruleDays, anniversary as ruleAnniversary } from './calendar.js';
 export { DomainError } from './errors.js';
+export { parseFoundingRoster } from './roster.js';
 export { localDate, deadlineDate } from './calendar.js';
 export { workflows, workflow, parseFields, validateAction, workflowGroups } from './workflows.js';
 

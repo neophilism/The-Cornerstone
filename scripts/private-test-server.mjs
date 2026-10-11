@@ -1,5 +1,7 @@
 import { spawn } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
+import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
 if (
   process.env['CORNERSTONE_MODE'] !== 'simulation' ||
   process.env['DATA_REALM'] !== 'simulation' ||
@@ -25,37 +27,21 @@ const env = {
 delete env['MIGRATION_DATABASE_URL'];
 delete env['WORKER_DATABASE_URL'];
 const commands = [
-  ['node', ['apps/api/dist/main.js'], { NODE_ENV: 'development', PORT: '4010' }],
-  [
-    'pnpm',
-    [
-      '--filter',
-      '@cornerstone/portal',
-      'exec',
-      'next',
-      'start',
-      '--hostname',
-      '127.0.0.1',
-      '-p',
-      '3001',
-    ],
-    { NODE_ENV: 'production' },
-  ],
-  [
-    'pnpm',
-    [
-      '--filter',
-      '@cornerstone/staff',
-      'exec',
-      'next',
-      'start',
-      '--hostname',
-      '127.0.0.1',
-      '-p',
-      '3002',
-    ],
-    { NODE_ENV: 'production' },
-  ],
+  {
+    command: process.execPath,
+    args: ['apps/api/dist/main.js'],
+    overrides: { NODE_ENV: 'development', PORT: '4010' },
+  },
+  ...['portal', 'staff'].map((name, index) => {
+    const packageUrl = new URL(`../apps/${name}/package.json`, import.meta.url);
+    const next = createRequire(packageUrl).resolve('next/dist/bin/next');
+    return {
+      command: process.execPath,
+      args: [next, 'start', '--hostname', '127.0.0.1', '-p', String(3001 + index)],
+      cwd: fileURLToPath(new URL('.', packageUrl)),
+      overrides: { NODE_ENV: 'production' },
+    };
+  }),
 ];
 const uiEnv = Object.fromEntries(
   [
@@ -70,8 +56,12 @@ const uiEnv = Object.fromEntries(
     .filter((k) => env[k])
     .map((k) => [k, env[k]]),
 );
-const children = commands.map(([command, args, overrides], index) =>
-  spawn(command, args, { stdio: 'inherit', env: { ...(index === 0 ? env : uiEnv), ...overrides } }),
+const children = commands.map(({ command, args, overrides, cwd }, index) =>
+  spawn(command, args, {
+    cwd,
+    stdio: 'inherit',
+    env: { ...(index === 0 ? env : uiEnv), ...overrides },
+  }),
 );
 if (process.env['WORKER_DATABASE_URL'])
   children.push(

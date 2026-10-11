@@ -70,7 +70,13 @@ export function WorkflowFields({
           ) : f.key === 'earnedIncomeShare' ? (
             <IncomeShare key={f.key} prefix={prefix} value={values[f.key]} />
           ) : f.type === 'json' ? (
-            <StructuredField key={f.key} field={f} prefix={prefix} value={values[f.key]} />
+            <StructuredField
+              key={f.key}
+              field={f}
+              prefix={prefix}
+              value={values[f.key]}
+              records={records}
+            />
           ) : f.type === 'boolean' ? (
             <div className="check-field" key={f.key}>
               <input
