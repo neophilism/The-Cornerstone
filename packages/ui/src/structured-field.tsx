@@ -1,6 +1,8 @@
 'use client';
 import { useState } from 'react';
 import type { Field } from '@cornerstone/domain';
+import type { CaseRecord } from '@cornerstone/contracts';
+import { FoundingRoster } from './founding-roster.js';
 
 export const listFields = new Set([
   'evidenceIds',
@@ -18,69 +20,55 @@ const outsideRights = [
   ['unitPledge', 'Founding units pledged as collateral'],
   ['compactForeclosure', 'Foreclosure on the compact right'],
 ] as const;
-type Row = Record<string, string>;
-function RowEditor({ field, prefix, value }: { field: Field; prefix: string; value: unknown }) {
-  const unit = field.key === 'units';
-  const empty = () => (unit ? { claimId: '', personId: '' } : { kind: 'formation', amount: '' });
-  const [rows, setRows] = useState<Row[]>(
-    Array.isArray(value) && value.length ? (value as Row[]) : [empty()],
+type BudgetRow = { kind: string; amount: string };
+function BudgetEditor({ field, prefix, value }: { field: Field; prefix: string; value: unknown }) {
+  const [rows, setRows] = useState<BudgetRow[]>(
+    Array.isArray(value) && value.length
+      ? (value as BudgetRow[])
+      : [{ kind: 'formation', amount: '' }],
   );
-  const change = (i: number, key: string, next: string) =>
-    setRows((r) => r.map((row, index) => (index === i ? { ...row, [key]: next } : row)));
+  const change = (index: number, patch: Partial<BudgetRow>) =>
+    setRows((old) => old.map((row, i) => (i === index ? { ...row, ...patch } : row)));
   return (
     <fieldset className="structured-field">
       <legend>{field.label}</legend>
       <p className="hint">
-        {unit
-          ? 'One eligible claim and one person per founding unit. The server verifies ownership, eligibility and duplicate rights.'
-          : 'Itemize the limited costs the enterprise requests. These are synthetic amounts, not an appropriation or payment.'}
+        Itemize the limited costs the enterprise requests. These are synthetic amounts, not an
+        appropriation or payment.
       </p>
       <input type="hidden" name={field.key} value={JSON.stringify(rows)} />
       {rows.map((row, i) => (
         <div className="structured-row" key={i}>
           <div className="field">
-            <label htmlFor={`${prefix}-${field.key}-${i}-first`}>
-              {unit ? `Eligible claim ID ${i + 1}` : `Cost category ${i + 1}`}
-            </label>
-            {unit ? (
-              <input
-                id={`${prefix}-${field.key}-${i}-first`}
-                value={row['claimId'] || ''}
-                onChange={(e) => change(i, 'claimId', e.target.value)}
-                required={field.required}
-              />
-            ) : (
-              <select
-                id={`${prefix}-${field.key}-${i}-first`}
-                value={row['kind'] || 'formation'}
-                onChange={(e) => change(i, 'kind', e.target.value)}
-              >
-                {costs.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            )}
+            <label htmlFor={`${prefix}-cost-${i}`}>Cost category {i + 1}</label>
+            <select
+              id={`${prefix}-cost-${i}`}
+              value={row.kind}
+              onChange={(e) => change(i, { kind: e.target.value })}
+            >
+              {costs.map((cost) => (
+                <option key={cost} value={cost}>
+                  {cost}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="field">
-            <label htmlFor={`${prefix}-${field.key}-${i}-second`}>
-              {unit ? `Person ID ${i + 1}` : `Amount ${i + 1} (USD)`}
-            </label>
+            <label htmlFor={`${prefix}-amount-${i}`}>Amount {i + 1} (USD)</label>
             <input
-              id={`${prefix}-${field.key}-${i}-second`}
-              inputMode={unit ? 'text' : 'decimal'}
-              value={row[unit ? 'personId' : 'amount'] || ''}
-              onChange={(e) => change(i, unit ? 'personId' : 'amount', e.target.value)}
+              id={`${prefix}-amount-${i}`}
+              inputMode="decimal"
+              value={row.amount}
+              onChange={(e) => change(i, { amount: e.target.value })}
               required={field.required}
             />
           </div>
           <button
             type="button"
             className="quiet-button"
-            aria-label={`Remove ${unit ? 'founding unit' : 'cost'} ${i + 1}`}
+            aria-label={`Remove cost ${i + 1}`}
             disabled={rows.length === 1}
-            onClick={() => setRows((r) => r.filter((_, index) => index !== i))}
+            onClick={() => setRows((old) => old.filter((_, index) => index !== i))}
           >
             Remove
           </button>
@@ -89,9 +77,9 @@ function RowEditor({ field, prefix, value }: { field: Field; prefix: string; val
       <button
         type="button"
         className="button button-secondary"
-        onClick={() => setRows((r) => [...r, empty()])}
+        onClick={() => setRows((old) => [...old, { kind: 'formation', amount: '' }])}
       >
-        Add {unit ? 'founding unit' : 'cost'}
+        Add cost
       </button>
     </fieldset>
   );
@@ -180,13 +168,16 @@ export function StructuredField({
   field,
   prefix,
   value,
+  records = [],
 }: {
   field: Field;
   prefix: string;
   value: unknown;
+  records?: CaseRecord[];
 }) {
-  if (field.key === 'units' || field.key === 'budget')
-    return <RowEditor field={field} prefix={prefix} value={value} />;
+  if (field.key === 'units')
+    return <FoundingRoster prefix={prefix} value={value} records={records} />;
+  if (field.key === 'budget') return <BudgetEditor field={field} prefix={prefix} value={value} />;
   if (field.key === 'investorRights')
     return <RightsEditor field={field} prefix={prefix} value={value} />;
   if (field.key === 'receiptRate')
