@@ -97,7 +97,9 @@ test('a person submits evidence by name, receives event review and pursues a sep
   await choice.uncheck();
   await submit.getByLabel('I confirm this submission is complete and accurate').check();
   await submit.getByRole('button', { name: 'Submit for review', exact: true }).click();
-  await expect(page.getByRole('alert')).toContainText('Attach and validate evidence');
+  await expect(
+    page.locator('.error-panel').filter({ hasText: 'Attach and validate evidence' }),
+  ).toBeVisible();
   await choice.check();
   await submit.getByRole('button', { name: 'Submit for review', exact: true }).click();
   await expect(
