@@ -1,0 +1,52 @@
+{
+  "base": "0afd9bc59b9822e28b7ecf8778bf0c8db0f6b476",
+  "target": "cornerstone/next-step-guidance",
+  "message": "Align next-step guidance with unavailable actions and verified releases",
+  "changes": [
+    {
+      "path": "docs/PROGRESS.json",
+      "beforeSha256": "60be276851e23ee29af7e7e93326e73122b40bbf11ed1033816ad3282bc7d620",
+      "afterSha256": "befaf30d30daf9b571023222cf4f8611994470c18a3b1a1e4bbb17b5dc7441c1",
+      "edits": [
+        {"find":"  ],\n  \"releasePullRequest\": \"https://github.com/neophilism/The-Cornerstone/pull/8\",\n  \"developmentMigrations\": 10\n","replace":"  ],\n  \"releasePullRequest\": \"https://github.com/neophilism/The-Cornerstone/pull/9\",\n  \"developmentMigrations\": 10\n"},
+        {"find":"  \"pending\": [\n    \"unavailable-action guidance acceptance\",\n    \"succession and complete program journeys\",\n","replace":"  \"pending\": [\n    \"availability-aware next-step acceptance\",\n    \"succession and complete program journeys\",\n"},
+        {"find":"  \"scope\": \"public policy website and synthetic preparation, evidence, membership and voting; full program unfinished\",\n  \"lastVerifiedCommit\": \"338810a35756620be9c3a787aac143206d950121\",\n  \"lastVerifiedRun\": \"https://github.com/neophilism/The-Cornerstone/actions/runs/38154766940\",\n  \"livePublicUrl\": \"https://cornerstone-policy-preview.onrender.com\",\n","replace":"  \"scope\": \"public policy website and synthetic preparation, evidence, membership and voting; full program unfinished\",\n  \"lastVerifiedCommit\": \"0afd9bc59b9822e28b7ecf8778bf0c8db0f6b476\",\n  \"lastVerifiedRun\": \"https://github.com/neophilism/The-Cornerstone/actions/runs/38159018769\",\n  \"livePublicUrl\": \"https://cornerstone-policy-preview.onrender.com\",\n"}
+      ]
+    },
+    {
+      "path": "docs/PROGRESS.md",
+      "beforeSha256": "676c8c26fea929defe60cdb7793e10dd362b63e5caaf5ed4fc5ad9e1311b82f7",
+      "afterSha256": "c77e39d433462069cd5fccc04c81f92f117b2461481df180582d73d25418c80b",
+      "edits": [
+        {"find":"\nLast verified merged release: 338810a35756620be9c3a787aac143206d950121, with the same tree as the tested PR #8 head. Verify and database jobs passed in [Actions run 38154766940](https://github.com/neophilism/The-Cornerstone/actions/runs/38154766940): 52 unit tests, 36 public and 30 private browser checks, actual PostgreSQL integrations and production builds. PRs #1–#8 are merged. The Render deployment branch was advanced to this release. No independent security approval is claimed.\n\n","replace":"\nLast verified merged application change: PR #9 at 0afd9bc59b9822e28b7ecf8778bf0c8db0f6b476. Its exact head 675ac5374d4755b4ad41736c055f65be3f6e9719 passed verification and database jobs in [Actions run 38159018769](https://github.com/neophilism/The-Cornerstone/actions/runs/38159018769); preview was inapplicable to that feature branch. Both unavailable-action desktop/mobile screenshots were inspected. PRs #1–#9 are merged. The deployment branch was last recorded at PR #8; a merge does not establish deployment. No independent security approval is claimed.\n\nUnavailable actions now explain missing integrations and reject direct commands before mutation. Availability-aware next-step guidance preserves draft editing and no longer promises submission for every draft. The added browser assertions require fresh CI acceptance.\n\n"}
+      ]
+    },
+    {
+      "path": "docs/STATUS.md",
+      "beforeSha256": "33a3ce254ecaf7de11c9b11d8f2f1f4483dbae18ec7b78e19bd9068ad11f80d7",
+      "afterSha256": "d2d354607630f030031c3e6b1f24010244ccabed2a7842bb0c64edbbeebde738",
+      "edits": [
+        {"find":"\nGuided event and individual journeys passed 18 private browser checks in Actions 38150860609 and were merged in PR #3. Mixed-event rolls and private larger-association choices are implemented; the 2,501-founder database integration passed in Actions 38151024114. Migration 009 is applied on development. The association extension and 20 private browser checks passed in Actions 38151692803; PR #4 is merged. Roster acceptance passed in Actions 38153086551 and PR #5 is merged. Scoped record browsing passed in Actions 38153419469 and PR #6 is merged. Guided financial acceptance passed in Actions 38154186337 and PR #7 is merged. Membership activity passed in Actions 38154766940; PR #8 is merged and migration 010 is applied on development. Unavailable-action guidance acceptance is pending.\n","replace":"\nGuided event and individual journeys passed 18 private browser checks in Actions 38150860609 and were merged in PR #3. Mixed-event rolls and private larger-association choices are implemented; the 2,501-founder database integration passed in Actions 38151024114. Migration 009 is applied on development. The association extension and 20 private browser checks passed in Actions 38151692803; PR #4 is merged. Roster acceptance passed in Actions 38153086551 and PR #5 is merged. Scoped record browsing passed in Actions 38153419469 and PR #6 is merged. Guided financial acceptance passed in Actions 38154186337 and PR #7 is merged. Membership activity passed in Actions 38154766940; PR #8 is merged and migration 010 is applied on development. Unavailable-action panels and API rejection passed in Actions 38159018769; PR #9 is merged.\n\nPR #9 is merged after verification and database checks passed in Actions 38159018769. Unavailable transitions remain fail-closed. The following next-step refinement avoids promising submission for every draft; its added acceptance is pending.\n"}
+      ]
+    },
+    {
+      "path": "packages/ui/src/journey.tsx",
+      "beforeSha256": "3ec57d73201eabeb866010e9f558908e8267b793cc4fef324dc5bd2726a6b7a4",
+      "afterSha256": "150dbb42c3b36c865a67ff49ba8bbd49d3cae3c2582fc2d79f3203c427f02a48",
+      "edits": [
+        {"find":"  };\n  const message =\n    record.kind === 'event_petition' && record.state === 'certified'\n      ? [\n","replace":"  };\n  const message = blocked\n    ? [\n        record.state === 'draft'\n          ? 'Prepare a draft; submission is unavailable'\n          : 'A required integration is unavailable',\n        'Read the prerequisites below. Preparing or exporting this record does not complete an unavailable action. The service will reject that action without changing the record.',\n      ]\n    : record.kind === 'event_petition' && record.state === 'certified'\n      ? [\n"},
+        {"find":"    draft: [\n      'Prepare, then submit',\n      'Review your saved details and add supporting material. You can return to a saved draft at any time. Available actions appear below.',\n    ],\n","replace":"    draft: [\n      'Review your draft',\n      'Review your saved details and supporting material. Saving a draft does not submit it. Actions permitted for your current role and this record version appear below.',\n    ],\n"},
+        {"find":"export function RecordNextStep({ record }: { record: CaseRecord }) {\n  const copy: Record<string, [string, string]> = {\n","replace":"export function RecordNextStep({ record }: { record: CaseRecord }) {\n  const transitions = workflow(record.kind).actions.filter((action) =>\n    action.from.includes(record.state),\n  );\n  const blocked =\n    transitions.length > 0 &&\n    transitions.every((action) => actionUnavailable(record.kind, action.key) !== null);\n  const copy: Record<string, [string, string]> = {\n"},
+        {"find":"import type { CaseRecord } from '@cornerstone/contracts';\nconst preparation: Record<string, [string, string]> = {\n","replace":"import type { CaseRecord } from '@cornerstone/contracts';\nimport { actionUnavailable, workflow } from '@cornerstone/domain';\nconst preparation: Record<string, [string, string]> = {\n"}
+      ]
+    },
+    {
+      "path": "tests/private/action-availability.spec.ts",
+      "beforeSha256": "0da2ac71a960056d7995bde4aa8063be58564d6b8886d3331201e3aea9b46d24",
+      "afterSha256": "d0f66694e9331164015f8a1cb11c455eb981fa4165f838f7d998d33c1a86457a",
+      "edits": [
+        {"find":"  await expect(page.getByRole('button', { name: 'Edit draft', exact: true })).toBeVisible();\n  const rejected = await page.request.post(origin + '/api/private/commands', {\n","replace":"  await expect(page.getByRole('button', { name: 'Edit draft', exact: true })).toBeVisible();\n  await expect(\n    page.getByRole('heading', { name: 'Prepare a draft; submission is unavailable', exact: true }),\n  ).toBeVisible();\n  await expect(\n    page.getByRole('heading', { name: 'Prepare, then submit', exact: true }),\n  ).toHaveCount(0);\n  await page.getByRole('button', { name: 'Edit draft', exact: true }).click();\n  await expect(page.getByRole('button', { name: 'Save draft changes', exact: true })).toBeVisible();\n  await page.getByRole('button', { name: 'Cancel editing', exact: true }).click();\n  const rejected = await page.request.post(origin + '/api/private/commands', {\n"}
+      ]
+    }
+  ]
+}
