@@ -17,6 +17,8 @@ import { AccountPanel } from './account.js';
 import { DraftAccessPanel } from './draft-access.js';
 import { EvidencePanel } from './evidence.js';
 import { MembershipPanel, FoundingConsentPanel, MemberBallotPanel } from './membership.js';
+import { EvidenceChoice, RecordChoice, IncomeShare, isRecordReference } from './record-fields.js';
+import { PreparationGuide, RecordNextStep } from './journey.js';
 
 type Session = { actor: Actor; csrf: string; mode: string; local: boolean };
 export function WorkflowFields({
@@ -24,16 +26,39 @@ export function WorkflowFields({
   prefix,
   values = {},
   records = [],
+  record,
+  api,
 }: {
   fields: Field[];
   prefix: string;
   values?: Record<string, unknown>;
   records?: CaseRecord[];
+  record?: CaseRecord;
+  api?: (path: string, body?: unknown) => Promise<any>;
 }) {
   return (
     <>
       {fields.map((f) =>
-        f.type === 'json' ? (
+        f.key === 'evidenceIds' ? (
+          <EvidenceChoice
+            key={`${prefix}:${record?.id}:${record?.version}:${f.key}`}
+            field={f}
+            prefix={prefix}
+            record={record}
+            value={values[f.key]}
+            api={api}
+          />
+        ) : isRecordReference(f.key) ? (
+          <RecordChoice
+            key={f.key}
+            field={f}
+            prefix={prefix}
+            value={values[f.key]}
+            records={records}
+          />
+        ) : f.key === 'earnedIncomeShare' ? (
+          <IncomeShare key={f.key} prefix={prefix} value={values[f.key]} />
+        ) : f.type === 'json' ? (
           <StructuredField key={f.key} field={f} prefix={prefix} value={values[f.key]} />
         ) : f.type === 'boolean' ? (
           <div className="check-field" key={f.key}>
@@ -54,31 +79,7 @@ export function WorkflowFields({
               {f.label}
               {!f.required ? ' (optional)' : ''}
             </label>
-            {f.key === 'associationId' &&
-            records.some(
-              (r) =>
-                r.kind === 'association' && ['ready', 'provisional', 'operating'].includes(r.state),
-            ) ? (
-              <select
-                id={`${prefix}-${f.key}`}
-                name={f.key}
-                required={f.required}
-                defaultValue={String(values[f.key] ?? '')}
-              >
-                <option value="">Choose an association</option>
-                {records
-                  .filter(
-                    (r) =>
-                      r.kind === 'association' &&
-                      ['ready', 'provisional', 'operating'].includes(r.state),
-                  )
-                  .map((r) => (
-                    <option value={r.id} key={r.id}>
-                      {r.title}
-                    </option>
-                  ))}
-              </select>
-            ) : f.type === 'select' ? (
+            {f.type === 'select' ? (
               <select
                 id={`${prefix}-${f.key}`}
                 name={f.key}
@@ -128,6 +129,14 @@ function formInput(form: HTMLFormElement, fields: Field[]) {
   const input: Record<string, unknown> = {};
   for (const f of fields) {
     const v = data.get(f.key);
+    if (f.key === 'evidenceIds') {
+      if (v !== null)
+        input[f.key] = String(v)
+          .split(/\r?\n/)
+          .map((s) => s.trim())
+          .filter(Boolean);
+      continue;
+    }
     if (f.type === 'boolean') {
       input[f.key] = v === 'on';
       continue;
@@ -176,6 +185,7 @@ export function Workspace({
     [loading, setLoading] = useState(true),
     [pending, setPending] = useState(false),
     [local, setLocal] = useState(false);
+  const [recordSearch, setRecordSearch] = useState('');
   const retries = useRef(new Map<string, { input: string; key: string }>());
   const [capabilities, setCapabilities] = useState<RecordCapabilities[]>([]);
   const permitted = selected
@@ -646,6 +656,7 @@ export function Workspace({
                   Cancel
                 </button>
               </div>
+              <PreparationGuide kind={creating} />
               <form className="form-stack action-panel" onSubmit={create}>
                 <div className="field">
                   <label htmlFor="record-title">Record title</label>
@@ -675,6 +686,7 @@ export function Workspace({
                   Back to records
                 </button>
               </div>
+              <RecordNextStep record={selected} />
               <div className="record-links">
                 {selected.state === 'draft' && permitted.includes('save_draft') ? (
                   <button className="button button-secondary" onClick={() => setEditing(!editing)}>
@@ -719,52 +731,63 @@ export function Workspace({
                     prefix="edit"
                     values={selected.data}
                     records={records}
+                    record={selected}
+                    api={api}
                   />
                   <button className="button" disabled={pending}>
                     {pending ? 'Saving…' : 'Save draft changes'}
                   </button>
                 </form>
               ) : null}
-              <dl className="record-data">
-                {Object.entries(selected.data)
-                  .filter(([k]) => !['history', 'rollDigest', 'lastBallotCommitment'].includes(k))
-                  .map(([k, v]) => (
-                    <div key={k} style={{ display: 'contents' }}>
-                      <dt>
-                        {labels.get(k) ||
-                          (
-                            {
-                              unitCount: 'Founding-unit count',
-                              votesCast: 'Ballots received',
-                              notCast: 'Units that did not vote',
-                              rollClosedAt: 'Founding roll closed',
-                            } as Record<string, string>
-                          )[k] ||
-                          k.replace(/([a-z])([A-Z])/g, '$1 $2').replaceAll('_', ' ')}
-                      </dt>
-                      <dd>
-                        {k === 'units' && Array.isArray(v) ? (
-                          <details>
-                            <summary>Inspect {v.length} founding entries</summary>
-                            <pre style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
-                              {JSON.stringify(v, null, 2)}
-                            </pre>
-                          </details>
-                        ) : typeof v === 'boolean' ? (
-                          v ? (
-                            'Yes'
+              <details className="saved-details" open>
+                <summary>Saved details</summary>
+                <dl className="record-data">
+                  {Object.entries(selected.data)
+                    .filter(([k]) => !['history', 'rollDigest', 'lastBallotCommitment'].includes(k))
+                    .map(([k, v]) => (
+                      <div key={k} style={{ display: 'contents' }}>
+                        <dt>
+                          {labels.get(k) ||
+                            (
+                              {
+                                unitCount: 'Founding-unit count',
+                                votesCast: 'Ballots received',
+                                notCast: 'Units that did not vote',
+                                rollClosedAt: 'Founding roll closed',
+                              } as Record<string, string>
+                            )[k] ||
+                            k.replace(/([a-z])([A-Z])/g, '$1 $2').replaceAll('_', ' ')}
+                        </dt>
+                        <dd>
+                          {k === 'units' && Array.isArray(v) ? (
+                            <details>
+                              <summary>Inspect {v.length} founding entries</summary>
+                              <pre style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
+                                {JSON.stringify(v, null, 2)}
+                              </pre>
+                            </details>
+                          ) : isRecordReference(k) ? (
+                            records.find((r) => r.id === v)?.title || String(v)
+                          ) : k === 'evidenceIds' && Array.isArray(v) ? (
+                            `${v.length} supporting attachment${v.length === 1 ? '' : 's'} · inspect below`
+                          ) : k === 'earnedIncomeShare' && typeof v === 'number' ? (
+                            `${Math.round(v * 10000) / 100}% of earned income before the action`
+                          ) : typeof v === 'boolean' ? (
+                            v ? (
+                              'Yes'
+                            ) : (
+                              'No'
+                            )
+                          ) : typeof v === 'object' ? (
+                            JSON.stringify(v, null, 2)
                           ) : (
-                            'No'
-                          )
-                        ) : typeof v === 'object' ? (
-                          JSON.stringify(v, null, 2)
-                        ) : (
-                          String(v)
-                        )}
-                      </dd>
-                    </div>
-                  ))}
-              </dl>
+                            String(v)
+                          )}
+                        </dd>
+                      </div>
+                    ))}
+                </dl>
+              </details>
               {selected.kind === 'association' && (
                 <FoundingConsentPanel
                   record={selected}
@@ -815,13 +838,20 @@ export function Workspace({
                   )
                   .map((a) => (
                     <form
-                      key={a.key}
+                      key={`${a.key}:${selected.version}`}
                       className="action-panel form-stack"
                       onSubmit={(e) => void command(e, a.key)}
                     >
                       <h2>{a.label}</h2>
                       <p className="muted">{a.help}</p>
-                      <WorkflowFields fields={a.fields} prefix={a.key} records={records} />
+                      <WorkflowFields
+                        fields={a.fields}
+                        prefix={a.key}
+                        records={records}
+                        record={selected}
+                        api={api}
+                        values={{ evidenceIds: selected.data['evidenceIds'] }}
+                      />
                       <button className="button" disabled={pending}>
                         {pending ? 'Submitting…' : a.label}
                       </button>
@@ -909,35 +939,59 @@ export function Workspace({
               {view === 'home' || view === 'records' ? (
                 <section className="workspace-section">
                   <h2>{staff ? 'Assigned records' : 'Continue where you left off'}</h2>
+                  {records.length > 0 && (
+                    <div className="field record-search">
+                      <label htmlFor="record-search">Find a record</label>
+                      <input
+                        id="record-search"
+                        type="search"
+                        value={recordSearch}
+                        onChange={(e) => setRecordSearch(e.target.value)}
+                        placeholder="Search by title, type or status"
+                      />
+                    </div>
+                  )}
                   <div className="task-list">
                     {records.length ? (
-                      records.map((r) => (
-                        <article className="task-card" key={r.id}>
-                          <div>
-                            <span className="badge">{r.state.replaceAll('_', ' ')}</span>
-                            <h2>{r.title}</h2>
-                            <p>
-                              {workflow(r.kind).label} · v{r.version}
-                            </p>
-                          </div>
-                          <button
-                            className="button button-secondary"
-                            onClick={() => {
-                              setSelected(r);
-                              setEditing(false);
-                              setError('');
-                            }}
-                          >
-                            Open
-                          </button>
-                        </article>
-                      ))
+                      records
+                        .filter((r) =>
+                          `${r.title} ${workflow(r.kind).label} ${r.state.replaceAll('_', ' ')}`
+                            .toLowerCase()
+                            .includes(recordSearch.trim().toLowerCase()),
+                        )
+                        .map((r) => (
+                          <article className="task-card" key={r.id}>
+                            <div>
+                              <span className="badge">{r.state.replaceAll('_', ' ')}</span>
+                              <h2>{r.title}</h2>
+                              <p>
+                                {workflow(r.kind).label} · v{r.version}
+                              </p>
+                            </div>
+                            <button
+                              className="button button-secondary"
+                              onClick={() => {
+                                setSelected(r);
+                                setEditing(false);
+                                setError('');
+                              }}
+                            >
+                              Open
+                            </button>
+                          </article>
+                        ))
                     ) : (
                       <p className="muted">
                         No accessible records yet. Start a synthetic draft below.
                       </p>
                     )}
                   </div>
+                  {records.length > 0 &&
+                    !records.some((r) =>
+                      `${r.title} ${workflow(r.kind).label} ${r.state.replaceAll('_', ' ')}`
+                        .toLowerCase()
+                        .includes(recordSearch.trim().toLowerCase()),
+                    ) && <p role="status">No accessible records match this search.</p>}
                 </section>
               ) : null}
               <section className="workspace-section">

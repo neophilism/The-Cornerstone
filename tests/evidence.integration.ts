@@ -161,12 +161,22 @@ try {
   assert.equal(revoked.record!.version, 5);
   assert.equal(grant.record!.version, 4);
   await assert.rejects(evidence.download(other, item.id), /not found/);
+  await assert.rejects(
+    program.command(actor, {
+      recordId: record.id,
+      action: 'submit',
+      expectedVersion: 5,
+      idempotencyKey: randomUUID(),
+      input: { attested: true, evidenceIds: [] },
+    }),
+    /Attach and validate/,
+  );
   const submitted = await program.command(actor, {
     recordId: record.id,
     action: 'submit',
     expectedVersion: 5,
     idempotencyKey: randomUUID(),
-    input: { attested: true },
+    input: { attested: true, evidenceIds: [item.id] },
   });
   assert.equal(submitted.record!.state, 'submitted');
   await assert.rejects(evidence.upload(actor, uploadFor(record.id, 6)), /ordinary draft/);
