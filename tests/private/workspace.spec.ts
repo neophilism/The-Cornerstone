@@ -71,16 +71,22 @@ test('a private draft survives editing and reloading, with versioned receipts', 
   const download = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Download receipt', exact: true }).click();
   expect((await download).suggestedFilename()).toBe('cornerstone-simulation-receipt.json');
-  await page.getByRole('button', { name: /^Activity/ }).click();
+  await page.getByRole('link', { name: /^Activity/ }).click();
   await expect(page.getByRole('heading', { name: 'Activity updates.' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Start a new record', exact: true })).toHaveCount(
     0,
   );
   await expect(async () => {
     await page.getByRole('button', { name: 'Refresh updates', exact: true }).click();
-    await expect(page.locator('.activity-card').filter({ hasText: title })).not.toHaveCount(0);
+    await expect(
+      page.locator('.activity-card').filter({ hasText: title }).filter({ hasText: 'version 3' }),
+    ).not.toHaveCount(0);
   }).toPass({ timeout: 10000 });
-  const update = page.locator('.activity-card').filter({ hasText: title }).first();
+  const update = page
+    .locator('.activity-card')
+    .filter({ hasText: title })
+    .filter({ hasText: 'version 3' })
+    .first();
   await update.getByRole('button', { name: 'Mark read', exact: true }).click();
   await expect(update.getByText('Read · simulation', { exact: true })).toBeVisible();
   await accessible(page);
@@ -90,7 +96,7 @@ test('a private draft survives editing and reloading, with versioned receipts', 
     fullPage: true,
   });
   await page.reload();
-  await page.getByRole('button', { name: /^Activity/ }).click();
+  await page.getByRole('link', { name: /^Activity/ }).click();
   await expect(
     page
       .locator('.activity-card')
@@ -195,4 +201,85 @@ test('private HTTP mutations enforce origin, CSRF and server roles', async ({ pa
   });
   expect(denied.status()).toBe(422);
   expect((await denied.json()).code).toBe('ROLE_REQUIRED');
+});
+test('account controls revoke other sessions without ending the current one', async ({
+  page,
+}, info) => {
+  await signIn(page, 'participant');
+  const context = await page.context().browser()!.newContext({ baseURL: 'http://127.0.0.1:3001' });
+  try {
+    const other = await context.newPage();
+    await signIn(other, 'participant');
+    await page.getByRole('link', { name: 'Account & access', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Account & access.' })).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Sign out other sessions', exact: true }),
+    ).toBeEnabled();
+    await accessible(page);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.screenshot({
+      path: `test-results/private-account-${info.project.name}.png`,
+      fullPage: true,
+    });
+    await page.getByRole('button', { name: 'Sign out other sessions', exact: true }).click();
+    await expect(
+      page.getByText('Other active sessions have been signed out.', { exact: true }),
+    ).toBeVisible();
+    expect((await other.request.get('/api/private/me')).status()).toBe(401);
+    expect((await page.request.get('/api/private/me')).status()).toBe(200);
+    await other.reload();
+    await expect(other.getByRole('heading', { name: 'Your private workspace.' })).toBeVisible();
+  } finally {
+    await context.close();
+  }
+});
+test('an owner can grant read access and revoke it, with no edit controls for the reader', async ({
+  page,
+}, info) => {
+  await signIn(page, 'participant');
+  const context = await page.context().browser()!.newContext({ baseURL: 'http://127.0.0.1:3001' });
+  try {
+    const recipient = await context.newPage();
+    await signIn(recipient, 'member');
+    const me = await (await recipient.request.get('/api/private/me')).json();
+    await start(page, 'Preparation dossier');
+    const title = `Invented shared record ${info.project.name}`;
+    await page.getByLabel('Record title').fill(title);
+    await page.getByLabel('Government action', { exact: true }).fill('Invented policy choice');
+    await page
+      .getByLabel('Established livelihood', { exact: true })
+      .fill('Invented primary livelihood');
+    await page.getByLabel('Direct loss', { exact: true }).fill('Invented loss and evidence');
+    await page.getByRole('button', { name: 'Save synthetic draft', exact: true }).click();
+    await page.getByText('Help with this record', { exact: true }).click();
+    await page.getByLabel('Recipient workspace ID', { exact: true }).fill(me.actor.id);
+    await page
+      .getByLabel('Access expiration date', { exact: true })
+      .fill(new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10));
+    await page
+      .getByLabel('I authorize this person to read this record, its versions and receipts.', {
+        exact: true,
+      })
+      .check();
+    await page.getByRole('button', { name: 'Give draft access', exact: true }).click();
+    await expect(page.getByText('Simulation receipt · version 2', { exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Revoke access', exact: true })).toBeVisible();
+    await accessible(page);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.screenshot({
+      path: `test-results/private-access-${info.project.name}.png`,
+      fullPage: true,
+    });
+    await recipient.reload();
+    await open(recipient, title);
+    await expect(recipient.getByRole('heading', { name: title, exact: true })).toBeVisible();
+    await expect(recipient.getByRole('button', { name: 'Edit draft', exact: true })).toHaveCount(0);
+    await expect(recipient.getByText('Help with this record', { exact: true })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Revoke access', exact: true }).click();
+    await expect(page.getByText('Simulation receipt · version 3', { exact: true })).toBeVisible();
+    await recipient.reload();
+    await expect(recipient.getByRole('heading', { name: title, exact: true })).toHaveCount(0);
+  } finally {
+    await context.close();
+  }
 });

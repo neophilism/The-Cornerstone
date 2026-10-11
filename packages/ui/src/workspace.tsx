@@ -2,6 +2,9 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import {
   ActivityNotificationSchema,
+  draftAccessKinds,
+  RecordCapabilitiesSchema,
+  type RecordCapabilities,
   type ActivityNotification,
   type Actor,
   type CaseRecord,
@@ -10,6 +13,8 @@ import {
 } from '@cornerstone/contracts';
 import { workflows, workflowGroups, workflow, type Field } from '@cornerstone/domain';
 import { StructuredField, listFields } from './structured-field.js';
+import { AccountPanel } from './account.js';
+import { DraftAccessPanel } from './draft-access.js';
 
 type Session = { actor: Actor; csrf: string; mode: string; local: boolean };
 export function WorkflowFields({
@@ -144,6 +149,11 @@ export function Workspace({
     [pending, setPending] = useState(false),
     [local, setLocal] = useState(false);
   const retries = useRef(new Map<string, { input: string; key: string }>());
+  const [capabilities, setCapabilities] = useState<RecordCapabilities[]>([]);
+  const permitted = selected
+    ? (capabilities.find((c) => c.recordId === selected.id && c.version === selected.version)
+        ?.actions ?? [])
+    : [];
   function requestKey(slot: string, input: unknown) {
     const encoded = JSON.stringify(input),
       previous = retries.current.get(slot);
@@ -170,6 +180,7 @@ export function Workspace({
         setSession(null);
         setRecords([]);
         setNotifications([]);
+        setCapabilities([]);
         setSelected(null);
         setReceipt(null);
       }
@@ -183,6 +194,7 @@ export function Workspace({
       setSession(me);
       const list = await api('records');
       setRecords(list.records);
+      setCapabilities(RecordCapabilitiesSchema.array().parse(list.capabilities));
       const inbox = await api('notifications');
       setNotifications(ActivityNotificationSchema.array().parse(inbox.notifications));
       return list.records as CaseRecord[];
@@ -216,6 +228,7 @@ export function Workspace({
       setReceipt(null);
       setEditing(false);
       setNotifications([]);
+      setCapabilities([]);
       retries.current.clear();
       await refresh();
     } catch (e) {
@@ -419,6 +432,17 @@ export function Workspace({
                 ? ` (${notifications.filter((n) => !n.readAt).length} unread)`
                 : ''}
             </a>
+            <a
+              href="#workspace"
+              aria-current={view === 'account' ? 'page' : undefined}
+              onClick={() => {
+                setView('account');
+                setSelected(null);
+                setCreating(null);
+              }}
+            >
+              Account & access
+            </a>
           </nav>
         </aside>
         <section className="workspace-main" id="workspace">
@@ -434,6 +458,8 @@ export function Workspace({
                   setSession(null);
                   setRecords([]);
                   setNotifications([]);
+                  setCapabilities([]);
+                  setView('home');
                   setSelected(null);
                   setCreating(null);
                   setReceipt(null);
@@ -536,6 +562,9 @@ export function Workspace({
               )}
             </section>
           )}
+          {view === 'account' && !selected && !creating && (
+            <AccountPanel actorId={session.actor.id} api={api} />
+          )}
           {receipt ? (
             <div className="receipt" role="status">
               <strong>Simulation receipt · version {receipt.version}</strong>
@@ -593,8 +622,7 @@ export function Workspace({
                 </button>
               </div>
               <div className="record-links">
-                {selected.state === 'draft' &&
-                workflow(selected.kind).createRoles.some((r) => session.actor.roles.includes(r)) ? (
+                {selected.state === 'draft' && permitted.includes('save_draft') ? (
                   <button className="button button-secondary" onClick={() => setEditing(!editing)}>
                     {editing ? 'Cancel editing' : 'Edit draft'}
                   </button>
@@ -654,9 +682,7 @@ export function Workspace({
               <div className="workflow-actions">
                 {workflow(selected.kind)
                   .actions.filter(
-                    (a) =>
-                      a.from.includes(selected.state) &&
-                      a.roles.some((r) => session.actor.roles.includes(r)),
+                    (a) => a.from.includes(selected.state) && permitted.includes(a.key),
                   )
                   .map((a) => (
                     <form
@@ -679,8 +705,22 @@ export function Workspace({
                   {JSON.stringify(selected.data['history'] || [], null, 2)}
                 </pre>
               </details>
+              {selected.ownerId === session.actor.id &&
+                (draftAccessKinds as readonly string[]).includes(selected.kind) && (
+                  <DraftAccessPanel
+                    key={selected.id}
+                    record={selected}
+                    api={api}
+                    onChanged={async (result) => {
+                      setReceipt(result.receipt);
+                      setSelected(result.record);
+                      setEditing(false);
+                      await refresh();
+                    }}
+                  />
+                )}
             </>
-          ) : view === 'activity' ? null : (
+          ) : ['activity', 'account'].includes(view) ? null : (
             <>
               <div className="workspace-heading">
                 <div>

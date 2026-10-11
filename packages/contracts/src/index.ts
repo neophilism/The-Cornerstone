@@ -25,6 +25,58 @@ export const RoleSchema = z.enum([
 export type Role = z.infer<typeof RoleSchema>;
 export const IdSchema = z.string().uuid();
 export const InstantSchema = z.string().datetime({ offset: true });
+export const WorkspaceSessionSchema = z
+  .object({
+    id: IdSchema,
+    authenticatedAt: InstantSchema,
+    expiresAt: InstantSchema,
+    current: z.boolean(),
+  })
+  .strict();
+export type WorkspaceSession = z.infer<typeof WorkspaceSessionSchema>;
+export const RevokeSessionSchema = z.object({ id: IdSchema }).strict();
+export const draftAccessKinds = [
+  'dossier',
+  'organizing_group',
+  'event_petition',
+  'claim',
+  'support_request',
+] as const;
+const AccessCommandFields = {
+  recordId: IdSchema,
+  expectedVersion: z.number().int().positive(),
+  idempotencyKey: IdSchema,
+};
+export const GrantDraftAccessSchema = z
+  .object({
+    ...AccessCommandFields,
+    subjectId: IdSchema,
+    expiresAt: InstantSchema,
+    allowDraftEdits: z.boolean(),
+    consent: z.literal(true),
+  })
+  .strict();
+export const RevokeDraftAccessSchema = z
+  .object({ ...AccessCommandFields, grantId: IdSchema })
+  .strict();
+export const DraftAccessViewSchema = z
+  .object({
+    id: IdSchema,
+    subjectId: IdSchema,
+    permissions: z.array(z.string().min(1).max(80)),
+    expiresAt: InstantSchema,
+    revokedAt: InstantSchema.nullable(),
+  })
+  .strict();
+export type DraftAccessView = z.infer<typeof DraftAccessViewSchema>;
+export const RecordCapabilitiesSchema = z
+  .object({
+    recordId: IdSchema,
+    version: z.number().int().positive(),
+    actions: z.array(z.string().min(1).max(80)),
+  })
+  .strict();
+export type RecordCapabilities = z.infer<typeof RecordCapabilitiesSchema>;
 export const ActivityNotificationSchema = z
   .object({
     id: IdSchema,

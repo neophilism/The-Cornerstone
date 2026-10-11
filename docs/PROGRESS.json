@@ -8,7 +8,7 @@
   "sourcePublicationApproved": true,
   "internalPlanPublicationApproved": false,
   "pending": [
-    "activity worker, calendar and credential-isolation CI verification",
+    "corrected activity browser checks and session/delegation CI verification",
     "protected integrations and independent review",
     "complete program journeys"
   ]

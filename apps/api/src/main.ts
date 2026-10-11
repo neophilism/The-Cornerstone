@@ -13,8 +13,12 @@ import {
   ModeSchema,
   RealmSchema,
   MarkActivityReadSchema,
+  WorkspaceSessionSchema,
+  RevokeSessionSchema,
+  IdSchema,
+  RecordCapabilitiesSchema,
 } from '@cornerstone/contracts';
-import { DomainError, workflows } from '@cornerstone/domain';
+import { DomainError, workflows, workflow } from '@cornerstone/domain';
 import {
   readKey,
   digest,
@@ -25,9 +29,11 @@ import {
   encrypt,
   decrypt,
   type Envelope,
+  canAct,
 } from '@cornerstone/security';
 import { Store, PersistenceError } from '@cornerstone/store';
 import { ProgramService } from './service.js';
+import { DraftAccessService } from './access.js';
 
 class ApplicationModule {}
 Module({})(ApplicationModule);
@@ -209,8 +215,92 @@ route('get', '/workflows', async (req, res) => {
   const a = await actor(req);
   res.json({ workflows: workflows.filter((w) => w.createRoles.some((r) => a.roles.includes(r))) });
 });
-route('get', '/records', async (req, res) =>
-  res.json({ records: await requireStore().list(await actor(req)) }),
+route('get', '/auth/sessions', async (req, res) => {
+  await actor(req);
+  const rows = await requireStore().pool.query('SELECT * FROM auth_sessions($1)', [
+    digest(cookies(req)[cookieName]),
+  ]);
+  res.json({
+    sessions: rows.rows.map((s) =>
+      WorkspaceSessionSchema.parse({
+        id: s.id,
+        authenticatedAt: s.authenticated_at.toISOString(),
+        expiresAt: s.expires_at.toISOString(),
+        current: s.current_session,
+      }),
+    ),
+  });
+});
+route('post', '/auth/sessions/revoke', async (req, res) => {
+  await actor(req, true);
+  const input = RevokeSessionSchema.parse(req.body);
+  const token = digest(cookies(req)[cookieName]);
+  const current = await requireStore().pool.query(
+    'SELECT id FROM auth_sessions($1) WHERE current_session',
+    [token],
+  );
+  const result = await requireStore().pool.query('SELECT auth_revoke_session($1,$2) revoked', [
+    token,
+    input.id,
+  ]);
+  if (current.rows[0]?.id === input.id) {
+    setCookie(res, cookieName, '', 0);
+    setCookie(res, csrfName, '', 0);
+  }
+  res.json({ revoked: result.rows[0]?.revoked === true });
+});
+route('post', '/auth/sessions/revoke-others', async (req, res) => {
+  await actor(req, true);
+  if (Object.keys(req.body ?? {}).length)
+    throw new DomainError('INVALID_INPUT', 'No fields are accepted for this action.');
+  const result = await requireStore().pool.query('SELECT auth_revoke_others($1) revoked', [
+    digest(cookies(req)[cookieName]),
+  ]);
+  res.json({ revoked: result.rows[0]?.revoked ?? 0 });
+});
+route('get', '/records', async (req, res) => {
+  const a = await actor(req),
+    db = requireStore(),
+    records = await db.list(a);
+  const grants = await db.transaction(a, async (tx) =>
+    (
+      await tx.query(
+        'SELECT subject_id,record_id,expires_at,revoked_at,permissions FROM grants WHERE record_id=ANY($1::uuid[])',
+        [records.map((r) => r.id)],
+      )
+    ).rows.map((g) => ({
+      subjectId: g.subject_id,
+      recordId: g.record_id,
+      expiresAt: g.expires_at.toISOString(),
+      revoked: !!g.revoked_at,
+      permissions: g.permissions,
+    })),
+  );
+  const capabilities = records.map((r) => {
+    const wf = workflow(r.kind),
+      now = new Date().toISOString();
+    const actions = wf.actions
+      .filter(
+        (action) =>
+          action.from.includes(r.state) && canAct(a, r, action.roles, grants, action.key, now),
+      )
+      .map((action) => action.key);
+    if (r.state === 'draft' && canAct(a, r, wf.createRoles, grants, 'save_draft', now))
+      actions.push('save_draft');
+    return RecordCapabilitiesSchema.parse({ recordId: r.id, version: r.version, actions });
+  });
+  res.json({ records, capabilities });
+});
+const accessService = () => new DraftAccessService(requireStore(), mode, realm);
+route('get', '/access', async (req, res) => {
+  const a = await actor(req);
+  res.json({ grants: await accessService().list(a, IdSchema.parse(req.query['recordId'])) });
+});
+route('post', '/access/grant', async (req, res) =>
+  res.json(await accessService().grant(await actor(req, true), req.body)),
+);
+route('post', '/access/revoke', async (req, res) =>
+  res.json(await accessService().revoke(await actor(req, true), req.body)),
 );
 route('get', '/notifications', async (req, res) =>
   res.json({ notifications: await requireStore().notifications(await actor(req)) }),

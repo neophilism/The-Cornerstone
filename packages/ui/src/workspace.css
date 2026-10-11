@@ -376,6 +376,10 @@
   padding: 24px;
   border-radius: 12px;
 }
+.workspace-id {
+  overflow-wrap: anywhere;
+  font-family: monospace;
+}
 .activity-card h2 {
   font-size: 28px;
 }
