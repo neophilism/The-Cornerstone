@@ -189,6 +189,7 @@ export const MemberBallotViewSchema = z
       .nullable(),
     closesOn: DateSchema.nullable(),
     ownUnits: z.array(IdSchema),
+    castUnits: z.array(IdSchema),
     ownBallots: z.array(
       z
         .object({

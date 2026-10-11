@@ -21,6 +21,7 @@ import { assertAuthority, draftPolicy } from '@cornerstone/policy';
 import { canAct, digest } from '@cornerstone/security';
 import { EvidenceService } from './evidence.js';
 import { MembershipService } from './membership.js';
+import { SuccessionService } from './succession.js';
 import { Store, type Transaction } from '@cornerstone/store';
 import {
   cents,
@@ -175,6 +176,8 @@ export class ProgramService {
       if (record.kind === 'resolution' && a.key === 'save_draft')
         await members.resolutionDraft(tx, actor, data, record.id);
       data = await this.linkedRules(tx, actor, record, command, data, now);
+      if (record.kind === 'succession')
+        data = await new SuccessionService().prepare(tx, actor, record, a.key, data);
       const ballot =
         record.kind === 'resolution' && a.key === 'record_vote'
           ? await members.prepareBallot(tx, actor, record, data, now.slice(0, 10))
@@ -206,6 +209,8 @@ export class ProgramService {
         requestDigest,
       );
       if (record.kind === 'association' && a.key === 'submit') await members.invite(tx, next);
+      if (record.kind === 'succession' && a.key === 'approve')
+        await new SuccessionService().finish(tx, next, receipt);
       if (ballot)
         await tx.query('SELECT simulation_cast_ballot($1,$2,$3,$4::jsonb,$5,$6)', [
           ballot.id,

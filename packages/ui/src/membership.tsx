@@ -406,7 +406,7 @@ export function MemberBallotPanel({
       generation.current++;
     };
   }, [record.id, record.version]);
-  const unit = view?.ownUnits.find((id) => !view.ownBallots.some((b) => b.unitId === id)),
+  const unit = view?.ownUnits.find((id) => !view.castUnits.includes(id)),
     open =
       canVote &&
       record.state === 'voting' &&
@@ -486,6 +486,16 @@ export function MemberBallotPanel({
           </p>
         </div>
       ))}
+      {view?.castUnits
+        .filter((id) => !view.ownBallots.some((b) => b.unitId === id))
+        .map((id) => (
+          <div className="receipt prior-unit-ballot" key={id}>
+            <strong>This founding unit has already voted.</strong>
+            <p>
+              A change of holder does not grant another vote or reveal the previous holder's choice.
+            </p>
+          </div>
+        ))}
       {!view?.ownUnits.length && (
         <p className="hint">This workspace holds no active founding unit in this association.</p>
       )}

@@ -26,6 +26,7 @@ import { MembershipPanel, FoundingConsentPanel, MemberBallotPanel } from './memb
 import { EvidenceChoice, RecordChoice, IncomeShare, isRecordReference } from './record-fields.js';
 import { PreparationGuide, RecordNextStep } from './journey.js';
 import { CalculationSummary } from './financial-fields.js';
+import { SuccessionSummary } from './succession.js';
 
 type Session = { actor: Actor; csrf: string; mode: string; local: boolean };
 export function WorkflowFields({
@@ -458,7 +459,7 @@ export function Workspace({
               <div className="persona-grid">
                 {(staff
                   ? ['labor', 'commerce', 'state', 'supervisor', 'fiscal', 'adjudicator', 'support']
-                  : ['participant', 'member']
+                  : ['participant', 'member', 'successor']
                 ).map((p) => (
                   <button key={p} disabled={pending} onClick={() => void signIn(p)}>
                     {p.replaceAll('_', ' ')} · synthetic development
@@ -779,6 +780,7 @@ export function Workspace({
                 </button>
               </div>
               <RecordNextStep record={selected} />
+              <SuccessionSummary record={selected} />
               <div className="record-links">
                 {selected.state === 'draft' && permitted.includes('save_draft') ? (
                   <button className="button button-secondary" onClick={() => setEditing(!editing)}>

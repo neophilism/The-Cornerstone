@@ -1,17 +1,17 @@
 {
   "updated": "2026-10-11",
   "scope": "public policy website and synthetic preparation, evidence, membership and voting; full program unfinished",
-  "lastVerifiedCommit": "0afd9bc59b9822e28b7ecf8778bf0c8db0f6b476",
-  "lastVerifiedRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/38159018769",
+  "lastVerifiedCommit": "b5de06bae62f668163e9627ab0cfc5fe12829f6c",
+  "lastVerifiedRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/38165726687",
   "livePublicUrl": "https://cornerstone-policy-preview.onrender.com",
   "protectedIntake": false,
   "sourcePublicationApproved": true,
   "internalPlanPublicationApproved": false,
   "pending": [
-    "availability-aware next-step acceptance",
-    "succession and complete program journeys",
+    "post-enrollment succession CI and browser acceptance",
+    "pre-enrollment surviving claims and complete program journeys",
     "protected integrations and independent review"
   ],
-  "releasePullRequest": "https://github.com/neophilism/The-Cornerstone/pull/9",
+  "releasePullRequest": "https://github.com/neophilism/The-Cornerstone/pull/10",
   "developmentMigrations": 10
 }

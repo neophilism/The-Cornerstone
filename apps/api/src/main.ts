@@ -356,6 +356,7 @@ route('post', '/auth/logout', async (req, res) => {
 const personas = [
   'participant',
   'member',
+  'successor',
   'labor',
   'commerce',
   'state',

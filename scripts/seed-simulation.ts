@@ -13,6 +13,7 @@ await client.connect();
 const personas = [
   'participant',
   'member',
+  'successor',
   'labor',
   'commerce',
   'state',
@@ -33,7 +34,7 @@ try {
     const roles =
       persona === 'member'
         ? ['participant', 'member']
-        : persona === 'participant'
+        : ['participant', 'successor'].includes(persona)
           ? ['participant']
           : [persona];
     await client.query(
@@ -43,7 +44,11 @@ try {
         persona,
         roles,
         institutions[persona] || null,
-        persona === 'member' ? 'verified' : persona === 'participant' ? 'draft' : 'privileged',
+        persona === 'member'
+          ? 'verified'
+          : ['participant', 'successor'].includes(persona)
+            ? 'draft'
+            : 'privileged',
       ],
     );
   }

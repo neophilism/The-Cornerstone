@@ -25,11 +25,5 @@ export function actionUnavailable(
       message:
         'An independently confirmed Treasury or settlement integration is not installed. No payment receipt has been issued.',
     };
-  if (kind === 'succession' && action === 'approve')
-    return {
-      code: 'SUCCESSION_REVIEW_REQUIRED',
-      message:
-        'The single-successor identity, grant and immutable unit transfer must be independently reviewed before activation.',
-    };
   return null;
 }
