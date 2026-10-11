@@ -2,7 +2,7 @@
 
 Updated October 11, 2026. The full program is unfinished. The earlier internal planning package remains private pending separate publication approval. The unverified canonical roadmap marker in registry/roadmap.json does not imply an empty implementation or assert a total planned-PR count.
 
-Last verified merged release: b453bfe461cf2bb288367dc8c61b3028f44071a9, with the same tree as the tested PR #7 head. Verify and database jobs passed in [Actions run 38154186337](https://github.com/neophilism/The-Cornerstone/actions/runs/38154186337): 52 unit tests, 36 public and 28 private browser checks, actual PostgreSQL integrations and production builds. PRs #1–#7 are merged. The Render deployment branch was advanced to this release. No independent security approval is claimed.
+Last verified merged release: 338810a35756620be9c3a787aac143206d950121, with the same tree as the tested PR #8 head. Verify and database jobs passed in [Actions run 38154766940](https://github.com/neophilism/The-Cornerstone/actions/runs/38154766940): 52 unit tests, 36 public and 30 private browser checks, actual PostgreSQL integrations and production builds. PRs #1–#8 are merged. The Render deployment branch was advanced to this release. No independent security approval is claimed.
 
 Guided evidence selection, related-record choices, income percentages, next-step guidance and record search are verified, including the full petition-to-individual-finding browser journey and six inspected desktop/mobile captures. See GUIDED_JOURNEYS.md.
 
@@ -14,14 +14,16 @@ Private record browsing now has authenticated continuation pages, older-record l
 
 Guided financial terms, cash schedules and calculation summaries passed actual PostgreSQL and desktop/mobile acceptance in Actions 38154186337. PR #7 is merged; all six finance captures were inspected. See GUIDED_FINANCE.md.
 
-Membership activity now includes scoped founding invitations, assigned-review updates, roll closure and opened/tallied member decisions, without broadcasting personal responses or ballots. Older invitations open through current permission checks. Migration 010 and its database/browser acceptance remain pending. See ACTIVITY_AND_CALENDAR.md.
+Membership activity now includes scoped founding invitations, assigned-review updates, roll closure and opened/tallied member decisions, without broadcasting personal responses or ballots. Older invitations open through current permission checks. Migration 010 is applied and checksummed on Neon development; database/browser acceptance passed in Actions 38154766940 and PR #8 is merged. See ACTIVITY_AND_CALENDAR.md.
 
 The public website explains the policy, provides a starting guide and help, and offers research search, chronology and evidence pages. Seven approved source originals are downloadable and byte-verified. All six workbook sheets and 231 census IDs reconcile. Research entries never supply an event or individual finding, and the register remains open to unlisted events.
 
 Private development includes versioned synthetic drafts, receipts and exports; assigned support; role/RLS denial; bounded finance and deterministic matching; a restricted durable activity worker; calendar helpers; self-service session revocation; and bounded owner-managed draft access. Synthetic text attachments use encrypted immutable bodies, quarantine, format validation, provenance and scoped byte-preserving download. Evidence-bearing submission and findings reject empty, unavailable, duplicate or corrupt attachment references. Format validation is not an antivirus scan, credibility finding or legal acceptance.
 
-Nine additive migrations are applied and checksummed on the Neon development branch only. The supplied production branch has not been migrated. The public Render service has no private database credentials.
+Ten migrations are applied and checksummed on the Neon development branch only. The supplied production branch has not been migrated. The public Render service has no private database credentials.
 
 Personal founding consent, scoped membership inspection and private member ballots with frozen all-unit tallies are implemented and tested in simulation. Every founder must accept unchanged terms; consent may be withdrawn during the full founding period. Opening a vote freezes the actual roll, and private choices stay outside shared record versions. Succession, full financial acceptance and additional whole-program journeys remain in development. Protected identity/encryption/recovery, actual document custody, independent ranking custodians, legal notices, Treasury and external authority integrations remain separate prerequisites. Real private intake, legal action, payment execution and real rankings remain disabled.
 
 Branch protection, independent reviews, signed release provenance, Render project/environment assignment and owner retirement of the unused privileged Neon development role remain open. A successful CI run is verification evidence, not a statutory authorization or independent security assessment.
+
+Unavailable provider-dependent actions now explain their prerequisites before presenting a form. The shared release gate also rejects direct API commands after permission checks, before validating inputs or changing records. Acceptance pending.
