@@ -89,7 +89,8 @@ jobs:
         env:
           NODE_ENV: production
       - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm test:private
+      - run: pnpm test:private --project=desktop --output=test-results/desktop
+      - run: pnpm test:private --project=mobile --output=test-results/mobile
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
