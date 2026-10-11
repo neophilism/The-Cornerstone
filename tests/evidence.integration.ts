@@ -1,3 +1,4 @@
+import { fixtureKey } from './fixture-key.js';
 import pg from 'pg';
 import { randomUUID, randomBytes } from 'node:crypto';
 import { strict as assert } from 'node:assert';
@@ -15,7 +16,7 @@ if (
   throw Error('Isolated synthetic connections required.');
 const owner = new pg.Client({ connectionString: process.env['MIGRATION_DATABASE_URL'] });
 await owner.connect();
-const store = new Store(process.env['DATABASE_URL'], randomBytes(32)),
+const store = new Store(process.env['DATABASE_URL'], fixtureKey()),
   program = new ProgramService(store, 'simulation', 'simulation'),
   evidence = new EvidenceService(store, 'simulation', 'simulation', 'synthetic-postgres'),
   access = new DraftAccessService(store, 'simulation', 'simulation');

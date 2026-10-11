@@ -35,6 +35,7 @@ import { Store, PersistenceError } from '@cornerstone/store';
 import { ProgramService } from './service.js';
 import { DraftAccessService } from './access.js';
 import { EvidenceService } from './evidence.js';
+import { MembershipService } from './membership.js';
 
 class ApplicationModule {}
 Module({})(ApplicationModule);
@@ -263,19 +264,11 @@ route('get', '/records', async (req, res) => {
   const a = await actor(req),
     db = requireStore(),
     records = await db.list(a);
-  const grants = await db.transaction(a, async (tx) =>
-    (
-      await tx.query(
-        'SELECT subject_id,record_id,expires_at,revoked_at,permissions FROM grants WHERE record_id=ANY($1::uuid[])',
-        [records.map((r) => r.id)],
-      )
-    ).rows.map((g) => ({
-      subjectId: g.subject_id,
-      recordId: g.record_id,
-      expiresAt: g.expires_at.toISOString(),
-      revoked: !!g.revoked_at,
-      permissions: g.permissions,
-    })),
+  const grants = await db.transaction(a, (tx) =>
+    db.scopes(
+      tx,
+      records.map((r) => r.id),
+    ),
   );
   const capabilities = records.map((r) => {
     const wf = workflow(r.kind),
@@ -330,6 +323,23 @@ route('get', '/evidence/download', async (req, res) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.send(result.bytes);
 });
+const membershipService = () => new MembershipService(requireStore(), mode, realm);
+route('get', '/memberships', async (req, res) =>
+  res.json(await membershipService().list(await actor(req))),
+);
+route('get', '/memberships/roll', async (req, res) =>
+  res.json(
+    await membershipService().rollView(await actor(req), IdSchema.parse(req.query['recordId'])),
+  ),
+);
+route('post', '/memberships/respond', async (req, res) =>
+  res.json(await membershipService().respond(await actor(req, true), req.body)),
+);
+route('get', '/governance', async (req, res) =>
+  res.json(
+    await membershipService().ballotView(await actor(req), IdSchema.parse(req.query['recordId'])),
+  ),
+);
 route('get', '/notifications', async (req, res) =>
   res.json({ notifications: await requireStore().notifications(await actor(req)) }),
 );

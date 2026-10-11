@@ -18,3 +18,5 @@ The initial application-field encryption adapter uses Node's AES-256-GCM with a 
 | Recovery              | Synthetic restore tests do not attest production RPO; journal and key continuity require independent custody and measured provider drills                                     |
 
 Public explanation can be released separately. No sensitive intake, E2EE claim, real sealed ranking, public disbursement, or official program activation follows merely from deployment.
+
+Synthetic member ballots use server-field encryption, immutable rows and scoped database access. Shared records exclude individual choices. Assigned reviewers and the authorized API can decrypt them; small published tallies can reveal choices by inference. This adapter supplies neither independently sealed ranking custody nor anonymous election guarantees. See MEMBERSHIP_AND_VOTING.md.

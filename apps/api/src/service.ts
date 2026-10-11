@@ -12,7 +12,6 @@ import {
   validateAction,
   assertTransition,
   validateFoundingRoll,
-  majorityOfAll,
   renewal,
   requireCondition,
   DomainError,
@@ -20,6 +19,7 @@ import {
 import { assertAuthority, draftPolicy } from '@cornerstone/policy';
 import { canAct, digest } from '@cornerstone/security';
 import { EvidenceService } from './evidence.js';
+import { MembershipService } from './membership.js';
 import { Store, type Transaction } from '@cornerstone/store';
 import {
   cents,
@@ -36,6 +36,7 @@ export class ProgramService {
     readonly store: Store,
     readonly mode: Mode,
     readonly realm: Realm,
+    private readonly clock: () => Date = () => new Date(),
   ) {}
   private writable(actor: Actor) {
     requireCondition(
@@ -59,7 +60,7 @@ export class ProgramService {
       'Your role cannot create this record.',
     );
     const data = parseFields(wf.createFields, input.input);
-    const now = new Date().toISOString();
+    const now = this.clock().toISOString();
     const requestDigest = digest(input);
     return this.store.transaction(actor, async (tx) => {
       const previous = await this.store.existingReceipt(
@@ -73,6 +74,8 @@ export class ProgramService {
           receipt: previous,
           record: await this.store.getVersion(tx, previous.recordId, previous.version),
         };
+      const members = new MembershipService(this.store, this.mode, this.realm);
+      if (input.kind === 'resolution') await members.resolutionDraft(tx, actor, data);
       const record: CaseRecord = {
         id: randomUUID(),
         realm: actor.realm,
@@ -97,6 +100,11 @@ export class ProgramService {
         requestDigest,
         true,
       );
+      if (record.kind === 'resolution')
+        await tx.query('SELECT simulation_link_resolution($1,$2)', [
+          record.id,
+          data['associationId'],
+        ]);
       return { record, receipt };
     });
   }
@@ -139,7 +147,7 @@ export class ProgramService {
       requireCondition(a, 'UNKNOWN_ACTION', 'Unknown action.');
       assertTransition(record, a);
       const grants = await this.store.grants(tx, record.id),
-        now = new Date().toISOString();
+        now = this.clock().toISOString();
       requireCondition(
         canAct(actor, record, a.roles, grants, a.key, now),
         'RECORD_PERMISSION',
@@ -160,14 +168,21 @@ export class ProgramService {
       const retained = { ...record.data };
       if (a.key === 'save_draft') for (const field of wf.createFields) delete retained[field.key];
       let data = validateAction({ ...record, data: retained }, a.key, input, now.slice(0, 10));
+      const members = new MembershipService(this.store, this.mode, this.realm);
+      if (record.kind === 'resolution' && a.key === 'save_draft')
+        await members.resolutionDraft(tx, actor, data, record.id);
       data = await this.linkedRules(tx, actor, record, command, data, now);
+      const ballot =
+        record.kind === 'resolution' && a.key === 'record_vote'
+          ? await members.prepareBallot(tx, actor, record, data, now.slice(0, 10))
+          : undefined;
       const history = Array.isArray(record.data['history']) ? record.data['history'] : [];
       data['history'] = [
         ...history,
         { version: record.version + 1, action: a.key, at: now, actorId: actor.id },
       ];
       let institution = record.institutionId;
-      if (a.key === 'submit') {
+      if (a.key === 'submit' || (record.kind === 'resolution' && a.key === 'open_vote')) {
         const routed = await tx.query('SELECT simulation_assign($1,$2)', [record.id, record.kind]);
         institution = routed.rows[0]?.simulation_assign || institution;
       }
@@ -187,6 +202,16 @@ export class ProgramService {
         command.idempotencyKey,
         requestDigest,
       );
+      if (record.kind === 'association' && a.key === 'submit') await members.invite(tx, next);
+      if (ballot)
+        await tx.query('SELECT simulation_cast_ballot($1,$2,$3,$4::jsonb,$5,$6)', [
+          ballot.id,
+          record.id,
+          ballot.unitId,
+          JSON.stringify(ballot.cipher),
+          ballot.commitment,
+          receipt.id,
+        ]);
       return { record: next, receipt };
     });
   }
@@ -240,6 +265,7 @@ export class ProgramService {
       await this.linked(tx, d['eventId'], 'event_petition', ['certified']);
     if (r.kind === 'association' && k === 'close_roll') {
       await this.linked(tx, d['eventId'], 'event_petition', ['certified']);
+      await new MembershipService(this.store, this.mode, this.realm).assertConsented(tx, r, today);
       const units = d['units'] as { claimId: string; personId: string }[];
       requireCondition(Array.isArray(units), 'INVALID_ROLL', 'Provide the founding roll.');
       validateFoundingRoll({
@@ -284,58 +310,15 @@ export class ProgramService {
       d['rollClosedAt'] = today;
     }
     if (r.kind === 'resolution' && k === 'open_vote') {
-      const a = await this.linked(tx, d['associationId'], 'association', [
+      await this.linked(tx, d['associationId'], 'association', [
         'ready',
         'provisional',
         'operating',
       ]);
-      const count = await tx.query(
-        'SELECT count(*)::int AS n FROM founding_units WHERE association_id=$1 AND active',
-        [a.id],
-      );
-      requireCondition(
-        Number(d['unitCount']) === count.rows[0]?.n,
-        'ROLL_VERSION',
-        'Use the actual frozen active founding roll.',
-      );
-      d['ballots'] = [];
-    }
-    if (r.kind === 'resolution' && k === 'record_vote') {
-      requireCondition(
-        today <= String(d['closesAt']),
-        'VOTE_CLOSED',
-        'The voting period has ended.',
-      );
-      IdSchema.parse(d['unitId']);
-      const unit = await tx.query(
-        'SELECT * FROM founding_units WHERE id=$1 AND association_id=$2 AND active',
-        [d['unitId'], d['associationId']],
-      );
-      requireCondition(
-        unit.rows[0] && (unit.rows[0].successor_id || unit.rows[0].person_id) === actor.id,
-        'UNIT_AUTHORITY',
-        'You must hold the active founding unit.',
-      );
-      const ballots = Array.isArray(d['ballots'])
-        ? (d['ballots'] as { unitId: string; choice: string }[])
-        : [];
-      requireCondition(
-        !ballots.some((b) => b.unitId === d['unitId']),
-        'DUPLICATE_BALLOT',
-        'That founding unit has already voted.',
-      );
-      d['ballots'] = [...ballots, { unitId: d['unitId'], choice: d['choice'] }];
+      await new MembershipService(this.store, this.mode, this.realm).freeze(tx, r, d, today);
     }
     if (r.kind === 'resolution' && k === 'tally') {
-      requireCondition(
-        today > String(d['closesAt']),
-        'VOTE_OPEN',
-        'Wait until the published voting period closes.',
-      );
-      const ballots = d['ballots'] as { unitId: string; choice: string }[];
-      const yes = ballots.filter((b) => b.choice === 'yes').length;
-      d['yes'] = yes;
-      d['approved'] = majorityOfAll(yes, Number(d['unitCount']));
+      await new MembershipService(this.store, this.mode, this.realm).tally(tx, r, d, today);
     }
     if (r.kind === 'offer' && k === 'publish') {
       await this.linked(tx, d['authorityId'], 'state_authority', ['verified']);

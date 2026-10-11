@@ -64,7 +64,7 @@ test('a private draft survives editing and reloading, with versioned receipts', 
   await expect(page.getByText('Simulation receipt · version 3', { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Edit draft', exact: true })).toHaveCount(0);
   await accessible(page);
-  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.evaluate(() => window.scrollTo({ top: 0, left: 0, behavior: 'instant' }));
   await page.screenshot({
     path: `test-results/private-dossier-${info.project.name}.png`,
     fullPage: true,
@@ -91,7 +91,7 @@ test('a private draft survives editing and reloading, with versioned receipts', 
   await update.getByRole('button', { name: 'Mark read', exact: true }).click();
   await expect(update.getByText('Read · simulation', { exact: true })).toBeVisible();
   await accessible(page);
-  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.evaluate(() => window.scrollTo({ top: 0, left: 0, behavior: 'instant' }));
   await page.screenshot({
     path: `test-results/private-activity-${info.project.name}.png`,
     fullPage: true,
@@ -102,6 +102,7 @@ test('a private draft survives editing and reloading, with versioned receipts', 
     page
       .locator('.activity-card')
       .filter({ hasText: title })
+      .filter({ hasText: 'version 3' })
       .first()
       .getByText('Read · simulation', { exact: true }),
   ).toBeVisible();
@@ -137,7 +138,7 @@ test('assigned support can answer a request and the participant can see the pers
   await page.getByRole('button', { name: 'Provide a response', exact: true }).click();
   await expect(page.getByText('Simulation receipt · version 3', { exact: true })).toBeVisible();
   await accessible(page);
-  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.evaluate(() => window.scrollTo({ top: 0, left: 0, behavior: 'instant' }));
   await page.screenshot({
     path: `test-results/private-support-${info.project.name}.png`,
     fullPage: true,
@@ -219,7 +220,7 @@ test('account controls revoke other sessions without ending the current one', as
       page.getByRole('button', { name: 'Sign out other sessions', exact: true }),
     ).toBeEnabled();
     await accessible(page);
-    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.evaluate(() => window.scrollTo({ top: 0, left: 0, behavior: 'instant' }));
     await page.screenshot({
       path: `test-results/private-account-${info.project.name}.png`,
       fullPage: true,
@@ -268,7 +269,7 @@ test('an owner can grant read access and revoke it, with no edit controls for th
     await expect(page.getByText('Simulation receipt · version 2', { exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Revoke access', exact: true })).toBeVisible();
     await accessible(page);
-    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.evaluate(() => window.scrollTo({ top: 0, left: 0, behavior: 'instant' }));
     await page.screenshot({
       path: `test-results/private-access-${info.project.name}.png`,
       fullPage: true,
@@ -349,7 +350,7 @@ test('a synthetic attachment stays quarantined until text validation and downloa
   expect(download.suggestedFilename()).toBe('invented-source.txt');
   expect(await readFile((await download.path())!)).toEqual(body);
   await accessible(page);
-  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.evaluate(() => window.scrollTo({ top: 0, left: 0, behavior: 'instant' }));
   await page.mouse.move(0, 0);
   await page.screenshot({
     path: 'test-results/private-evidence-' + info.project.name + '.png',
@@ -362,4 +363,122 @@ test('a synthetic attachment stays quarantined until text validation and downloa
       .locator('.evidence-card')
       .getByRole('heading', { name: 'invented-source.txt', exact: true }),
   ).toBeVisible();
+});
+
+test('a founder personally declines, accepts and withdraws an invitation', async ({
+  page,
+}, info) => {
+  await signIn(page, info.project.name === 'desktop' ? 'participant' : 'member');
+  await page.getByRole('link', { name: 'Membership & votes', exact: true }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Membership & votes.', exact: true }),
+  ).toBeVisible();
+  const invitation = page.locator('.invitation-card').filter({
+    has: page.getByRole('heading', { name: 'Invented voluntary invitation', exact: true }),
+  });
+  await invitation.getByRole('button', { name: 'Review association', exact: true }).click();
+  const consent = page.locator('.founding-consent');
+  await consent.getByRole('button', { name: 'Decline founding invitation', exact: true }).click();
+  await expect(consent.getByText('Your response: declined', { exact: true })).toBeVisible();
+  await consent.getByLabel(/^I voluntarily accept these unchanged terms/).check();
+  await consent.getByRole('button', { name: 'Accept founding invitation', exact: true }).click();
+  await expect(consent.getByText('Your response: accepted', { exact: true })).toBeVisible();
+  await consent.getByRole('button', { name: 'Withdraw founding consent', exact: true }).click();
+  await expect(consent.getByText('Your response: declined', { exact: true })).toBeVisible();
+  await consent.getByLabel(/^I voluntarily accept these unchanged terms/).check();
+  await consent.getByRole('button', { name: 'Accept founding invitation', exact: true }).click();
+  await expect(consent.getByText('Your response: accepted', { exact: true })).toBeVisible();
+  await expect(page.locator('.founding-consent')).toHaveCount(1);
+  await accessible(page);
+  await page.evaluate(() => {
+    (document.activeElement as HTMLElement | null)?.blur();
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  });
+  await page.screenshot({
+    path: `test-results/private-consent-${info.project.name}.png`,
+    fullPage: true,
+  });
+  await page.reload();
+  await page.getByRole('link', { name: 'Membership & votes', exact: true }).click();
+  await expect(
+    page
+      .locator('.membership-card')
+      .getByRole('heading', { name: 'Invented closed association', exact: true }),
+  ).toBeVisible();
+  await expect(
+    page
+      .locator('.invitation-card')
+      .filter({ hasText: 'Invented voluntary invitation' })
+      .getByText('accepted · simulation', { exact: true }),
+  ).toBeVisible();
+  await accessible(page);
+  await page.evaluate(() => {
+    (document.activeElement as HTMLElement | null)?.blur();
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  });
+  await page.screenshot({
+    path: `test-results/private-membership-${info.project.name}.png`,
+    fullPage: true,
+  });
+});
+
+test('two members vote privately on a frozen roll and retain their own receipts', async ({
+  page,
+}, info) => {
+  await signIn(page, 'participant');
+  await start(page, 'Member resolution');
+  const title = `Invented member decision ${info.project.name}`;
+  await page.getByLabel('Record title', { exact: true }).fill(title);
+  await page
+    .getByLabel('Association ID', { exact: true })
+    .selectOption({ label: 'Invented closed association' });
+  await page.getByLabel('Reserved decision', { exact: true }).selectOption('compact');
+  await page
+    .getByLabel('Exact proposal', { exact: true })
+    .fill('Invented compact proposal for inspection before a voluntary vote.');
+  await page.getByRole('button', { name: 'Save synthetic draft', exact: true }).click();
+  await expect(page.getByText('Simulation receipt · version 1', { exact: true })).toBeVisible();
+  await page
+    .getByLabel('Voting closes', { exact: true })
+    .fill(new Date(Date.now() + 86400000 * 2).toISOString().slice(0, 10));
+  await page.getByRole('button', { name: 'Open member vote', exact: true }).click();
+  const ballot = page.locator('.member-ballot');
+  await ballot.getByLabel('Your vote', { exact: true }).selectOption('yes');
+  await ballot.getByRole('button', { name: 'Save my ballot', exact: true }).click();
+  await expect(ballot.getByText('Your saved ballot: yes', { exact: true })).toBeVisible();
+  await expect(ballot.getByRole('button', { name: 'Save my ballot', exact: true })).toHaveCount(0);
+  await expect(page.locator('.member-ballot')).toHaveCount(1);
+  await accessible(page);
+  await page.evaluate(() => {
+    (document.activeElement as HTMLElement | null)?.blur();
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  });
+  await page.screenshot({
+    path: `test-results/private-ballot-${info.project.name}.png`,
+    fullPage: true,
+  });
+  await page.getByRole('button', { name: 'Sign out', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Your private workspace.' })).toBeVisible();
+  await signIn(page, 'member');
+  await page.getByRole('link', { name: 'Membership & votes', exact: true }).click();
+  await page
+    .locator('.activity-card')
+    .filter({ has: page.getByRole('heading', { name: title, exact: true }) })
+    .getByRole('button', { name: 'Review decision', exact: true })
+    .click();
+  await expect(page.getByText('Your saved ballot: yes', { exact: true })).toHaveCount(0);
+  await ballot.getByLabel('Your vote', { exact: true }).selectOption('abstain');
+  await ballot.getByRole('button', { name: 'Save my ballot', exact: true }).click();
+  await expect(ballot.getByText('Your saved ballot: abstain', { exact: true })).toBeVisible();
+  const records = await (await page.request.get('/api/private/records')).json();
+  const r = records.records.find((r: { title: string }) => r.title === title);
+  expect(r.data.unitCount).toBe(2);
+  expect(r.data.votesCast).toBe(2);
+  expect(['choice', 'unitId', 'ballots'].some((k) => k in r.data)).toBe(false);
+  const view = await (await page.request.get('/api/private/governance?recordId=' + r.id)).json();
+  expect(view.ownBallots.map((b: { choice: string }) => b.choice)).toEqual(['abstain']);
+  await page.reload();
+  await open(page, title);
+  await expect(ballot.getByText('Your saved ballot: abstain', { exact: true })).toBeVisible();
+  await accessible(page);
 });

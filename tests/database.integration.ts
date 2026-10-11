@@ -1,3 +1,4 @@
+import { fixtureKey } from './fixture-key.js';
 import pg from 'pg';
 import { readFile } from 'node:fs/promises';
 import { randomUUID, randomBytes } from 'node:crypto';
@@ -11,7 +12,7 @@ if (process.env['DATA_REALM'] !== 'simulation')
   throw Error('Explicit synthetic simulation realm required.');
 const owner = new pg.Client({ connectionString: process.env['MIGRATION_DATABASE_URL'] });
 await owner.connect();
-const store = new Store(process.env['DATABASE_URL'], randomBytes(32));
+const store = new Store(process.env['DATABASE_URL'], fixtureKey());
 try {
   await store.verifyRole();
   await owner.query('BEGIN');

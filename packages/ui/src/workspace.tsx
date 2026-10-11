@@ -16,16 +16,19 @@ import { StructuredField, listFields } from './structured-field.js';
 import { AccountPanel } from './account.js';
 import { DraftAccessPanel } from './draft-access.js';
 import { EvidencePanel } from './evidence.js';
+import { MembershipPanel, FoundingConsentPanel, MemberBallotPanel } from './membership.js';
 
 type Session = { actor: Actor; csrf: string; mode: string; local: boolean };
 export function WorkflowFields({
   fields,
   prefix,
   values = {},
+  records = [],
 }: {
   fields: Field[];
   prefix: string;
   values?: Record<string, unknown>;
+  records?: CaseRecord[];
 }) {
   return (
     <>
@@ -51,7 +54,31 @@ export function WorkflowFields({
               {f.label}
               {!f.required ? ' (optional)' : ''}
             </label>
-            {f.type === 'select' ? (
+            {f.key === 'associationId' &&
+            records.some(
+              (r) =>
+                r.kind === 'association' && ['ready', 'provisional', 'operating'].includes(r.state),
+            ) ? (
+              <select
+                id={`${prefix}-${f.key}`}
+                name={f.key}
+                required={f.required}
+                defaultValue={String(values[f.key] ?? '')}
+              >
+                <option value="">Choose an association</option>
+                {records
+                  .filter(
+                    (r) =>
+                      r.kind === 'association' &&
+                      ['ready', 'provisional', 'operating'].includes(r.state),
+                  )
+                  .map((r) => (
+                    <option value={r.id} key={r.id}>
+                      {r.title}
+                    </option>
+                  ))}
+              </select>
+            ) : f.type === 'select' ? (
               <select
                 id={`${prefix}-${f.key}`}
                 name={f.key}
@@ -435,6 +462,17 @@ export function Workspace({
             </a>
             <a
               href="#workspace"
+              aria-current={view === 'memberships' ? 'page' : undefined}
+              onClick={() => {
+                setView('memberships');
+                setSelected(null);
+                setCreating(null);
+              }}
+            >
+              Membership & votes
+            </a>
+            <a
+              href="#workspace"
               aria-current={view === 'account' ? 'page' : undefined}
               onClick={() => {
                 setView('account');
@@ -566,6 +604,17 @@ export function Workspace({
           {view === 'account' && !selected && !creating && (
             <AccountPanel actorId={session.actor.id} api={api} />
           )}
+          {view === 'memberships' && !selected && !creating && (
+            <MembershipPanel
+              records={records}
+              api={api}
+              onRefresh={refresh}
+              onOpen={(r) => {
+                setSelected(r);
+                setEditing(false);
+              }}
+            />
+          )}
           {receipt ? (
             <div className="receipt" role="status">
               <strong>Simulation receipt · version {receipt.version}</strong>
@@ -602,7 +651,11 @@ export function Workspace({
                   <label htmlFor="record-title">Record title</label>
                   <input id="record-title" name="title" required minLength={3} maxLength={160} />
                 </div>
-                <WorkflowFields fields={workflow(creating).createFields} prefix="create" />
+                <WorkflowFields
+                  fields={workflow(creating).createFields}
+                  prefix="create"
+                  records={records}
+                />
                 <button className="button" disabled={pending}>
                   Save synthetic draft
                 </button>
@@ -637,6 +690,18 @@ export function Workspace({
                 <button className="quiet-button" onClick={() => window.print()}>
                   Print record
                 </button>
+                <button
+                  className="quiet-button"
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(selected.id);
+                    } catch {
+                      setError('Record ID: ' + selected.id);
+                    }
+                  }}
+                >
+                  Copy record ID
+                </button>
               </div>
               {editing ? (
                 <form
@@ -653,6 +718,7 @@ export function Workspace({
                     fields={workflow(selected.kind).createFields}
                     prefix="edit"
                     values={selected.data}
+                    records={records}
                   />
                   <button className="button" disabled={pending}>
                     {pending ? 'Saving…' : 'Save draft changes'}
@@ -661,25 +727,68 @@ export function Workspace({
               ) : null}
               <dl className="record-data">
                 {Object.entries(selected.data)
-                  .filter(([k]) => k !== 'history')
+                  .filter(([k]) => !['history', 'rollDigest', 'lastBallotCommitment'].includes(k))
                   .map(([k, v]) => (
                     <div key={k} style={{ display: 'contents' }}>
                       <dt>
                         {labels.get(k) ||
+                          (
+                            {
+                              unitCount: 'Founding-unit count',
+                              votesCast: 'Ballots received',
+                              notCast: 'Units that did not vote',
+                              rollClosedAt: 'Founding roll closed',
+                            } as Record<string, string>
+                          )[k] ||
                           k.replace(/([a-z])([A-Z])/g, '$1 $2').replaceAll('_', ' ')}
                       </dt>
                       <dd>
-                        {typeof v === 'boolean'
-                          ? v
-                            ? 'Yes'
-                            : 'No'
-                          : typeof v === 'object'
-                            ? JSON.stringify(v, null, 2)
-                            : String(v)}
+                        {k === 'units' && Array.isArray(v) ? (
+                          <details>
+                            <summary>Inspect {v.length} founding entries</summary>
+                            <pre style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
+                              {JSON.stringify(v, null, 2)}
+                            </pre>
+                          </details>
+                        ) : typeof v === 'boolean' ? (
+                          v ? (
+                            'Yes'
+                          ) : (
+                            'No'
+                          )
+                        ) : typeof v === 'object' ? (
+                          JSON.stringify(v, null, 2)
+                        ) : (
+                          String(v)
+                        )}
                       </dd>
                     </div>
                   ))}
               </dl>
+              {selected.kind === 'association' && (
+                <FoundingConsentPanel
+                  record={selected}
+                  actorId={session.actor.id}
+                  api={api}
+                  onChanged={async (result) => {
+                    setReceipt(result.receipt);
+                    setSelected(result.record);
+                    await refresh();
+                  }}
+                />
+              )}
+              {selected.kind === 'resolution' && (
+                <MemberBallotPanel
+                  record={selected}
+                  canVote={permitted.includes('record_vote')}
+                  api={api}
+                  onChanged={async (result) => {
+                    setReceipt(result.receipt);
+                    setSelected(result.record);
+                    await refresh();
+                  }}
+                />
+              )}
               <div className="record-evidence">
                 {!['sealed_ranking', 'draw', 'round'].includes(selected.kind) && (
                   <EvidencePanel
@@ -699,7 +808,10 @@ export function Workspace({
               <div className="workflow-actions">
                 {workflow(selected.kind)
                   .actions.filter(
-                    (a) => a.from.includes(selected.state) && permitted.includes(a.key),
+                    (a) =>
+                      a.from.includes(selected.state) &&
+                      permitted.includes(a.key) &&
+                      !(selected.kind === 'resolution' && a.key === 'record_vote'),
                   )
                   .map((a) => (
                     <form
@@ -709,13 +821,32 @@ export function Workspace({
                     >
                       <h2>{a.label}</h2>
                       <p className="muted">{a.help}</p>
-                      <WorkflowFields fields={a.fields} prefix={a.key} />
+                      <WorkflowFields fields={a.fields} prefix={a.key} records={records} />
                       <button className="button" disabled={pending}>
                         {pending ? 'Submitting…' : a.label}
                       </button>
                     </form>
                   ))}
               </div>
+              {selected.kind === 'resolution' && !!selected.data['rollDigest'] && (
+                <details className="action-panel" style={{ marginTop: 25 }}>
+                  <summary>Vote verification details</summary>
+                  <p className="hint">
+                    These fingerprints bind the frozen roll and most recently received ballot. They
+                    do not reveal individual choices.
+                  </p>
+                  <dl className="record-data">
+                    <dt>Frozen roll fingerprint</dt>
+                    <dd>{String(selected.data['rollDigest'])}</dd>
+                    {!!selected.data['lastBallotCommitment'] && (
+                      <>
+                        <dt>Latest ballot commitment</dt>
+                        <dd>{String(selected.data['lastBallotCommitment'])}</dd>
+                      </>
+                    )}
+                  </dl>
+                </details>
+              )}
               <details className="action-panel" style={{ marginTop: 25 }}>
                 <summary>Version history</summary>
                 <pre style={{ whiteSpace: 'pre-wrap', fontSize: 12 }}>
@@ -737,7 +868,7 @@ export function Workspace({
                   />
                 )}
             </div>
-          ) : ['activity', 'account'].includes(view) ? null : (
+          ) : ['activity', 'account', 'memberships'].includes(view) ? null : (
             <>
               <div className="workspace-heading">
                 <div>
