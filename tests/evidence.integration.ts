@@ -84,7 +84,7 @@ try {
   await assert.rejects(evidence.upload(other, uploadFor(record.id, 1)), /Record not found/);
   await assert.rejects(
     evidence.upload(actor, uploadFor(record.id, 1, Buffer.alloc(MAX_SYNTHETIC_EVIDENCE_BYTES + 1))),
-    /Zod|maximum|Too big/i,
+    { code: 'EVIDENCE_SIZE', status: 422 },
   );
   const input = uploadFor(record.id, 1),
     [one, two] = await Promise.all([evidence.upload(actor, input), evidence.upload(actor, input)]);
