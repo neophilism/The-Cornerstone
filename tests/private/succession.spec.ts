@@ -174,10 +174,11 @@ test('a personally requested successor keeps one unit without inheriting a priva
     });
     expect(rejected.status()).toBe(422);
     expect(JSON.stringify(await rejected.json())).toContain('DUPLICATE_BALLOT');
-    const privateClaim = await (
-      await page.request.get(origin + '/api/private/records?recordId=' + firstUnit.claim_id)
-    ).json();
-    expect(privateClaim.records).toEqual([]);
+    const privateClaim = await page.request.get(
+      origin + '/api/private/records?recordId=' + firstUnit.claim_id,
+    );
+    expect(privateClaim.status()).toBe(404);
+    expect((await privateClaim.json()).code).toBe('NOT_FOUND');
     await page.reload();
     const view = await (
       await page.request.get(origin + '/api/private/governance?recordId=' + resolution.id)
@@ -185,10 +186,11 @@ test('a personally requested successor keeps one unit without inheriting a priva
     expect(view.ownBallots).toEqual([]);
     expect(view.castUnits).toEqual([firstUnit.id]);
     await signIn(page, 'participant');
-    const former = await (
-      await page.request.get(origin + '/api/private/records?recordId=' + association.id)
-    ).json();
-    expect(former.records).toEqual([]);
+    const former = await page.request.get(
+      origin + '/api/private/records?recordId=' + association.id,
+    );
+    expect(former.status()).toBe(404);
+    expect((await former.json()).code).toBe('NOT_FOUND');
   } finally {
     await w.close();
   }
