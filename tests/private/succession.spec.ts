@@ -67,13 +67,11 @@ test('a personally requested successor keeps one unit without inheriting a priva
       page.getByRole('heading', { name: 'One unit, not another vote', exact: true }),
     ).toBeVisible();
     await page.getByText('Attach a synthetic text file', { exact: true }).click();
-    await page
-      .getByLabel('Synthetic text file', { exact: true })
-      .setInputFiles({
-        name: 'invented-succession.txt',
-        mimeType: 'text/plain',
-        buffer: Buffer.from(findings),
-      });
+    await page.getByLabel('Synthetic text file', { exact: true }).setInputFiles({
+      name: 'invented-succession.txt',
+      mimeType: 'text/plain',
+      buffer: Buffer.from(findings),
+    });
     await page
       .getByLabel('What this item shows', { exact: true })
       .fill('Invented death and designation chain; no real probate proof.');
@@ -96,11 +94,9 @@ test('a personally requested successor keeps one unit without inheriting a priva
       .getByRole('button', { name: 'Open', exact: true })
       .click();
     await page.getByRole('button', { name: 'Begin assigned review', exact: true }).click();
-    const panel = page
-      .locator('.action-panel')
-      .filter({
-        has: page.getByRole('heading', { name: 'Approve one synthetic successor', exact: true }),
-      });
+    const panel = page.locator('.action-panel').filter({
+      has: page.getByRole('heading', { name: 'Approve one synthetic successor', exact: true }),
+    });
     for (const checkbox of await panel.getByRole('checkbox').all()) await checkbox.check();
     await panel
       .getByLabel('Bylaw, probate, notice and review basis', { exact: true })
