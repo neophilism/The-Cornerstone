@@ -1,124 +1,15 @@
 {
-  "base": "71ce7ceedc9ff3ffcb360a8b116b9c5c266feed8",
+  "base": "3c0bfac65623f094f6b76b93e8fce3b1437a72db",
   "target": "cornerstone/unit-succession",
-  "message": "Integrate personal succession, scoped review and ballot privacy",
+  "message": "Format succession browser acceptance",
   "changes": [
     {
-      "path": "README.md",
-      "beforeSha256": "f9fd2f0a01671bf1013fa84dc222c3be0a698f60f147128377bcef83b3ee2fe6",
-      "afterSha256": "3292cd095241f07e854b46b9741674c89b6324f67a36bba5a2bfb118e8f8d3a1",
-      "edits": [{"find":"tained in [docs/PROGRESS.md](docs/PROGRESS.md).\n","replace":"tained in [docs/PROGRESS.md](docs/PROGRESS.md).\n\nSynthetic founding-unit succession, unchanged frozen votes and predecessor-ballot privacy are described in `docs/SUCCESSION.md`. This does not activate real probate, identity, legal-notice or private-intake services.\n"}]
-    },
-    {
-      "path": "apps/api/src/main.ts",
-      "beforeSha256": "8d2ef2ee499f5bc8bc464995c113ba7601082f8e647438280dad4ecfd581ed84",
-      "afterSha256": "58660f440387d12d4b291edfc2c87e142d25acdd03e7b4971cea1e447f06e54e",
-      "edits": [{"find":"  'participant',\n  'member',\n  'labor',\n  'commerce',\n","replace":"  'participant',\n  'member',\n  'successor',\n  'labor',\n  'commerce',\n"}]
-    },
-    {
-      "path": "apps/api/src/membership.ts",
-      "beforeSha256": "663f4440ad356c4e226ee2d7413f89d2fe09d3a128dbe393eb5a64df31404f1f",
-      "afterSha256": "b90e11460cad06d3b0e55a69bf233e2a11672e7b72523221a780747aef24b00f",
+      "path": "tests/private/succession.spec.ts",
+      "beforeSha256": "326ab52d0eb47abfac2c15d5665678802e2cbb51c4111f1aa80f2f246e02ed1c",
+      "afterSha256": "962bc3446a70e9ccd3401690d388e99129a11e68feb5850bc84be74a6a0a0a7e",
       "edits": [
-        {"find":"        closesOn: link.closes_text,\n        ownUnits: units,\n        ownBallots: rows.map((row) => ({\n          unitId: row.unit_id,\n","replace":"        closesOn: link.closes_text,\n        ownUnits: units,\n        castUnits: (\n          await tx.query('SELECT unit_id FROM simulation_ballot_status($1) WHERE cast_already', [\n            id,\n          ])\n        ).rows.map((row) => row.unit_id),\n        ownBallots: rows.map((row) => ({\n          unitId: row.unit_id,\n"},
-        {"find":"      const rows = (\n        await tx.query<BallotRow>(\n          'SELECT * FROM ballots WHERE resolution_id=$1 AND unit_id=ANY($2::uuid[])',\n          [id, units],\n        )\n      ).rows;\n","replace":"      const rows = (\n        await tx.query<BallotRow>(\n          'SELECT b.* FROM ballots b JOIN receipts r ON r.id=b.receipt_id WHERE b.resolution_id=$1 AND b.unit_id=ANY($2::uuid[]) AND r.actor_id=$3',\n          [id, units, actor.id],\n        )\n      ).rows;\n"},
-        {"find":"      'You must hold an active unit in this resolution’s frozen roll.',\n    );\n    requireCondition(\n      !(\n        await tx.query('SELECT id FROM ballots WHERE resolution_id=$1 AND unit_id=$2', [\n          record.id,\n          unitId,\n        ])\n      ).rowCount,\n      'DUPLICATE_BALLOT',\n      'That founding unit has already voted.',\n","replace":"      'You must hold an active unit in this resolution’s frozen roll.',\n    );\n    try {\n      await tx.query('SELECT simulation_lock_voting_unit($1,$2)', [record.id, unitId]);\n    } catch (error) {\n      if (error instanceof Error && error.message === 'UNIT_AUTHORITY')\n        throw new DomainError(\n          'UNIT_AUTHORITY',\n          'This founding unit is no longer held by you.',\n          409,\n        );\n      throw error;\n    }\n    const status = (\n      await tx.query('SELECT cast_already FROM simulation_ballot_status($1) WHERE unit_id=$2', [\n        record.id,\n        unitId,\n      ])\n    ).rows[0];\n    requireCondition(status, 'UNIT_AUTHORITY', 'An active frozen founding unit is required.');\n    requireCondition(\n      !status.cast_already,\n      'DUPLICATE_BALLOT',\n      'That founding unit has already voted.',\n"}
-      ]
-    },
-    {
-      "path": "apps/api/src/service.ts",
-      "beforeSha256": "4143317300fbdabcd277434f4bd3f8ba6da2e4c2ab9bd9a96d5d1bd7136e3885",
-      "afterSha256": "ce5a2787476a28239d88dc4e883abf2ccae6c8970486a9f371b6f6b6544d623c",
-      "edits": [
-        {"find":"      );\n      if (record.kind === 'association' && a.key === 'submit') await members.invite(tx, next);\n      if (ballot)\n        await tx.query('SELECT simulation_cast_ballot($1,$2,$3,$4::jsonb,$5,$6)', [\n","replace":"      );\n      if (record.kind === 'association' && a.key === 'submit') await members.invite(tx, next);\n      if (record.kind === 'succession' && a.key === 'approve')\n        await new SuccessionService().finish(tx, next, receipt);\n      if (ballot)\n        await tx.query('SELECT simulation_cast_ballot($1,$2,$3,$4::jsonb,$5,$6)', [\n"},
-        {"find":"        await members.resolutionDraft(tx, actor, data, record.id);\n      data = await this.linkedRules(tx, actor, record, command, data, now);\n      const ballot =\n        record.kind === 'resolution' && a.key === 'record_vote'\n","replace":"        await members.resolutionDraft(tx, actor, data, record.id);\n      data = await this.linkedRules(tx, actor, record, command, data, now);\n      if (record.kind === 'succession')\n        data = await new SuccessionService().prepare(tx, actor, record, a.key, data);\n      const ballot =\n        record.kind === 'resolution' && a.key === 'record_vote'\n"},
-        {"find":"import { EvidenceService } from './evidence.js';\nimport { MembershipService } from './membership.js';\nimport { Store, type Transaction } from '@cornerstone/store';\nimport {\n","replace":"import { EvidenceService } from './evidence.js';\nimport { MembershipService } from './membership.js';\nimport { SuccessionService } from './succession.js';\nimport { Store, type Transaction } from '@cornerstone/store';\nimport {\n"}
-      ]
-    },
-    {
-      "path": "docs/MEMBERSHIP_AND_VOTING.md",
-      "beforeSha256": "e1d83e8087b99cd0487a2f25b3dfd497a37d8f233c0867c8b7ff6327a79bcd9f",
-      "afterSha256": "1d4c578bb2bbff601489a879e61ecae643b3f427edfafec77eaa069ec2a0d768",
-      "edits": [
-        {"find":"and tallying. Database policies restrict ballot rows to the unit holder or assigned Labor reviewer. These ballots are server-decryptable, not cryp","replace":"and tallying. Database policies restrict ballot choices to their original receipt actor or assigned Labor reviewer. A later holder sees only whether that unit has already voted, not the predecessor's choice or receipt. These ballots are server-decryptable, not cryp"},
-        {"find":"roll may cast one ballot, including a successor when that separately reviewed transfer adapter becomes available. Ballot replacement is unavailable in this init","replace":"roll may cast one ballot, including a successor after the separate synthetic transfer decision. Ballot replacement is unavailable in this init"},
-        {"find":" limit, not a new statutory membership ceiling. Single-successor activation remains gated.\n\n## Member decisions\n\nAn active founding","replace":" limit, not a new statutory membership ceiling. Post-enrollment synthetic succession is described in SUCCESSION.md; real identity and legal activation remain gated.\n\n## Member decisions\n\nAn active founding"}
-      ]
-    },
-    {
-      "path": "docs/PROGRESS.json",
-      "beforeSha256": "befaf30d30daf9b571023222cf4f8611994470c18a3b1a1e4bbb17b5dc7441c1",
-      "afterSha256": "709d3f4cb02bb8e720721f18853a2e8b17641e432e735ae4fc83ef628299292e",
-      "edits": [
-        {"find":"  \"internalPlanPublicationApproved\": false,\n  \"pending\": [\n    \"availability-aware next-step acceptance\",\n    \"succession and complete program journeys\",\n    \"protected integrations and independent review\"\n  ],\n  \"releasePullRequest\": \"https://github.com/neophilism/The-Cornerstone/pull/9\",\n  \"developmentMigrations\": 10\n}\n","replace":"  \"internalPlanPublicationApproved\": false,\n  \"pending\": [\n    \"post-enrollment succession CI and browser acceptance\",\n    \"pre-enrollment surviving claims and complete program journeys\",\n    \"protected integrations and independent review\"\n  ],\n  \"releasePullRequest\": \"https://github.com/neophilism/The-Cornerstone/pull/10\",\n  \"developmentMigrations\": 10\n}\n"},
-        {"find":"  \"updated\": \"2026-10-11\",\n  \"scope\": \"public policy website and synthetic preparation, evidence, membership and voting; full program unfinished\",\n  \"lastVerifiedCommit\": \"0afd9bc59b9822e28b7ecf8778bf0c8db0f6b476\",\n  \"lastVerifiedRun\": \"https://github.com/neophilism/The-Cornerstone/actions/runs/38159018769\",\n  \"livePublicUrl\": \"https://cornerstone-policy-preview.onrender.com\",\n  \"protectedIntake\": false,\n","replace":"  \"updated\": \"2026-10-11\",\n  \"scope\": \"public policy website and synthetic preparation, evidence, membership and voting; full program unfinished\",\n  \"lastVerifiedCommit\": \"b5de06bae62f668163e9627ab0cfc5fe12829f6c\",\n  \"lastVerifiedRun\": \"https://github.com/neophilism/The-Cornerstone/actions/runs/38165726687\",\n  \"livePublicUrl\": \"https://cornerstone-policy-preview.onrender.com\",\n  \"protectedIntake\": false,\n"}
-      ]
-    },
-    {
-      "path": "docs/PROGRESS.md",
-      "beforeSha256": "c77e39d433462069cd5fccc04c81f92f117b2461481df180582d73d25418c80b",
-      "afterSha256": "f54a2f3acab6b5a52712a9d393d47ee51dfe4202ffe3fcff4f15e131af60354e",
-      "edits": [
-        {"find":"horization or independent security assessment.\n\nUnavailable provider-dependent actions now explain their prerequisites before presenting a form. The shared release gate also rejects direct API commands after permission checks, before validating inputs or changing records. Acceptance pending.\n","replace":"horization or independent security assessment.\n\nPost-enrollment synthetic succession and ballot-holder privacy have local PostgreSQL acceptance and a new UI journey. The 56 unit tests and production builds pass locally. Full feature CI, browser inspection and migration deployment are not yet recorded. See SUCCESSION.md. The full program remains unfinished.\n"},
-        {"find":"n for every draft. The added browser assertions require fresh CI acceptance.\n\nGuided evidence selection, related-record cho","replace":"n for every draft. The added browser assertions passed in Actions 38165726687.\n\nGuided evidence selection, related-record cho"},
-        {"find":"curity approval is claimed.\n\nUnavailable actions now explain missing integrations and reject direct ","replace":"curity approval is claimed.\n\nUnavailable actions explain missing integrations and reject direct "},
-        {"find":".\n\nLast verified merged application change: PR #9 at 0afd9bc59b9822e28b7ecf8778bf0c8db0f6b476. Its exact head 675ac5374d4755b4ad41736c055f65be3f6e9719 passed verification and database jobs in [Actions run 38159018769](https://github.com/neophilism/The-Cornerstone/actions/runs/38159018769); preview was inapplicable to that feature branch. Both unavailable-action desktop/mobile screenshots were inspected. PRs #1–#9 are merged. The deployment branch was last reco","replace":".\n\nLast verified merged application change: PR #10 at b5de06bae62f668163e9627ab0cfc5fe12829f6c, with the same tree as its exact tested head b1bd9f0f4016e1b333cf78fcb47138d8c72624ee. Verification and database jobs passed in [Actions run 38165726687](https://github.com/neophilism/The-Cornerstone/actions/runs/38165726687); preview was inapplicable to that feature branch. Both next-step desktop/mobile screenshots were inspected. PRs #1–#10 are merged. The deployment branch was last reco"}
-      ]
-    },
-    {
-      "path": "docs/STATUS.md",
-      "beforeSha256": "d2d354607630f030031c3e6b1f24010244ccabed2a7842bb0c64edbbeebde738",
-      "afterSha256": "7c74503b780d48e256543103941fcbf8b0afcb58ce97f7419cfe7e6f21db3732",
-      "edits": [{"find":"d in Actions 38159018769; PR #9 is merged.\n\nPR #9 is merged after verification and database checks passed in Actions 38159018769. Unavailable transitions remain fail-closed. The following next-step refinement avoids promising submission for every draft; its added acceptance is pending.\n","replace":"d in Actions 38159018769; PR #9 is merged.\n\nPR #10 is merged after verification and database checks passed in Actions 38165726687. Both desktop/mobile next-step screenshots were inspected. Unavailable transitions remain fail-closed; draft guidance no longer promises submission where it is unavailable.\n\nPost-enrollment synthetic succession is implemented with exact-holder snapshots, receipt-bound atomic updates, privacy-preserving used-vote status and estate designation. See SUCCESSION.md for acceptance and remaining pre-enrollment, external-service and independent-review requirements. Migrations 011–012 are not yet recorded as deployed.\n"}]
-    },
-    {
-      "path": "packages/contracts/src/index.ts",
-      "beforeSha256": "3baf5a150943d31f4fd061f81efcd018df7c52d35f392951ac04b997ff6e2f56",
-      "afterSha256": "b0efaff7fb44ef7b52ee542ad983b22a9071146cbf25e1c175143d4e672e0818",
-      "edits": [{"find":"    closesOn: DateSchema.nullable(),\n    ownUnits: z.array(IdSchema),\n    ownBallots: z.array(\n      z\n","replace":"    closesOn: DateSchema.nullable(),\n    ownUnits: z.array(IdSchema),\n    castUnits: z.array(IdSchema),\n    ownBallots: z.array(\n      z\n"}]
-    },
-    {
-      "path": "packages/domain/src/availability.ts",
-      "beforeSha256": "dd5aa907ae47dc31e23d214a2c3b05c0308436ebaf8c19c666fdb6a5131bb3ec",
-      "afterSha256": "1fd023b59d90cbf3cd84e65570d6adec895d756a170ab1f99d9121a32026fbbf",
-      "edits": [{"find":"        'An independently confirmed Treasury or settlement integration is not installed. No payment receipt has been issued.',\n    };\n  if (kind === 'succession' && action === 'approve')\n    return {\n      code: 'SUCCESSION_REVIEW_REQUIRED',\n      message:\n        'The single-successor identity, grant and immutable unit transfer must be independently reviewed before activation.',\n    };\n  return null;\n}\n","replace":"        'An independently confirmed Treasury or settlement integration is not installed. No payment receipt has been issued.',\n    };\n  return null;\n}\n"}]
-    },
-    {
-      "path": "packages/domain/src/workflows.ts",
-      "beforeSha256": "896c214f78c649fb5d59061e92d7bc48540a6ec8b90000c4350e6ac70d13e06e",
-      "afterSha256": "47e145b796f50331078285abde3903922096bc7139215187d4ee703f43ab33e2",
-      "edits": [
-        {"find":"    );\n  }\n  if (record.kind === 'succession' && key === 'approve')\n    yes('undivided', 'Succession must preserve a single undivided right.');\n  if (record.kind === 'association' && key === 'close_roll') {\n    yes('equalRights', 'Equal base rights and votes are required.');\n","replace":"    );\n  }\n  if (record.kind === 'succession' && key === 'submit')\n    yes('rightsAcknowledged', 'Personally acknowledge the undivided rights and limits.');\n  if (record.kind === 'succession' && key === 'approve')\n    for (const name of [\n      'undivided',\n      'deathEstablished',\n      'identityEstablished',\n      'chainEstablished',\n      'probateConsistent',\n      'competingRightsResolved',\n    ])\n      yes(name, 'A complete evidence-based succession finding is required.');\n  if (record.kind === 'association' && key === 'close_roll') {\n    yes('equalRights', 'Equal base rights and votes are required.');\n"},
-        {"find":"    'succession',\n    'Single-successor request',\n    'Preserve one undivided claim or founding unit.',\n    participant,\n    [\n      reference,\n      f('successorId', 'Proposed single successor actor ID'),\n      f('chain', 'Succession evidence', 'textarea'),\n      evidence,\n    ],\n    [\n      submit(),\n      review('labor', 'claim'),\n      action(\n        'approve',\n        'Approve one successor',\n        ['review'],\n        'approved',\n        ['labor'],\n        'claim',\n        [f('undivided', 'Exactly one undivided claim or unit is preserved', 'boolean'), reasons],\n        'No multiplication among heirs.',\n      ),\n      deny('labor', 'claim'),\n    ],\n  ),\n","replace":"    'succession',\n    'Single-successor request',\n    'Request one existing founding unit after a death, without another vote or account access.',\n    ['participant', 'member'],\n    [\n      f(\n        'unitId',\n        'Existing founding unit reference',\n        'text',\n        true,\n        'Use a supplied unit reference. It does not grant access to the former holder or their private claim.',\n      ),\n      f('transferBasis', 'Succession route', 'select', true, undefined, [\n        'member_death',\n        'estate_designation',\n      ]),\n      f('capacity', 'Requested capacity', 'select', true, undefined, [\n        'designated_successor',\n        'estate_representative',\n      ]),\n      f('chain', 'Succession evidence and chain', 'textarea'),\n      evidence,\n    ],\n    [\n      action(\n        'submit',\n        'Submit my succession request',\n        ['draft'],\n        'submitted',\n        ['participant', 'member'],\n        null,\n        [\n          consent,\n          f(\n            'rightsAcknowledged',\n            'I request one undivided unit, with no extra vote, personal debt or access to a different private account',\n            'boolean',\n          ),\n        ],\n        'Only the proposed successor can personally submit. Invented development evidence is not legal proof.',\n      ),\n      review('labor', 'claim'),\n      action(\n        'request_changes',\n        'Request a corrected succession packet',\n        ['review'],\n        'changes_requested',\n        ['labor'],\n        'claim',\n        [reasons],\n        'Explain needed evidence or a changed holder. No unit is changed.',\n      ),\n      action(\n        'revise_request',\n        'Reopen my draft',\n        ['changes_requested'],\n        'draft',\n        ['participant', 'member'],\n        null,\n        [],\n        'Review and resubmit personally. The next review takes a fresh unit-holder snapshot.',\n      ),\n      action(\n        'approve',\n        'Approve one synthetic successor',\n        ['review'],\n        'approved',\n        ['labor'],\n        'claim',\n        [\n          f('undivided', 'Exactly one undivided founding unit is preserved', 'boolean'),\n          f(\n            'deathEstablished',\n            'The death of the relevant rights holder is supported by the evidence',\n            'boolean',\n          ),\n          f('identityEstablished', 'The proposed successor is the requesting person', 'boolean'),\n          f(\n            'chainEstablished',\n            'The designation or estate authority and chain are established',\n            'boolean',\n          ),\n          f(\n            'probateConsistent',\n            'The route follows uniform bylaws and the applicable probate requirements',\n            'boolean',\n          ),\n          f(\n            'competingRightsResolved',\n            'Notice, review and any competing claims have been addressed',\n            'boolean',\n          ),\n          f('legalBasis', 'Bylaw, probate, notice and review basis', 'textarea'),\n          reasons,\n          evidence,\n        ],\n        'Transfer the existing unit atomically in simulation. This does not prove real identity, effect legal succession, divide rights, reveal prior ballots or transfer an account.',\n      ),\n      deny('labor', 'claim'),\n      appeal(),\n    ],\n  ),\n"}
-      ]
-    },
-    {
-      "path": "packages/ui/src/membership.tsx",
-      "beforeSha256": "6ca55a240589bc0bd68eccba67842e642fde8fd85c300cc6c926893104dff215",
-      "afterSha256": "e96e820e0df01aab43d2ae19b701d5b9db01abac88e7da4e9168026240501485",
-      "edits": [
-        {"find":"        </div>\n      ))}\n      {!view?.ownUnits.length && (\n        <p className=\"hint\">This workspace holds no active founding unit in this association.</p>\n","replace":"        </div>\n      ))}\n      {view?.castUnits\n        .filter((id) => !view.ownBallots.some((b) => b.unitId === id))\n        .map((id) => (\n          <div className=\"receipt prior-unit-ballot\" key={id}>\n            <strong>This founding unit has already voted.</strong>\n            <p>\n              A change of holder does not grant another vote or reveal the previous holder's choice.\n            </p>\n          </div>\n        ))}\n      {!view?.ownUnits.length && (\n        <p className=\"hint\">This workspace holds no active founding unit in this association.</p>\n"},
-        {"find":"    };\n  }, [record.id, record.version]);\n  const unit = view?.ownUnits.find((id) => !view.ownBallots.some((b) => b.unitId === id)),\n    open =\n      canVote &&\n","replace":"    };\n  }, [record.id, record.version]);\n  const unit = view?.ownUnits.find((id) => !view.castUnits.includes(id)),\n    open =\n      canVote &&\n"}
-      ]
-    },
-    {
-      "path": "packages/ui/src/workspace.tsx",
-      "beforeSha256": "a982303c495c787c5874d2f68886c82f8413584ca4127a6c084e1da232386f2b",
-      "afterSha256": "ab0c4471a1346a889d8488c758d90c7c7e9de253cf54696352d57c3076f6dbf6",
-      "edits": [
-        {"find":"              </div>\n              <RecordNextStep record={selected} />\n              <div className=\"record-links\">\n                {selected.state === 'draft' && permitted.includes('save_draft') ? (\n","replace":"              </div>\n              <RecordNextStep record={selected} />\n              <SuccessionSummary record={selected} />\n              <div className=\"record-links\">\n                {selected.state === 'draft' && permitted.includes('save_draft') ? (\n"},
-        {"find":"                {(staff\n                  ? ['labor', 'commerce', 'state', 'supervisor', 'fiscal', 'adjudicator', 'support']\n                  : ['participant', 'member']\n                ).map((p) => (\n                  <button key={p} disabled={pending} onClick={() => void signIn(p)}>\n","replace":"                {(staff\n                  ? ['labor', 'commerce', 'state', 'supervisor', 'fiscal', 'adjudicator', 'support']\n                  : ['participant', 'member', 'successor']\n                ).map((p) => (\n                  <button key={p} disabled={pending} onClick={() => void signIn(p)}>\n"},
-        {"find":"import { PreparationGuide, RecordNextStep } from './journey.js';\nimport { CalculationSummary } from './financial-fields.js';\n\ntype Session = { actor: Actor; csrf: string; mode: string; local: boolean };\n","replace":"import { PreparationGuide, RecordNextStep } from './journey.js';\nimport { CalculationSummary } from './financial-fields.js';\nimport { SuccessionSummary } from './succession.js';\n\ntype Session = { actor: Actor; csrf: string; mode: string; local: boolean };\n"}
-      ]
-    },
-    {
-      "path": "scripts/seed-simulation.ts",
-      "beforeSha256": "73c14f648b1cfe8a22aafee66769a71314ad90424ebbee27f3e0884aada44439",
-      "afterSha256": "b366c40cd1d5c35676e7b04c868a3ef9b464125103bd4cdcafbc6d96af948c5a",
-      "edits": [
-        {"find":"        roles,\n        institutions[persona] || null,\n        persona === 'member' ? 'verified' : persona === 'participant' ? 'draft' : 'privileged',\n      ],\n    );\n","replace":"        roles,\n        institutions[persona] || null,\n        persona === 'member'\n          ? 'verified'\n          : ['participant', 'successor'].includes(persona)\n            ? 'draft'\n            : 'privileged',\n      ],\n    );\n"},
-        {"find":"      persona === 'member'\n        ? ['participant', 'member']\n        : persona === 'participant'\n          ? ['participant']\n          : [persona];\n","replace":"      persona === 'member'\n        ? ['participant', 'member']\n        : ['participant', 'successor'].includes(persona)\n          ? ['participant']\n          : [persona];\n"},
-        {"find":"  'participant',\n  'member',\n  'labor',\n  'commerce',\n","replace":"  'participant',\n  'member',\n  'successor',\n  'labor',\n  'commerce',\n"}
+        {"find":"      .click();\n    await page.getByRole('button', { name: 'Begin assigned review', exact: true }).click();\n    const panel = page\n      .locator('.action-panel')\n      .filter({\n        has: page.getByRole('heading', { name: 'Approve one synthetic successor', exact: true }),\n      });\n    for (const checkbox of await panel.getByRole('checkbox').all()) await checkbox.check();\n    await panel\n","replace":"      .click();\n    await page.getByRole('button', { name: 'Begin assigned review', exact: true }).click();\n    const panel = page.locator('.action-panel').filter({\n      has: page.getByRole('heading', { name: 'Approve one synthetic successor', exact: true }),\n    });\n    for (const checkbox of await panel.getByRole('checkbox').all()) await checkbox.check();\n    await panel\n"},
+        {"find":"    ).toBeVisible();\n    await page.getByText('Attach a synthetic text file', { exact: true }).click();\n    await page\n      .getByLabel('Synthetic text file', { exact: true })\n      .setInputFiles({\n        name: 'invented-succession.txt',\n        mimeType: 'text/plain',\n        buffer: Buffer.from(findings),\n      });\n    await page\n      .getByLabel('What this item shows', { exact: true })\n","replace":"    ).toBeVisible();\n    await page.getByText('Attach a synthetic text file', { exact: true }).click();\n    await page.getByLabel('Synthetic text file', { exact: true }).setInputFiles({\n      name: 'invented-succession.txt',\n      mimeType: 'text/plain',\n      buffer: Buffer.from(findings),\n    });\n    await page\n      .getByLabel('What this item shows', { exact: true })\n"}
       ]
     }
   ]
