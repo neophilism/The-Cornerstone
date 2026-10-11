@@ -50,7 +50,7 @@ export class MembershipService {
     this.simulation(actor);
     return this.store.transaction(actor, async (tx) => {
       const invitations = await tx.query(
-        'SELECT * FROM founding_invitations WHERE person_id=$1 ORDER BY created_at DESC LIMIT 200',
+        'SELECT *,closes_on::text AS closes_text FROM founding_invitations WHERE person_id=$1 ORDER BY created_at DESC LIMIT 200',
         [actor.id],
       );
       const units = await tx.query(
@@ -77,7 +77,7 @@ export class MembershipService {
       claimId: i.claim_id,
       personId: i.person_id,
       termsDigest: i.terms_digest,
-      closesOn: String(i.closes_on).slice(0, 10),
+      closesOn: String(i.closes_text),
       response: i.response,
       respondedAt: i.responded_at?.toISOString() ?? null,
     });
@@ -96,7 +96,7 @@ export class MembershipService {
           actor.assignments.includes(id));
       const rows = (
         await tx.query(
-          'SELECT * FROM founding_invitations WHERE association_id=$1 ORDER BY created_at,id',
+          'SELECT *,closes_on::text AS closes_text FROM founding_invitations WHERE association_id=$1 ORDER BY created_at,id',
           [id],
         )
       ).rows;
