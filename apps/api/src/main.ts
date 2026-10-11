@@ -16,9 +16,8 @@ import {
   WorkspaceSessionSchema,
   RevokeSessionSchema,
   IdSchema,
-  RecordCapabilitiesSchema,
 } from '@cornerstone/contracts';
-import { DomainError, workflows, workflow } from '@cornerstone/domain';
+import { DomainError, workflows } from '@cornerstone/domain';
 import {
   readKey,
   digest,
@@ -29,13 +28,13 @@ import {
   encrypt,
   decrypt,
   type Envelope,
-  canAct,
 } from '@cornerstone/security';
 import { Store, PersistenceError } from '@cornerstone/store';
 import { ProgramService } from './service.js';
 import { DraftAccessService } from './access.js';
 import { EvidenceService } from './evidence.js';
 import { MembershipService } from './membership.js';
+import { RecordReader } from './records.js';
 
 class ApplicationModule {}
 Module({})(ApplicationModule);
@@ -261,35 +260,7 @@ route('post', '/auth/sessions/revoke-others', async (req, res) => {
   res.json({ revoked: result.rows[0]?.revoked ?? 0 });
 });
 route('get', '/records', async (req, res) => {
-  const a = await actor(req),
-    db = requireStore(),
-    records = await db.list(a);
-  const grants = await db.transaction(a, (tx) =>
-    db.scopes(
-      tx,
-      records.map((r) => r.id),
-    ),
-  );
-  const capabilities = records.map((r) => {
-    const wf = workflow(r.kind),
-      now = new Date().toISOString();
-    const actions = wf.actions
-      .filter(
-        (action) =>
-          action.from.includes(r.state) && canAct(a, r, action.roles, grants, action.key, now),
-      )
-      .map((action) => action.key);
-    if (r.state === 'draft' && canAct(a, r, wf.createRoles, grants, 'save_draft', now))
-      actions.push('save_draft');
-    if (
-      r.state === 'draft' &&
-      !['sealed_ranking', 'draw', 'round'].includes(r.kind) &&
-      canAct(a, r, wf.createRoles, grants, 'attach_evidence', now)
-    )
-      actions.push('attach_evidence');
-    return RecordCapabilitiesSchema.parse({ recordId: r.id, version: r.version, actions });
-  });
-  res.json({ records, capabilities });
+  res.json(await new RecordReader(requireStore()).read(await actor(req), req.query));
 });
 const accessService = () => new DraftAccessService(requireStore(), mode, realm);
 route('get', '/access', async (req, res) => {

@@ -447,3 +447,10 @@
 .activity-card h2 {
   font-size: 28px;
 }
+.record-reference {
+  margin-top: 24px;
+  max-width: 560px;
+}
+.record-reference form {
+  margin-top: 16px;
+}

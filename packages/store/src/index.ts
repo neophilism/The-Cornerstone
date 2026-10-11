@@ -1,6 +1,8 @@
 import pg from 'pg';
 import {
   ActivityNotificationSchema,
+  RecordPageQuerySchema,
+  RecordCursorSchema,
   type Actor,
   type CaseRecord,
   type Receipt,
@@ -125,11 +127,45 @@ export class Store {
     return r.rows[0] ? this.decode(r.rows[0]) : null;
   }
   async list(actor: Actor) {
+    return (await this.listPage(actor)).records;
+  }
+  async listPage(actor: Actor, input: unknown = {}) {
+    const query = RecordPageQuerySchema.parse(input);
+    const binding = `cornerstone:record-page:${actor.realm}:${actor.id}`;
+    let before: { id: string; updatedAt: string } | undefined;
+    if (query.cursor) {
+      try {
+        before = RecordCursorSchema.parse(
+          this.open(JSON.parse(Buffer.from(query.cursor, 'base64url').toString('utf8')), binding),
+        );
+      } catch {
+        throw new PersistenceError(
+          'INVALID_CURSOR',
+          'This record page is unavailable. Refresh your records to continue.',
+          400,
+        );
+      }
+    }
     return this.transaction(actor, async (tx) => {
-      const r = await tx.query<Row>(
-        'SELECT * FROM case_records ORDER BY updated_at DESC LIMIT 200',
+      // Preserve PostgreSQL microseconds in the boundary; JavaScript Date truncates them.
+      const result = await tx.query<Row & { sort_stamp: string }>(
+        `SELECT *,to_char(updated_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS sort_stamp
+         FROM case_records
+         WHERE ($1::timestamptz IS NULL OR (updated_at,id)<($1::timestamptz,$2::uuid))
+         ORDER BY updated_at DESC,id DESC LIMIT $3`,
+        [before?.updatedAt ?? null, before?.id ?? null, query.limit + 1],
       );
-      return r.rows.map((row) => this.decode(row));
+      const rows = result.rows.slice(0, query.limit);
+      const last = rows.at(-1);
+      const nextCursor =
+        result.rows.length > query.limit && last
+          ? Buffer.from(
+              JSON.stringify(
+                this.seal({ version: 1, id: last.id, updatedAt: last.sort_stamp }, binding),
+              ),
+            ).toString('base64url')
+          : null;
+      return { records: rows.map((row) => this.decode(row)), nextCursor };
     });
   }
   async getVersion(tx: Transaction, id: string, version: number) {
