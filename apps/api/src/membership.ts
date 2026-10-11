@@ -188,6 +188,11 @@ export class MembershipService {
     });
   }
   async invite(tx: Transaction, record: CaseRecord) {
+    requireCondition(
+      record.data['rollOpened'] === record.updatedAt.slice(0, 10),
+      'FOUNDING_OPENING_DATE',
+      'In simulation, use the submission date for the founding opening date so every invitation receives the full period.',
+    );
     const units = record.data['units'] as { claimId: string; personId: string }[];
     requireCondition(
       units.length >= 2 && units.length <= draftPolicy.ordinaryUnitLimit,

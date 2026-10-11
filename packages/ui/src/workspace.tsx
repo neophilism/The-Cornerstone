@@ -727,41 +727,44 @@ export function Workspace({
               ) : null}
               <dl className="record-data">
                 {Object.entries(selected.data)
-                  .filter(([k]) => k !== 'history')
+                  .filter(([k]) => !['history', 'rollDigest', 'lastBallotCommitment'].includes(k))
                   .map(([k, v]) => (
                     <div key={k} style={{ display: 'contents' }}>
                       <dt>
                         {labels.get(k) ||
+                          (
+                            {
+                              unitCount: 'Founding units in the vote',
+                              votesCast: 'Ballots received',
+                              notCast: 'Units that did not vote',
+                              rollClosedAt: 'Founding roll closed',
+                            } as Record<string, string>
+                          )[k] ||
                           k.replace(/([a-z])([A-Z])/g, '$1 $2').replaceAll('_', ' ')}
                       </dt>
                       <dd>
-                        {typeof v === 'boolean'
-                          ? v
-                            ? 'Yes'
-                            : 'No'
-                          : typeof v === 'object'
-                            ? JSON.stringify(v, null, 2)
-                            : String(v)}
+                        {k === 'units' && Array.isArray(v) ? (
+                          <details>
+                            <summary>Inspect {v.length} founding entries</summary>
+                            <pre style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
+                              {JSON.stringify(v, null, 2)}
+                            </pre>
+                          </details>
+                        ) : typeof v === 'boolean' ? (
+                          v ? (
+                            'Yes'
+                          ) : (
+                            'No'
+                          )
+                        ) : typeof v === 'object' ? (
+                          JSON.stringify(v, null, 2)
+                        ) : (
+                          String(v)
+                        )}
                       </dd>
                     </div>
                   ))}
               </dl>
-              <div className="record-evidence">
-                {!['sealed_ranking', 'draw', 'round'].includes(selected.kind) && (
-                  <EvidencePanel
-                    record={selected}
-                    actorId={session.actor.id}
-                    canAttach={permitted.includes('attach_evidence')}
-                    api={api}
-                    onChanged={async (result) => {
-                      setReceipt(result.receipt);
-                      setSelected(result.record);
-                      setEditing(false);
-                      await refresh();
-                    }}
-                  />
-                )}
-              </div>
               {selected.kind === 'association' && (
                 <FoundingConsentPanel
                   record={selected}
@@ -786,6 +789,22 @@ export function Workspace({
                   }}
                 />
               )}
+              <div className="record-evidence">
+                {!['sealed_ranking', 'draw', 'round'].includes(selected.kind) && (
+                  <EvidencePanel
+                    record={selected}
+                    actorId={session.actor.id}
+                    canAttach={permitted.includes('attach_evidence')}
+                    api={api}
+                    onChanged={async (result) => {
+                      setReceipt(result.receipt);
+                      setSelected(result.record);
+                      setEditing(false);
+                      await refresh();
+                    }}
+                  />
+                )}
+              </div>
               <div className="workflow-actions">
                 {workflow(selected.kind)
                   .actions.filter(
@@ -809,6 +828,25 @@ export function Workspace({
                     </form>
                   ))}
               </div>
+              {selected.kind === 'resolution' && !!selected.data['rollDigest'] && (
+                <details className="action-panel" style={{ marginTop: 25 }}>
+                  <summary>Vote verification details</summary>
+                  <p className="hint">
+                    These fingerprints bind the frozen roll and most recently received ballot. They
+                    do not reveal individual choices.
+                  </p>
+                  <dl className="record-data">
+                    <dt>Frozen roll fingerprint</dt>
+                    <dd>{String(selected.data['rollDigest'])}</dd>
+                    {!!selected.data['lastBallotCommitment'] && (
+                      <>
+                        <dt>Latest ballot commitment</dt>
+                        <dd>{String(selected.data['lastBallotCommitment'])}</dd>
+                      </>
+                    )}
+                  </dl>
+                </details>
+              )}
               <details className="action-panel" style={{ marginTop: 25 }}>
                 <summary>Version history</summary>
                 <pre style={{ whiteSpace: 'pre-wrap', fontSize: 12 }}>

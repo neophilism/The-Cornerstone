@@ -183,6 +183,15 @@ try {
     code: 'FOUNDING_ROLL_INVALID',
   });
   assert.equal((await get('participant', wrong.id))!.version, 1);
+  const backdated = await create('participant', 'association', 'Invented backdated opening', {
+    eventId: event,
+    units,
+    rollOpened: addCalendarDays(today, -179),
+    constitution: rights,
+  });
+  await assert.rejects(command('participant', backdated.id, 'submit', { attested: true }), {
+    code: 'FOUNDING_OPENING_DATE',
+  });
   await command('participant', association.id, 'submit', { attested: true });
   assert.ok(await get('member', association.id));
   assert.equal(await get('member', first), null);

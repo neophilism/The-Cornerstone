@@ -67,6 +67,11 @@ export function MembershipPanel({
   useEffect(() => {
     void refresh();
   }, []);
+  const invitations =
+    snapshot?.invitations.filter((i) => {
+      const association = records.find((r) => r.id === i.associationId);
+      return !association || ['submitted', 'review'].includes(association.state);
+    }) ?? [];
   return (
     <section className="membership-overview">
       <p className="eyebrow">Your association</p>
@@ -84,9 +89,9 @@ export function MembershipPanel({
         </p>
       )}
       <h2>Founding invitations</h2>
-      {snapshot?.invitations.length ? (
+      {invitations.length ? (
         <ol className="activity-list">
-          {snapshot.invitations.map((i) => {
+          {invitations.map((i) => {
             const r = records.find((r) => r.id === i.associationId);
             return (
               <li className="activity-card invitation-card" key={i.id}>

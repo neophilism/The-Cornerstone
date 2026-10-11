@@ -102,6 +102,7 @@ test('a private draft survives editing and reloading, with versioned receipts', 
     page
       .locator('.activity-card')
       .filter({ hasText: title })
+      .filter({ hasText: 'version 3' })
       .first()
       .getByText('Read · simulation', { exact: true }),
   ).toBeVisible();
@@ -389,6 +390,10 @@ test('a founder personally declines, accepts and withdraws an invitation', async
   await expect(consent.getByText('Your response: accepted', { exact: true })).toBeVisible();
   await expect(page.locator('.founding-consent')).toHaveCount(1);
   await accessible(page);
+  await page.evaluate(() => {
+    (document.activeElement as HTMLElement | null)?.blur();
+    window.scrollTo(0, 0);
+  });
   await page.screenshot({
     path: `test-results/private-consent-${info.project.name}.png`,
     fullPage: true,
@@ -407,6 +412,10 @@ test('a founder personally declines, accepts and withdraws an invitation', async
       .getByText('accepted · simulation', { exact: true }),
   ).toBeVisible();
   await accessible(page);
+  await page.evaluate(() => {
+    (document.activeElement as HTMLElement | null)?.blur();
+    window.scrollTo(0, 0);
+  });
   await page.screenshot({
     path: `test-results/private-membership-${info.project.name}.png`,
     fullPage: true,
@@ -440,6 +449,10 @@ test('two members vote privately on a frozen roll and retain their own receipts'
   await expect(ballot.getByRole('button', { name: 'Save my ballot', exact: true })).toHaveCount(0);
   await expect(page.locator('.member-ballot')).toHaveCount(1);
   await accessible(page);
+  await page.evaluate(() => {
+    (document.activeElement as HTMLElement | null)?.blur();
+    window.scrollTo(0, 0);
+  });
   await page.screenshot({
     path: `test-results/private-ballot-${info.project.name}.png`,
     fullPage: true,
