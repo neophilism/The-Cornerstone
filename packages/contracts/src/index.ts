@@ -101,6 +101,72 @@ export const DateSchema = z
     const d = new Date(`${v}T00:00:00Z`);
     return !Number.isNaN(d.valueOf()) && d.toISOString().slice(0, 10) === v;
   }, 'Use a valid calendar date');
+export const MAX_SYNTHETIC_EVIDENCE_BYTES = 262144;
+export const MAX_SYNTHETIC_ATTACHMENTS = 10;
+export const EvidenceFilenameSchema = z
+  .string()
+  .trim()
+  .max(100)
+  .regex(/^[A-Za-z0-9][A-Za-z0-9 _.-]*\.txt$/i);
+const EvidenceSourceUrlSchema = z
+  .string()
+  .max(2000)
+  .url()
+  .refine((value) => {
+    const url = new URL(value);
+    return ['https:', 'http:'].includes(url.protocol) && !url.username && !url.password;
+  }, 'Use an HTTP(S) source URL without credentials');
+export const EvidenceMetadataSchema = z
+  .object({
+    filename: EvidenceFilenameSchema,
+    description: z.string().trim().min(3).max(2000),
+    sourceUrl: EvidenceSourceUrlSchema.optional(),
+    sourceDate: DateSchema.optional(),
+    plaintextSha256: z.string().regex(/^[a-f0-9]{64}$/),
+  })
+  .strict();
+export const UploadSyntheticEvidenceSchema = z
+  .object({
+    recordId: IdSchema,
+    expectedVersion: z.number().int().positive(),
+    idempotencyKey: IdSchema,
+    filename: EvidenceFilenameSchema,
+    description: z.string().trim().min(3).max(2000),
+    sourceUrl: EvidenceSourceUrlSchema.optional(),
+    sourceDate: DateSchema.optional(),
+    base64: z
+      .string()
+      .min(4)
+      .max(Math.ceil(MAX_SYNTHETIC_EVIDENCE_BYTES / 3) * 4)
+      .regex(/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/),
+    attestedSynthetic: z.literal(true),
+  })
+  .strict();
+export const ValidateSyntheticEvidenceSchema = z
+  .object({
+    recordId: IdSchema,
+    evidenceId: IdSchema,
+    expectedVersion: z.number().int().positive(),
+    idempotencyKey: IdSchema,
+  })
+  .strict();
+export const EvidenceViewSchema = EvidenceMetadataSchema.extend({
+  id: IdSchema,
+  recordId: IdSchema,
+  uploaderId: IdSchema,
+  byteLength: z.number().int().min(1).max(MAX_SYNTHETIC_EVIDENCE_BYTES),
+  state: z.enum(['quarantined', 'scanning', 'clean', 'rejected']),
+  createdAt: InstantSchema,
+  checkedAt: InstantSchema.nullable(),
+  checkMethod: z.literal('synthetic_text_v1').nullable(),
+  rejectionCode: z.enum(['INVALID_TEXT', 'INTEGRITY']).nullable(),
+  mediaType: z.literal('text/plain'),
+  realm: z.literal('simulation'),
+  classification: z.literal('synthetic_evidence'),
+  securityScan: z.literal('not_performed'),
+  legalAcceptance: z.literal(false),
+}).strict();
+export type EvidenceView = z.infer<typeof EvidenceViewSchema>;
 export const MoneySchema = z.string().regex(/^(0|[1-9]\d{0,17})(\.\d{2})?$/);
 const LedgerIdSchema = z.string().min(1).max(200);
 export const FractionSchema = z

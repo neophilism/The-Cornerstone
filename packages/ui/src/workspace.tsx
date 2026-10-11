@@ -15,6 +15,7 @@ import { workflows, workflowGroups, workflow, type Field } from '@cornerstone/do
 import { StructuredField, listFields } from './structured-field.js';
 import { AccountPanel } from './account.js';
 import { DraftAccessPanel } from './draft-access.js';
+import { EvidencePanel } from './evidence.js';
 
 type Session = { actor: Actor; csrf: string; mode: string; local: boolean };
 export function WorkflowFields({
@@ -679,6 +680,21 @@ export function Workspace({
                     </div>
                   ))}
               </dl>
+              {!['sealed_ranking', 'draw', 'round'].includes(selected.kind) && (
+                <EvidencePanel
+                  key={selected.id}
+                  record={selected}
+                  actorId={session.actor.id}
+                  canAttach={permitted.includes('attach_evidence')}
+                  api={api}
+                  onChanged={async (result) => {
+                    setReceipt(result.receipt);
+                    setSelected(result.record);
+                    setEditing(false);
+                    await refresh();
+                  }}
+                />
+              )}
               <div className="workflow-actions">
                 {workflow(selected.kind)
                   .actions.filter(
@@ -816,8 +832,8 @@ export function Workspace({
                 <div>
                   <strong>Protected functions remain gated.</strong>
                   <p>
-                    Evidence storage, independently sealed rankings, Treasury transfers, court
-                    filing and protected production identity require reviewed integrations. A
+                    Protected evidence storage, independently sealed rankings, Treasury transfers,
+                    court filing and protected production identity require reviewed integrations. A
                     disabled provider never issues a fake success receipt.
                   </p>
                 </div>

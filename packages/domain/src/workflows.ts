@@ -122,7 +122,15 @@ const w = (
   description,
   initial,
   createRoles,
-  createFields,
+  createFields: createFields.map((field) =>
+    field.key === 'evidenceIds'
+      ? {
+          ...field,
+          required: false,
+          help: 'Save a draft, then attach and validate synthetic text. Evidence IDs are required before submission or findings.',
+        }
+      : field,
+  ),
   actions,
   official,
 });

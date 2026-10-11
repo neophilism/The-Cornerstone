@@ -34,6 +34,7 @@ import {
 import { Store, PersistenceError } from '@cornerstone/store';
 import { ProgramService } from './service.js';
 import { DraftAccessService } from './access.js';
+import { EvidenceService } from './evidence.js';
 
 class ApplicationModule {}
 Module({})(ApplicationModule);
@@ -287,6 +288,12 @@ route('get', '/records', async (req, res) => {
       .map((action) => action.key);
     if (r.state === 'draft' && canAct(a, r, wf.createRoles, grants, 'save_draft', now))
       actions.push('save_draft');
+    if (
+      r.state === 'draft' &&
+      !['sealed_ranking', 'draw', 'round'].includes(r.kind) &&
+      canAct(a, r, wf.createRoles, grants, 'attach_evidence', now)
+    )
+      actions.push('attach_evidence');
     return RecordCapabilitiesSchema.parse({ recordId: r.id, version: r.version, actions });
   });
   res.json({ records, capabilities });
@@ -302,6 +309,27 @@ route('post', '/access/grant', async (req, res) =>
 route('post', '/access/revoke', async (req, res) =>
   res.json(await accessService().revoke(await actor(req, true), req.body)),
 );
+const evidenceService = () =>
+  new EvidenceService(requireStore(), mode, realm, env['EVIDENCE_STORAGE_PROVIDER'] || 'disabled');
+route('get', '/evidence', async (req, res) =>
+  res.json(await evidenceService().list(await actor(req), IdSchema.parse(req.query['recordId']))),
+);
+route('post', '/evidence/upload', async (req, res) =>
+  res.json(await evidenceService().upload(await actor(req, true), req.body)),
+);
+route('post', '/evidence/validate', async (req, res) =>
+  res.json(await evidenceService().validate(await actor(req, true), req.body)),
+);
+route('get', '/evidence/download', async (req, res) => {
+  const result = await evidenceService().download(
+    await actor(req),
+    IdSchema.parse(req.query['id']),
+  );
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  res.setHeader('Content-Disposition', 'attachment; filename="' + result.filename + '"');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.send(result.bytes);
+});
 route('get', '/notifications', async (req, res) =>
   res.json({ notifications: await requireStore().notifications(await actor(req)) }),
 );

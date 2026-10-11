@@ -19,6 +19,7 @@ import {
 } from '@cornerstone/domain';
 import { assertAuthority, draftPolicy } from '@cornerstone/policy';
 import { canAct, digest } from '@cornerstone/security';
+import { EvidenceService } from './evidence.js';
 import { Store, type Transaction } from '@cornerstone/store';
 import {
   cents,
@@ -215,6 +216,26 @@ export class ProgramService {
   ) {
     const k = c.action,
       today = now.slice(0, 10);
+    const definition = workflow(r.kind),
+      action = definition.actions.find((a) => a.key === k);
+    const needsEvidence =
+      (k === 'submit' && definition.createFields.some((f) => f.key === 'evidenceIds')) ||
+      action?.fields.some((f) => f.key === 'evidenceIds' && f.required);
+    if (needsEvidence)
+      requireCondition(
+        Array.isArray(d['evidenceIds']) && d['evidenceIds'].length > 0,
+        'EVIDENCE_REQUIRED',
+        'Attach and validate evidence before submission or written findings.',
+      );
+    if (Array.isArray(d['evidenceIds']) && (needsEvidence || action?.authority)) {
+      const ids = d['evidenceIds'].map((id) => IdSchema.parse(id));
+      await new EvidenceService(
+        this.store,
+        this.mode,
+        this.realm,
+        'synthetic-postgres',
+      ).assertAvailable(tx, r.id, ids);
+    }
     if (r.kind === 'claim' && k === 'find_eligible')
       await this.linked(tx, d['eventId'], 'event_petition', ['certified']);
     if (r.kind === 'association' && k === 'close_roll') {

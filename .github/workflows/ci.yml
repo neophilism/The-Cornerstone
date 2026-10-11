@@ -82,6 +82,7 @@ jobs:
       - run: pnpm test:db
       - run: node --import tsx tests/activity.integration.ts
       - run: node --import tsx tests/identity-access.integration.ts
+      - run: node --import tsx tests/evidence.integration.ts
       - run: pnpm -r --filter @cornerstone/api --filter @cornerstone/portal --filter @cornerstone/staff --filter @cornerstone/worker build
         env:
           NODE_ENV: production

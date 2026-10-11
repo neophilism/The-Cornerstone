@@ -111,6 +111,12 @@ export class Store {
       ...privateData.metadata,
     };
   }
+  seal(value: unknown, binding: string): Envelope {
+    return encrypt(value, this.key, 'development-field-v1', binding);
+  }
+  open<T>(envelope: Envelope, binding: string): T {
+    return decrypt<T>(envelope, this.key, binding);
+  }
   async get(tx: Transaction, id: string, lock = false) {
     const r = await tx.query<Row>(
       `SELECT * FROM case_records WHERE id=$1 ${lock ? 'FOR UPDATE' : ''}`,

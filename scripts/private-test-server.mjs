@@ -13,6 +13,7 @@ const env = {
   LOCAL_AUTH_ENABLED: 'true',
   LOCAL_AUTH_HOST: 'localhost',
   SENSITIVE_INTAKE_ENABLED: 'false',
+  EVIDENCE_STORAGE_PROVIDER: 'synthetic-postgres',
   API_INTERNAL_URL: 'http://127.0.0.1:4010',
   PORTAL_ORIGIN: 'http://127.0.0.1:3001',
   STAFF_ORIGIN: 'http://127.0.0.1:3002',

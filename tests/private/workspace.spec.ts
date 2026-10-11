@@ -1,6 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { randomUUID } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
 async function signIn(page: Page, persona: string, staff = false) {
   await page.goto(staff ? 'http://127.0.0.1:3002' : '/');
   await page
@@ -282,4 +283,78 @@ test('an owner can grant read access and revoke it, with no edit controls for th
   } finally {
     await context.close();
   }
+});
+test('a synthetic attachment stays quarantined until text validation and downloads its original bytes', async ({
+  page,
+}, info) => {
+  await signIn(page, 'participant');
+  await start(page, 'Preparation dossier');
+  const title = 'Invented attachment record ' + info.project.name;
+  await page.getByLabel('Record title').fill(title);
+  await page.getByLabel('Government action', { exact: true }).fill('Invented government action');
+  await page.getByLabel('Established livelihood', { exact: true }).fill('Invented primary job');
+  await page.getByLabel('Direct loss', { exact: true }).fill('Invented direct livelihood loss');
+  await page.getByRole('button', { name: 'Save synthetic draft', exact: true }).click();
+  await page.getByText('Attach a synthetic text file', { exact: true }).click();
+  const body = Buffer.from('Invented evidence only. Café and plain UTF-8 text.\n');
+  await page
+    .getByLabel('Synthetic text file', { exact: true })
+    .setInputFiles({ name: 'invented-source.txt', mimeType: 'text/plain', buffer: body });
+  await page
+    .getByLabel('What this item shows', { exact: true })
+    .fill('Invented livelihood account for development');
+  await page
+    .getByLabel('Source URL (optional)', { exact: true })
+    .fill('https://example.com/invented-source');
+  await page
+    .getByLabel('I am using invented development information only.', { exact: true })
+    .check();
+  await page.getByRole('button', { name: 'Save quarantined attachment', exact: true }).click();
+  await expect(page.getByText('Simulation receipt · version 2', { exact: true })).toBeVisible();
+  const card = page
+    .locator('.evidence-card')
+    .filter({ has: page.getByRole('heading', { name: 'invented-source.txt', exact: true }) });
+  await expect(card.getByText('Quarantined · download unavailable', { exact: true })).toBeVisible();
+  await expect(
+    card.getByRole('link', { name: 'Download synthetic text', exact: true }),
+  ).toHaveCount(0);
+  const me = await (await page.request.get('/api/private/me')).json();
+  const snapshot = await (await page.request.get('/api/private/records')).json();
+  const record = snapshot.records.find((r: { title: string }) => r.title === title);
+  const list = await (await page.request.get('/api/private/evidence?recordId=' + record.id)).json();
+  expect(list.evidence[0].securityScan).toBe('not_performed');
+  expect(
+    (await page.request.get('/api/private/evidence/download?id=' + list.evidence[0].id)).status(),
+  ).toBe(422);
+  const tooLarge = await page.request.post('/api/private/evidence/upload', {
+    headers: {
+      Origin: 'http://127.0.0.1:3001',
+      'X-CSRF-Token': me.csrf,
+      'Content-Type': 'application/json',
+    },
+    data: 'x'.repeat(2097153),
+  });
+  expect(tooLarge.status()).toBe(413);
+  await card.getByRole('button', { name: 'Validate synthetic text', exact: true }).click();
+  await expect(page.getByText('Simulation receipt · version 3', { exact: true })).toBeVisible();
+  await expect(card.getByText('Synthetic text checked', { exact: true })).toBeVisible();
+  const wait = page.waitForEvent('download');
+  await card.getByRole('link', { name: 'Download synthetic text', exact: true }).click();
+  const download = await wait;
+  expect(download.suggestedFilename()).toBe('invented-source.txt');
+  expect(await readFile((await download.path())!)).toEqual(body);
+  await accessible(page);
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.mouse.move(0, 0);
+  await page.screenshot({
+    path: 'test-results/private-evidence-' + info.project.name + '.png',
+    fullPage: true,
+  });
+  await page.reload();
+  await open(page, title);
+  await expect(
+    page
+      .locator('.evidence-card')
+      .getByRole('heading', { name: 'invented-source.txt', exact: true }),
+  ).toBeVisible();
 });
