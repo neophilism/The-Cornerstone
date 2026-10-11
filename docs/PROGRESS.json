@@ -1,14 +1,14 @@
 {
   "updated": "2026-10-11",
   "scope": "first code release and approved source/research expansion; full program unfinished",
-  "lastVerifiedCommit": "0a5dbe10cd4ed493d821efd156f4f44ad37c5703",
-  "lastVerifiedRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/38123596471",
+  "lastVerifiedCommit": "a0da54a50908333bb601d7557b1262f16d484faf",
+  "lastVerifiedRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/38125509319",
   "livePublicUrl": "https://cornerstone-policy-preview.onrender.com",
   "protectedIntake": false,
   "sourcePublicationApproved": true,
   "internalPlanPublicationApproved": false,
   "pending": [
-    "synthetic evidence PostgreSQL/browser and download verification",
+    "consent-based membership and private member voting",
     "protected integrations and independent review",
     "complete program journeys"
   ]

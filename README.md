@@ -2,6 +2,8 @@
 
 A public policy website and scoped application for private preparation and synthetic program training. Official legal and financial actions require verified authority and institutional integration; they are disabled in the initial release.
 
+[Open the public website](https://cornerstone-policy-preview.onrender.com/). The repository contains the public site, participant and staff workspaces, API, worker, database migrations, shared policy engines and tests. This is a working initial release; the full program is unfinished.
+
 ## Development
 
 Use Node 24 and the pinned pnpm version. Run `pnpm install --frozen-lockfile`, `pnpm build`, then `pnpm dev`. The public site uses port 3000, portal 3001, staff 3002, and API 4010. Copy `.env.example` to `.env` and configure a local PostgreSQL/PostGIS database before persistent workflows. Never use real private data in simulation.
@@ -19,3 +21,7 @@ Render hosts the application services; Neon supplies PostgreSQL. `render.yaml` d
 The seven approved source originals are preserved in `policy/` with verified hashes and download links. The research explorer imports all six workbook sheets and reconciles 231 census IDs; entries remain research-only. Run `python scripts/import-research.py --check` to verify extraction using the documented offline dependencies.
 
 Read `AGENTS.md`, `docs/DEVELOPMENT.md` and `docs/PROGRESS.md` to continue the implementation. The earlier internal planning package remains private pending separate publication approval. Synthetic fixtures cannot certify events or people.
+
+## Roadmap verification
+
+The canonical roadmap marker is [registry/roadmap.json](registry/roadmap.json). Its `planVerified: false` and zero planned-PR count concern the unpublished full planning package, not the amount of implemented code. No total planned PR count is asserted. Actual implementation and verification evidence are maintained in [docs/PROGRESS.md](docs/PROGRESS.md).
