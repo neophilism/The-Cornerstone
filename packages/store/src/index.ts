@@ -170,7 +170,7 @@ export class Store {
   }
   async getVersion(tx: Transaction, id: string, version: number) {
     const r = await tx.query<Row>(
-      'SELECT c.id,c.kind,c.owner_id,c.institution_id,c.jurisdiction,c.policy_version,c.created_at,v.realm,v.state,v.version,v.payload_cipher,v.created_at AS updated_at FROM case_records c JOIN case_versions v ON v.record_id=c.id WHERE c.id=$1 AND v.version=$2',
+      'SELECT c.id,c.kind,o.owner_id,c.institution_id,c.jurisdiction,c.policy_version,c.created_at,v.realm,v.state,v.version,v.payload_cipher,v.created_at AS updated_at FROM case_records c JOIN case_versions v ON v.record_id=c.id JOIN case_version_owners o ON o.record_id=v.record_id AND o.version=v.version WHERE c.id=$1 AND v.version=$2',
       [id, version],
     );
     return r.rows[0] ? this.decode(r.rows[0]) : null;

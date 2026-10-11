@@ -27,6 +27,7 @@ import { EvidenceChoice, RecordChoice, IncomeShare, isRecordReference } from './
 import { PreparationGuide, RecordNextStep } from './journey.js';
 import { CalculationSummary } from './financial-fields.js';
 import { SuccessionSummary } from './succession.js';
+import { ClaimSurvivalSummary } from './claim-survival.js';
 
 type Session = { actor: Actor; csrf: string; mode: string; local: boolean };
 export function WorkflowFields({
@@ -787,6 +788,7 @@ export function Workspace({
               </div>
               <RecordNextStep record={selected} />
               <SuccessionSummary record={selected} />
+              <ClaimSurvivalSummary record={selected} onOpen={(id) => void openRecord(id)} />
               <div className="record-links">
                 {selected.state === 'draft' && permitted.includes('save_draft') ? (
                   <button className="button button-secondary" onClick={() => setEditing(!editing)}>

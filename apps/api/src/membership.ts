@@ -63,7 +63,7 @@ export class MembershipService {
           unitId: u.id,
           associationId: u.association_id,
           claimId: u.claim_id,
-          successor: !!u.successor_id,
+          successor: !!u.successor_id || u.holder_capacity !== 'founder',
         })),
         realm: 'simulation',
         officialMembership: false,
@@ -169,11 +169,27 @@ export class MembershipService {
         'FOUNDING_PERIOD_CLOSED',
         'The published founding period has closed.',
       );
-      await tx.query('SELECT simulation_respond_invitation($1,$2,$3)', [
-        invitation.id,
-        input.response,
-        invitation.terms_digest,
-      ]);
+      try {
+        await tx.query('SELECT simulation_respond_invitation($1,$2,$3)', [
+          invitation.id,
+          input.response,
+          invitation.terms_digest,
+        ]);
+      } catch (error) {
+        if (error instanceof Error && error.message === 'COHORT_ALREADY_SELECTED')
+          throw new DomainError(
+            'COHORT_ALREADY_SELECTED',
+            'This claim already has accepted consent in another open cohort. Withdraw that consent before selecting this one.',
+            409,
+          );
+        if (error instanceof Error && error.message === 'FOUNDING_HOLDER_CHANGED')
+          throw new DomainError(
+            'FOUNDING_HOLDER_CHANGED',
+            "The current claim holder changed. This earlier invitation cannot supply the new holder's personal consent.",
+            409,
+          );
+        throw error;
+      }
       const larger =
         Array.isArray(record.data['units']) &&
         record.data['units'].length > draftPolicy.ordinaryUnitLimit;

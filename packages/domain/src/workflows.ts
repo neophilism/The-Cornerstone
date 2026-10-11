@@ -489,6 +489,119 @@ export const workflows: WorkflowDefinition[] = [
     ],
   ),
   w(
+    'claim_survival',
+    'Surviving claim request',
+    'Request authority to prove or exercise one existing claim before enrollment.',
+    ['participant', 'member'],
+    [
+      f(
+        'claimId',
+        'Original claim reference',
+        'text',
+        true,
+        'A supplied reference does not reveal the file. An assigned reviewer must verify the chain before any case-specific access changes.',
+      ),
+      f('transferBasis', 'Claim succession route', 'select', true, undefined, [
+        'holder_death',
+        'estate_designation',
+      ]),
+      f('capacity', 'Requested claim capacity', 'select', true, undefined, [
+        'designated_successor',
+        'estate_representative',
+      ]),
+      f('chain', 'Death, designation and succession chain', 'textarea'),
+      evidence,
+    ],
+    [
+      action(
+        'submit',
+        'Submit my surviving claim request',
+        ['draft'],
+        'submitted',
+        ['participant', 'member'],
+        null,
+        [
+          consent,
+          f(
+            'rightsAcknowledged',
+            "I request one undivided claim and only the case access needed to exercise it, not another person's account or an extra unit",
+            'boolean',
+          ),
+        ],
+        "The proposed successor must submit personally. This is not proof of the original worker's eligibility.",
+      ),
+      review('labor', 'claim'),
+      action(
+        'request_changes',
+        'Request a corrected claim-survival packet',
+        ['review'],
+        'changes_requested',
+        ['labor'],
+        'claim',
+        [reasons],
+        'Explain missing evidence or a changed claim. No claim control changes.',
+      ),
+      action(
+        'revise_request',
+        'Reopen my claim-survival draft',
+        ['changes_requested'],
+        'draft',
+        ['participant', 'member'],
+        null,
+        [],
+        'Correct and resubmit personally. A new review will capture the current claim version.',
+      ),
+      action(
+        'approve',
+        'Approve case-specific claim survival',
+        ['review'],
+        'approved',
+        ['labor'],
+        'claim',
+        [
+          f('undivided', 'Exactly one existing undivided claim is preserved', 'boolean'),
+          f(
+            'deathEstablished',
+            'The death of the relevant rights holder is supported by the evidence',
+            'boolean',
+          ),
+          f('identityEstablished', 'The proposed successor is the requesting person', 'boolean'),
+          f(
+            'chainEstablished',
+            'The designation or estate authority and chain are established',
+            'boolean',
+          ),
+          f(
+            'probateConsistent',
+            'The succession follows the applicable probate requirements',
+            'boolean',
+          ),
+          f(
+            'competingRightsResolved',
+            'Notice, review and competing claims have been addressed',
+            'boolean',
+          ),
+          f(
+            'caseAccessNecessary',
+            'Authority includes necessary access to this claim file only, and prior delegated access will end',
+            'boolean',
+          ),
+          f(
+            'eligibilitySeparate',
+            "The worker's eligibility remains a separate finding and the existing claim state is unchanged",
+            'boolean',
+          ),
+          f('legalBasis', 'Succession, case-access, notice and review basis', 'textarea'),
+          reasons,
+          evidence,
+        ],
+        'Change control of the same un-enrolled claim in simulation. Do not copy the claim, decide eligibility, transfer an account or create a founding unit.',
+      ),
+      deny('labor', 'claim'),
+      appeal(),
+    ],
+  ),
+  w(
     'association',
     'Cornerstone Association',
     'Form a voluntary, bounded founding roll before ranking.',
@@ -508,6 +621,23 @@ export const workflows: WorkflowDefinition[] = [
     [
       submit(),
       review('labor', 'association'),
+      action(
+        'withdraw_proposal',
+        'Withdraw this unclosed association proposal',
+        ['submitted', 'review'],
+        'withdrawn',
+        participant,
+        null,
+        [
+          reasons,
+          f(
+            'rightsPreserved',
+            'Existing claims and unrelated rights remain intact; no closed unit or compact is changed',
+            'boolean',
+          ),
+        ],
+        'End only this open proposal. Preserve personal consent history and allow eligible claims to choose another open cohort.',
+      ),
       action(
         'close_roll',
         'Certify and close founding roll',
@@ -1642,9 +1772,9 @@ export function validateAction(
       'An association’s own material breach does not qualify.',
     );
   }
-  if (record.kind === 'succession' && key === 'submit')
+  if (['succession', 'claim_survival'].includes(record.kind) && key === 'submit')
     yes('rightsAcknowledged', 'Personally acknowledge the undivided rights and limits.');
-  if (record.kind === 'succession' && key === 'approve')
+  if (['succession', 'claim_survival'].includes(record.kind) && key === 'approve')
     for (const name of [
       'undivided',
       'deathEstablished',
@@ -1654,6 +1784,12 @@ export function validateAction(
       'competingRightsResolved',
     ])
       yes(name, 'A complete evidence-based succession finding is required.');
+  if (record.kind === 'claim_survival' && key === 'approve') {
+    yes('caseAccessNecessary', 'Record the necessary authority over this specific claim file.');
+    yes('eligibilitySeparate', 'Succession cannot replace the worker eligibility finding.');
+  }
+  if (record.kind === 'association' && key === 'withdraw_proposal')
+    yes('rightsPreserved', 'Withdrawing an unclosed proposal does not forfeit any claim.');
   if (record.kind === 'association' && key === 'close_roll') {
     yes('equalRights', 'Equal base rights and votes are required.');
     yes('voluntary', 'Participation must remain voluntary.');
@@ -1718,7 +1854,15 @@ export function validateAction(
 export const workflowGroups = [
   {
     label: 'Prepare & participate',
-    kinds: ['dossier', 'organizing_group', 'event_petition', 'claim', 'hearing', 'succession'],
+    kinds: [
+      'dossier',
+      'organizing_group',
+      'event_petition',
+      'claim',
+      'hearing',
+      'succession',
+      'claim_survival',
+    ],
   },
   {
     label: 'Members & enterprise',

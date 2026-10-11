@@ -14,6 +14,10 @@ Migration 009 permits larger proposed rolls while retaining the ordinary 2,500-u
 
 Closing a larger roll derives the yes count from verified personal choices. More than half of all proposed founders must approve, every founder must still accept unchanged membership terms, and Labor must separately find that meetings, voting, records and direct deliberation remain practical. A staff-supplied yes count is rejected. Eligibility rows are locked in a consistent order and units are created in one atomic database operation, including the existing one-active-roll constraint. The existing one-megabyte structured-request bound is a technical adapter limit, not a new statutory membership ceiling. Post-enrollment synthetic succession is described in SUCCESSION.md; real identity and legal activation remain gated.
 
+## Claim control and voluntary cohort choice
+
+A reviewed pre-enrollment claim transfer preserves the original claim and requires the new holder's own unchanged-term consent. The previous holder's invitation cannot supply that consent. Acceptance and roll closure lock the original claim; competing open-cohort acceptances cannot reserve it twice. Consent may be withdrawn before choosing another open cohort. The owner may withdraw an unclosed proposal without extinguishing anyone's claim, but this action cannot dissolve a closed roll. Estate capacity and the deceased rights holder carry into the existing unit at enrollment. See CLAIM_SURVIVAL.md.
+
 ## Member decisions
 
 An active founding-unit holder can draft a resolution for an accessible closed association. The server derives its unit count, fixes its association and freezes the actual unit IDs when voting opens. Every active holder in the frozen roll may cast one ballot, including a successor after the separate synthetic transfer decision. Ballot replacement is unavailable in this initial adapter.

@@ -57,7 +57,15 @@ try {
   );
   const actual = Object.fromEntries(rows.rows.map((r) => [r.subject, r.institution_id]));
   const routes: Record<string, string[]> = {
-    labor: ['event_petition', 'claim', 'succession', 'association', 'launch', 'resolution'],
+    labor: [
+      'event_petition',
+      'claim',
+      'succession',
+      'claim_survival',
+      'association',
+      'launch',
+      'resolution',
+    ],
     commerce: ['round', 'match'],
     state: ['objection', 'permit'],
     supervisor: ['state_authority', 'offer', 'compact', 'supervision', 'enforcement', 'renewal'],
