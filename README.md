@@ -26,4 +26,4 @@ Read `AGENTS.md`, `docs/DEVELOPMENT.md` and `docs/PROGRESS.md` to continue the i
 
 The canonical roadmap marker is [registry/roadmap.json](registry/roadmap.json). Its `planVerified: false` and zero planned-PR count concern the unpublished full planning package, not the amount of implemented code. No total planned PR count is asserted. Actual implementation and verification evidence are maintained in [docs/PROGRESS.md](docs/PROGRESS.md).
 
-Synthetic founding-unit succession, unchanged frozen votes and predecessor-ballot privacy are described in `docs/SUCCESSION.md`. This does not activate real probate, identity, legal-notice or private-intake services.
+Synthetic founding-unit succession, unchanged frozen votes and predecessor-ballot privacy are described in `docs/SUCCESSION.md`. Continuing an existing un-enrolled claim is described in `docs/CLAIM_SURVIVAL.md`. Apply all checked migrations before running the matching API revision; the public site has no database dependency. Neither route activates real probate, identity, legal-notice or private-intake services.
