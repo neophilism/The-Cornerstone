@@ -40,10 +40,12 @@ export function Header({
   locale = 'en',
   portalUrl = '/workspace',
   active = '',
+  publicOrigin = '',
 }: {
   locale?: Locale;
   portalUrl?: string;
   active?: string;
+  publicOrigin?: string;
 }) {
   const t = translate(locale);
   const links = [
@@ -64,12 +66,12 @@ export function Header({
           {' '}
           · A voluntary remedy for deliberate livelihood displacement
         </span>
-        <a href="/policy">
+        <a href={`${publicOrigin}/policy`}>
           Read the proposal <span aria-hidden="true">↗</span>
         </a>
       </div>
       <header className="site-header">
-        <a className="brand" href="/" aria-label="The Cornerstone home">
+        <a className="brand" href={`${publicOrigin}/`} aria-label="The Cornerstone home">
           <Mark />
           <span>
             THE
@@ -79,7 +81,11 @@ export function Header({
         </a>
         <nav className="desktop-nav" aria-label="Main navigation">
           {links.map(([href, label]) => (
-            <a key={href} href={href} aria-current={active === href ? 'page' : undefined}>
+            <a
+              key={href}
+              href={`${publicOrigin}${href}`}
+              aria-current={active === href ? 'page' : undefined}
+            >
               {label}
             </a>
           ))}
@@ -92,23 +98,23 @@ export function Header({
           <summary>Menu</summary>
           <nav aria-label="Mobile navigation">
             {links.map(([href, label]) => (
-              <a key={href} href={href}>
+              <a key={href} href={`${publicOrigin}${href}`}>
                 {label}
               </a>
             ))}
             <a href={portalUrl}>{t.account}</a>
-            <a href="/public-record">{t.record}</a>
+            <a href={`${publicOrigin}/public-record`}>{t.record}</a>
           </nav>
         </details>
       </header>
     </>
   );
 }
-export function Footer() {
+export function Footer({ publicOrigin = '' }: { publicOrigin?: string }) {
   return (
     <footer className="site-footer">
       <div className="footer-top">
-        <a className="brand" href="/">
+        <a className="brand" href={`${publicOrigin}/`}>
           <Mark />
           <span>
             THE
@@ -121,18 +127,18 @@ export function Footer() {
           <br />A future you help build.
         </p>
         <div className="footer-links">
-          <a href="/policy">Policy & sources</a>
-          <a href="/help">Help & questions</a>
-          <a href="/public-record">Public record</a>
-          <a href="/privacy">Privacy</a>
-          <a href="/accessibility">Accessibility</a>
+          <a href={`${publicOrigin}/policy`}>Policy & sources</a>
+          <a href={`${publicOrigin}/help`}>Help & questions</a>
+          <a href={`${publicOrigin}/public-record`}>Public record</a>
+          <a href={`${publicOrigin}/privacy`}>Privacy</a>
+          <a href={`${publicOrigin}/accessibility`}>Accessibility</a>
         </div>
       </div>
       <div className="footer-bottom">
         <span>
           Cornerstone is a proposal. This site does not certify eligibility or grant legal rights.
         </span>
-        <a href="/es" lang="es">
+        <a href={`${publicOrigin}/es`} lang="es">
           Español
         </a>
       </div>

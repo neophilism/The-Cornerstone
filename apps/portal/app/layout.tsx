@@ -9,9 +9,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>
-        <Header portalUrl="/" />
+        <Header
+          portalUrl="/"
+          publicOrigin={process.env['PUBLIC_ORIGIN'] || 'http://localhost:3000'}
+        />
         {children}
-        <Footer />
+        <Footer publicOrigin={process.env['PUBLIC_ORIGIN'] || 'http://localhost:3000'} />
       </body>
     </html>
   );

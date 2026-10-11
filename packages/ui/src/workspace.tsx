@@ -117,7 +117,13 @@ function download(value: unknown, name: string) {
   a.click();
   URL.revokeObjectURL(url);
 }
-export function Workspace({ staff = false }: { staff?: boolean }) {
+export function Workspace({
+  staff = false,
+  publicOrigin = '/',
+}: {
+  staff?: boolean;
+  publicOrigin?: string;
+}) {
   const [session, setSession] = useState<Session | null>(null),
     [records, setRecords] = useState<CaseRecord[]>([]),
     [view, setView] = useState<string>('home'),
@@ -308,10 +314,7 @@ export function Workspace({ staff = false }: { staff?: boolean }) {
                 Official sign-in requires an approved identity provider, independent security review
                 and legal activation.
               </p>
-              <a
-                className="button button-secondary"
-                href={process.env['NEXT_PUBLIC_PUBLIC_ORIGIN'] || '/'}
-              >
+              <a className="button button-secondary" href={publicOrigin}>
                 Return to the public site
               </a>
             </>
@@ -323,6 +326,26 @@ export function Workspace({ staff = false }: { staff?: boolean }) {
     w.createRoles.some((r) => session.actor.roles.includes(r)),
   );
   const group = workflowGroups.find((g) => g.label === view);
+  const receiptRecord = receipt
+    ? records.find((r) => r.id === receipt.recordId) ||
+      (selected?.id === receipt.recordId ? selected : null)
+    : null;
+  const receiptLabel =
+    receipt?.action === 'create'
+      ? 'Draft saved'
+      : receipt?.action === 'save_draft'
+        ? 'Draft changes saved'
+        : receiptRecord
+          ? workflow(receiptRecord.kind).actions.find((a) => a.key === receipt?.action)?.label
+          : null;
+  const labels = selected
+    ? new Map(
+        [
+          ...workflow(selected.kind).createFields,
+          ...workflow(selected.kind).actions.flatMap((a) => a.fields),
+        ].map((f) => [f.key, f.label]),
+      )
+    : new Map<string, string>();
   const items = group
     ? visible.filter((w) => (group.kinds as readonly string[]).includes(w.kind))
     : visible;
@@ -405,7 +428,8 @@ export function Workspace({ staff = false }: { staff?: boolean }) {
             <div className="receipt" role="status">
               <strong>Simulation receipt · version {receipt.version}</strong>
               <p>
-                {receipt.action} · {new Date(receipt.acceptedAt).toLocaleString()}
+                {receiptLabel || receipt.action.replaceAll('_', ' ')} ·{' '}
+                {new Date(receipt.acceptedAt).toLocaleString()}
               </p>
               <p>{receipt.id}</p>
               <button
@@ -499,8 +523,19 @@ export function Workspace({ staff = false }: { staff?: boolean }) {
                   .filter(([k]) => k !== 'history')
                   .map(([k, v]) => (
                     <div key={k} style={{ display: 'contents' }}>
-                      <dt>{k.replaceAll('_', ' ')}</dt>
-                      <dd>{typeof v === 'object' ? JSON.stringify(v, null, 2) : String(v)}</dd>
+                      <dt>
+                        {labels.get(k) ||
+                          k.replace(/([a-z])([A-Z])/g, '$1 $2').replaceAll('_', ' ')}
+                      </dt>
+                      <dd>
+                        {typeof v === 'boolean'
+                          ? v
+                            ? 'Yes'
+                            : 'No'
+                          : typeof v === 'object'
+                            ? JSON.stringify(v, null, 2)
+                            : String(v)}
+                      </dd>
                     </div>
                   ))}
               </dl>
