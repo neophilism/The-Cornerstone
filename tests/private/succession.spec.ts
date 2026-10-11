@@ -5,6 +5,11 @@ import { Simulation, findings } from '../helpers/simulation.js';
 async function signIn(page: Page, persona: string, staff = false) {
   const origin = 'http://127.0.0.1:' + (staff ? '3002' : '3001');
   await page.goto(origin);
+  await expect(
+    page.getByRole('heading', {
+      name: /^(Your private workspace\.|Your next step, made clear\.)$/,
+    }),
+  ).toBeVisible();
   if (await page.getByRole('button', { name: 'Sign out', exact: true }).count())
     await page.getByRole('button', { name: 'Sign out', exact: true }).click();
   await page
@@ -79,7 +84,32 @@ test('a personally requested successor keeps one unit without inheriting a priva
       .getByLabel('I am using invented development information only.', { exact: true })
       .check();
     await page.getByRole('button', { name: 'Save quarantined attachment', exact: true }).click();
+    await expect(
+      page.getByText('Quarantined · download unavailable', { exact: true }),
+    ).toBeVisible();
+    let releaseValidation!: () => void;
+    let responseHeld!: () => void;
+    const held = new Promise<void>((resolve) => {
+      responseHeld = resolve;
+    });
+    const release = new Promise<void>((resolve) => {
+      releaseValidation = resolve;
+    });
+    await page.route('**/api/private/evidence/validate', async (route) => {
+      const response = await route.fetch();
+      responseHeld();
+      await release;
+      await route.fulfill({ response });
+    });
     await page.getByRole('button', { name: 'Validate synthetic text', exact: true }).click();
+    await held;
+    await expect(
+      page.getByRole('button', { name: 'Submit my succession request', exact: true }),
+    ).toBeDisabled();
+    await expect(page.getByLabel('I request one undivided unit', { exact: false })).toBeDisabled();
+    releaseValidation();
+    await expect(page.getByText('Synthetic text checked', { exact: true })).toBeVisible();
+    await page.unroute('**/api/private/evidence/validate');
     await page
       .getByLabel('I confirm this submission is complete and accurate', { exact: false })
       .check();
@@ -97,6 +127,7 @@ test('a personally requested successor keeps one unit without inheriting a priva
     const panel = page.locator('.action-panel').filter({
       has: page.getByRole('heading', { name: 'Approve one synthetic successor', exact: true }),
     });
+    await expect(panel).toBeVisible();
     for (const checkbox of await panel.getByRole('checkbox').all()) await checkbox.check();
     await panel
       .getByLabel('Bylaw, probate, notice and review basis', { exact: true })
