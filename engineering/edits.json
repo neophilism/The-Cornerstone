@@ -1,97 +1,42 @@
 {
-  "base": "fff9f3b94d1969320d20467ac413720402aaf7d5",
+  "base": "056da7a09e99bc61304417ff9bfa867b0b2392a3",
   "target": "cornerstone/claim-survival",
-  "message": "Record verified succession release and exact claim-survival deployment boundaries",
+  "message": "Make claim survival discoverable in participant navigation",
   "changes": [
     {
-      "path": "README.md",
-      "beforeSha256": "3292cd095241f07e854b46b9741674c89b6324f67a36bba5a2bfb118e8f8d3a1",
-      "afterSha256": "bec7f3860d0d044d78d0daee7a1d111255496d49e30ada336f5a778c1f33b0c3",
+      "path": "packages/domain/src/workflows.ts",
+      "beforeSha256": "27f8c0c2c170faccdd47a2d03b7d855255342743654751346bf76a754f9d0c17",
+      "afterSha256": "2c055750fec06439ee5c58c712ca328bf07337de1b1cb7837ab390c42f008ea3",
       "edits": [
         {
-          "find": "Synthetic founding-unit succession, unchanged frozen votes and predecessor-ballot privacy are described in `docs/SUCCESSION.md`. This does not activate real probate, identity, legal-notice or private-intake services.\n",
-          "replace": "Synthetic founding-unit succession, unchanged frozen votes and predecessor-ballot privacy are described in `docs/SUCCESSION.md`. Continuing an existing un-enrolled claim is described in `docs/CLAIM_SURVIVAL.md`. Apply all checked migrations before running the matching API revision; the public site has no database dependency. Neither route activates real probate, identity, legal-notice or private-intake services.\n"
+          "find": "export const workflowGroups = [\n  {\n    label: 'Prepare & participate',\n    kinds: ['dossier', 'organizing_group', 'event_petition', 'claim', 'hearing', 'succession'],\n  },\n  {\n    label: 'Members & enterprise',\n",
+          "replace": "export const workflowGroups = [\n  {\n    label: 'Prepare & participate',\n    kinds: [\n      'dossier',\n      'organizing_group',\n      'event_petition',\n      'claim',\n      'hearing',\n      'succession',\n      'claim_survival',\n    ],\n  },\n  {\n    label: 'Members & enterprise',\n"
         }
       ]
     },
     {
-      "path": "docs/DEPLOYMENT.md",
-      "beforeSha256": "c80f9a0d0f22d69c004dbc7bea5b7f543b629a20e77c1d5761ba7420791d0cd7",
-      "afterSha256": "8b0780be229e0227a4a3a21578f0baab33f4fa22c1f3ad9d42920c525b535182",
+      "path": "tests/claim-survival.test.ts",
+      "beforeSha256": "d9fcabb53748809c63cb4341904933e377b346f54bba790ebf565e415e632ecc",
+      "afterSha256": "d0fcd7e186ed8d84406d6d07fa66522b4371b07a6b4c1638bf3bfa0428a9b0c6",
       "edits": [
         {
-          "find": "Migration 009 adds private synthetic larger-association choices and atomic bulk founding-unit creation. Its actual PostgreSQL integration passed, and it is applied with checksum 2a3d2902ba270050770b69f734eb31c64ec0b607ad375282c935ccf34c633b3e on development only. No production application is authorized by its presence in the repository. Keep runtime deployment and schema versions compatible.\n",
-          "replace": "Migration 009 adds private synthetic larger-association choices and atomic bulk founding-unit creation. Its actual PostgreSQL integration passed, and it is applied with checksum 2a3d2902ba270050770b69f734eb31c64ec0b607ad375282c935ccf34c633b3e on development only. No production application is authorized by its presence in the repository. Keep runtime deployment and schema versions compatible. Existing-claim control requires migration 013 before its API revision, because historical reconstruction reads the new version-owner sidecar. Public-only deployment does not require that migration.\n"
+          "find": "  eligibilitySeparate: true,\n};\ndescribe('case-specific claim survival', () => {\n  it('requires each substantive finding including narrow case access and separate eligibility', () => {\n    for (const key of Object.keys(findings))\n      expect(() =>\n",
+          "replace": "  eligibilitySeparate: true,\n};\ndescribe('case-specific claim survival', () => {\n  it('keeps every available workflow in exactly one navigation group', () => {\n    const grouped = workflowGroups.flatMap((group) => [...group.kinds]);\n    expect(new Set(grouped).size).toBe(grouped.length);\n    expect([...grouped].sort()).toEqual(workflows.map((item) => item.kind).sort());\n  });\n  it('requires each substantive finding including narrow case access and separate eligibility', () => {\n    for (const key of Object.keys(findings))\n      expect(() =>\n"
         },
         {
-          "find": "Development schema work uses a separately named Neon development branch. Migrations 001–009 are applied and checksummed there; migrations 008–009 add synthetic membership, ballots and larger-scale choices with forced row-level security. No application migration has been applied to production. PostgreSQL 18 and PostGIS 3.6 are used. Migration credentials are separate from the restricted `cornerstone_runtime` role. API-created Neon roles can bypass RLS; do not use such a role for runtime. Pool connections use transaction-local subject and realm settings.\n",
-          "replace": "Development schema work uses a separately named Neon development branch. Migrations 001–010 are applied and checksummed on cornerstone-development (br-falling-band-b4eeukqt). Its isolated child cornerstone-claim-survival (br-super-frost-b4ga2f8q) also has 011–012, applied with exact prior-checksum guards and transaction locks. The child upgrade retained restricted runtime/worker roles and forced history RLS. Migration 013 is tested locally but not yet applied to either Neon branch. These are separate schema states, not a production deployment. No application migration has been applied to production. PostgreSQL 18 and PostGIS 3.6 are used. Migration credentials are separate from the restricted `cornerstone_runtime` role. API-created Neon roles can bypass RLS; do not use such a role for runtime. Pool connections use transaction-local subject and realm settings.\n"
+          "find": "import { describe, expect, it } from 'vitest';\nimport { randomUUID } from 'node:crypto';\nimport type { CaseRecord } from '@cornerstone/contracts';\nimport { parseFields, validateAction, workflow } from '@cornerstone/domain';\nconst claim: CaseRecord = {\n  id: randomUUID(),\n  kind: 'claim_survival',\n",
+          "replace": "import { describe, expect, it } from 'vitest';\nimport { randomUUID } from 'node:crypto';\nimport type { CaseRecord } from '@cornerstone/contracts';\nimport {\n  parseFields,\n  validateAction,\n  workflow,\n  workflows,\n  workflowGroups,\n} from '@cornerstone/domain';\nconst claim: CaseRecord = {\n  id: randomUUID(),\n  kind: 'claim_survival',\n"
         }
       ]
     },
     {
-      "path": "docs/MEMBERSHIP_AND_VOTING.md",
-      "beforeSha256": "1d4c578bb2bbff601489a879e61ecae643b3f427edfafec77eaa069ec2a0d768",
-      "afterSha256": "48fcf3a292342b2886bcbe1b4bf6c287ca78d27981b5728f582cb482d42a75f4",
+      "path": "tests/private/claim-survival.spec.ts",
+      "beforeSha256": "92177960202849056b2ee7e41d38e3aed452b0cd3d54cf7b1962cbb9d242e857",
+      "afterSha256": "e0fafa51cbcf24af1bcb70966f6d03351959280fbc6af5b849cacaff9fa67ad8",
       "edits": [
         {
-          "find": "Closing a larger roll derives the yes count from verified personal choices. More than half of all proposed founders must approve, every founder must still accept unchanged membership terms, and Labor must separately find that meetings, voting, records and direct deliberation remain practical. A staff-supplied yes count is rejected. Eligibility rows are locked in a consistent order and units are created in one atomic database operation, including the existing one-active-roll constraint. The existing one-megabyte structured-request bound is a technical adapter limit, not a new statutory membership ceiling. Post-enrollment synthetic succession is described in SUCCESSION.md; real identity and legal activation remain gated.\n\n",
-          "replace": "Closing a larger roll derives the yes count from verified personal choices. More than half of all proposed founders must approve, every founder must still accept unchanged membership terms, and Labor must separately find that meetings, voting, records and direct deliberation remain practical. A staff-supplied yes count is rejected. Eligibility rows are locked in a consistent order and units are created in one atomic database operation, including the existing one-active-roll constraint. The existing one-megabyte structured-request bound is a technical adapter limit, not a new statutory membership ceiling. Post-enrollment synthetic succession is described in SUCCESSION.md; real identity and legal activation remain gated.\n\n## Claim control and voluntary cohort choice\n\nA reviewed pre-enrollment claim transfer preserves the original claim and requires the new holder's own unchanged-term consent. The previous holder's invitation cannot supply that consent. Acceptance and roll closure lock the original claim; competing open-cohort acceptances cannot reserve it twice. Consent may be withdrawn before choosing another open cohort. The owner may withdraw an unclosed proposal without extinguishing anyone's claim, but this action cannot dissolve a closed roll. Estate capacity and the deceased rights holder carry into the existing unit at enrollment. See CLAIM_SURVIVAL.md.\n\n"
-        }
-      ]
-    },
-    {
-      "path": "docs/PROGRESS.json",
-      "beforeSha256": "709d3f4cb02bb8e720721f18853a2e8b17641e432e735ae4fc83ef628299292e",
-      "afterSha256": "b8c7289e7733d520d34bd6f5f80bde899518aa6b3579f4014f102b7e12be93fa",
-      "content": "{\n  \"updated\": \"2026-10-11\",\n  \"scope\": \"public policy website and synthetic preparation, evidence, membership and voting; full program unfinished\",\n  \"lastVerifiedCommit\": \"f948607412830a73a98d549c06a945c8f70b2320\",\n  \"lastVerifiedRun\": \"https://github.com/neophilism/The-Cornerstone/actions/runs/38168575128\",\n  \"livePublicUrl\": \"https://cornerstone-policy-preview.onrender.com\",\n  \"protectedIntake\": false,\n  \"sourcePublicationApproved\": true,\n  \"internalPlanPublicationApproved\": false,\n  \"pending\": [\n    \"existing-claim survival CI and browser acceptance\",\n    \"new deceased-worker filings and complete program journeys\",\n    \"protected integrations and independent review\"\n  ],\n  \"releasePullRequest\": \"https://github.com/neophilism/The-Cornerstone/pull/11\",\n  \"developmentMigrations\": 10,\n  \"migrationRehearsal\": {\n    \"branch\": \"br-super-frost-b4ga2f8q\",\n    \"parent\": \"br-falling-band-b4eeukqt\",\n    \"appliedMigrations\": 12,\n    \"productionChanged\": false\n  }\n}\n"
-    },
-    {
-      "path": "docs/PROGRESS.md",
-      "beforeSha256": "f54a2f3acab6b5a52712a9d393d47ee51dfe4202ffe3fcff4f15e131af60354e",
-      "afterSha256": "75cd33949f017cdcedb50f0e424e396ab14544e9a9ec4c16ca8a3ed8860e44ad",
-      "edits": [
-        {
-          "find": "Post-enrollment synthetic succession and ballot-holder privacy have local PostgreSQL acceptance and a new UI journey. The 56 unit tests and production builds pass locally. Full feature CI, browser inspection and migration deployment are not yet recorded. See SUCCESSION.md. The full program remains unfinished.\n",
-          "replace": "Post-enrollment synthetic succession and ballot-holder privacy passed the exact PR #11 CI and browser checks above. The evidence-validation refresh race found during that journey was fixed with a held-response regression test. See SUCCESSION.md.\n\nThe following existing-claim survival change has 61 passing local unit tests and actual PostgreSQL acceptance for historical receipts, narrow case access, estate capacity and concurrent enrollment. Its desktop/mobile journey and full feature CI remain pending. See CLAIM_SURVIVAL.md for its precise scope and the separate new-filing boundary. The full program remains unfinished.\n"
-        },
-        {
-          "find": "Personal founding consent, scoped membership inspection and private member ballots with frozen all-unit tallies are implemented and tested in simulation. Every founder must accept unchanged terms; consent may be withdrawn during the full founding period. Opening a vote freezes the actual roll, and private choices stay outside shared record versions. Succession, full financial acceptance and additional whole-program journeys remain in development. Protected identity/encryption/recovery, actual document custody, independent ranking custodians, legal notices, Treasury and external authority integrations remain separate prerequisites. Real private intake, legal action, payment execution and real rankings remain disabled.\n",
-          "replace": "Personal founding consent, scoped membership inspection and private member ballots with frozen all-unit tallies are implemented and tested in simulation. Every founder must accept unchanged terms; consent may be withdrawn during the full founding period. Opening a vote freezes the actual roll, and private choices stay outside shared record versions. Existing-claim survival, new deceased-worker filings, full financial acceptance and additional whole-program journeys remain in development. Protected identity/encryption/recovery, actual document custody, independent ranking custodians, legal notices, Treasury and external authority integrations remain separate prerequisites. Real private intake, legal action, payment execution and real rankings remain disabled.\n"
-        },
-        {
-          "find": "Ten migrations are applied and checksummed on the Neon development branch only. The supplied production branch has not been migrated. The public Render service has no private database credentials.\n",
-          "replace": "Ten migrations remain applied and checksummed on the original Neon development branch. Migrations 011–012 passed checksum-guarded upgrade and permission inspection on its isolated child cornerstone-claim-survival (br-super-frost-b4ga2f8q); this is not promotion to the parent. Migration 013 is locally tested, not yet applied on Neon. The supplied production branch has not been migrated. The public Render service has no private database credentials.\n"
-        },
-        {
-          "find": "Last verified merged application change: PR #10 at b5de06bae62f668163e9627ab0cfc5fe12829f6c, with the same tree as its exact tested head b1bd9f0f4016e1b333cf78fcb47138d8c72624ee. Verification and database jobs passed in [Actions run 38165726687](https://github.com/neophilism/The-Cornerstone/actions/runs/38165726687); preview was inapplicable to that feature branch. Both next-step desktop/mobile screenshots were inspected. PRs #1–#10 are merged. The deployment branch was last recorded at PR #8; a merge does not establish deployment. No independent security approval is claimed.\n",
-          "replace": "Last verified merged application change: PR #11 at f948607412830a73a98d549c06a945c8f70b2320, with the same tree as its exact tested head e467b5dffe17f212443409490eb33d5e5c326ae6. Verification and database jobs passed in [Actions run 38168575128](https://github.com/neophilism/The-Cornerstone/actions/runs/38168575128); preview was inapplicable to that feature branch. All six succession request, review and used-vote screenshots were inspected. PRs #1–#11 are merged. The deployment branch was last recorded at PR #8; a merge does not establish deployment. No independent security approval is claimed.\n"
-        }
-      ]
-    },
-    {
-      "path": "docs/STATUS.md",
-      "beforeSha256": "7c74503b780d48e256543103941fcbf8b0afcb58ce97f7419cfe7e6f21db3732",
-      "afterSha256": "c73500d8b04e74c87d7992a8407384aeb005b960aecacb1d3d09caf310c1b550",
-      "edits": [
-        {
-          "find": "Post-enrollment synthetic succession is implemented with exact-holder snapshots, receipt-bound atomic updates, privacy-preserving used-vote status and estate designation. See SUCCESSION.md for acceptance and remaining pre-enrollment, external-service and independent-review requirements. Migrations 011–012 are not yet recorded as deployed.\n",
-          "replace": "Post-enrollment synthetic succession is implemented with exact-holder snapshots, receipt-bound atomic updates, privacy-preserving used-vote status and estate designation. See SUCCESSION.md for acceptance and remaining pre-enrollment, external-service and independent-review requirements. PR #11 passed verify/database CI and six inspected desktop/mobile views in Actions 38168575128. Migrations 011–012 passed a guarded upgrade on the isolated Neon child only; the original development branch remains at 010.\n\nExisting-claim survival now has local unit and PostgreSQL acceptance, preserving historical receipts and separate eligibility while authorizing only one case file. Its new browser journey and full feature CI remain pending. New deceased-worker filings and real external authority remain separate work. See CLAIM_SURVIVAL.md.\n"
-        },
-        {
-          "find": "| Workflows   | Editable versioned synthetic drafts, receipts and exports; explicit states/roles, policy guards and linked-record validation; guided unit/cost/capital-rights inputs and bounded synthetic text evidence | Succession and complete program journeys; external-provider and whole-program acceptance                                       |\n",
-          "replace": "| Workflows   | Editable versioned synthetic drafts, receipts and exports; explicit states/roles, policy guards and linked-record validation; guided unit/cost/capital-rights inputs and bounded synthetic text evidence | Existing-claim survival acceptance, new deceased-worker filings and complete program journeys                                  |\n"
-        }
-      ]
-    },
-    {
-      "path": "docs/SUCCESSION.md",
-      "beforeSha256": "40e5538ec13ccb3c0a79b214d700bd52c1235f44d77e8d1121ddae6bf96f704a",
-      "afterSha256": "7e044aa805a573d8b1c42236fe49ab8076087e4ba79119201ba1fb732998bcea",
-      "edits": [
-        {
-          "find": "Pre-enrollment surviving claims, full probate/identity/notice integrations, contested-estate case management and independent legal/security review remain separate work. The local `successor` persona is explicitly seeded and remains behind the existing development, simulation and localhost-only controls. It must never be enabled on a public deployment.\n",
-          "replace": "An existing un-enrolled claim has a separate case-control route described in CLAIM_SURVIVAL.md. New deceased-worker filings, full probate/identity/notice integrations, contested-estate case management and independent legal/security review remain separate work. The local `successor` persona is explicitly seeded and remains behind the existing development, simulation and localhost-only controls. It must never be enabled on a public deployment.\n"
+          "find": "    const original = await claimFixture(w, worker, labor, event);\n    const unrelated = await claimFixture(w, worker, labor, event);\n    const origin = await signIn(page, 'successor');\n    await page\n      .locator('.workflow-card')\n      .filter({ has: page.getByRole('heading', { name: 'Surviving claim request', exact: true }) })\n",
+          "replace": "    const original = await claimFixture(w, worker, labor, event);\n    const unrelated = await claimFixture(w, worker, labor, event);\n    const origin = await signIn(page, 'successor');\n    await page.getByRole('link', { name: 'Prepare & participate', exact: true }).click();\n    await page\n      .locator('.workflow-card')\n      .filter({ has: page.getByRole('heading', { name: 'Surviving claim request', exact: true }) })\n"
         }
       ]
     }
