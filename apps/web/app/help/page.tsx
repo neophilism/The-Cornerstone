@@ -30,7 +30,18 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ q
               <summary>{f.question}</summary>
               <p>{f.answer}</p>
               <span className="source-note">
-                Design reference: {f.source}. Draft, subject to legislative adoption.
+                Design reference: {f.source}. Draft, subject to legislative adoption.{' '}
+                {f.source.toLowerCase().includes('federal') && (
+                  <a href="/documents/federal-cornerstone-bill">Read the federal draft</a>
+                )}
+                {f.source.toLowerCase().includes('state') && (
+                  <>
+                    {' '}
+                    <a href="/documents/model-state-cornerstone-enabling-act">
+                      Read the state draft
+                    </a>
+                  </>
+                )}
               </span>
             </details>
           ))}

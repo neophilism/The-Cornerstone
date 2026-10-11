@@ -5,6 +5,8 @@ for (const route of [
   '/how-it-works',
   '/participate',
   '/events',
+  '/events/C-001',
+  '/events/method',
   '/opportunities',
   '/public-record',
   '/policy',
@@ -29,7 +31,7 @@ for (const route of [
     expect(
       results.violations.map((v) => ({ id: v.id, nodes: v.nodes.map((n) => n.target) })),
     ).toEqual([]);
-    if (['/', '/workspace', '/participate'].includes(route))
+    if (['/', '/workspace', '/participate', '/events', '/policy'].includes(route))
       await page.screenshot({
         path: `test-results/${route === '/' ? 'home' : route.slice(1)}-${info.project.name}.png`,
         fullPage: true,

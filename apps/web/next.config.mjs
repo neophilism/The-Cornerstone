@@ -2,6 +2,7 @@ export default {
   agentRules: false,
   poweredByHeader: false,
   reactStrictMode: true,
+  outputFileTracingIncludes: { '/documents/*': ['../../policy/*'] },
   transpilePackages: [
     '@cornerstone/ui',
     '@cornerstone/content',

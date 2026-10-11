@@ -12,4 +12,6 @@ Use Node 24 and the pinned pnpm version. Run `pnpm install --frozen-lockfile`, `
 
 Render hosts the application services; Neon supplies PostgreSQL. `render.yaml` describes the public release. Production sensitive intake, real rankings, payment execution, and official activation remain gated. Resource credentials belong in the providers' secret configuration. Read `docs/DEPLOYMENT.md` and `docs/STATUS.md` before deployment.
 
-Original design documents and the full development package are excluded from this public code change pending explicit publication approval. Research imports require operator-supplied, publication-approved source files. Synthetic fixtures are clearly labeled and cannot certify events or people.
+The seven approved source originals are preserved in `policy/` with verified hashes and download links. The research explorer imports all six workbook sheets and reconciles 231 census IDs; entries remain research-only. Run `python scripts/import-research.py --check` to verify extraction using the documented offline dependencies.
+
+Read `AGENTS.md`, `docs/DEVELOPMENT.md` and `docs/PROGRESS.md` to continue the implementation. The earlier internal planning package remains private pending separate publication approval. Synthetic fixtures cannot certify events or people.

@@ -1,4 +1,5 @@
 import { PageIntro, Notice, ButtonLink } from '@cornerstone/ui';
+import { sourceDocuments } from '@cornerstone/content/research';
 export const metadata = { title: 'Policy & sources' };
 export default function Page() {
   return (
@@ -41,11 +42,32 @@ export default function Page() {
           offers, compacts, supervision, the separate state surplus share, and a dedicated
           land-acquisition account.
         </p>
-        <Notice title="Source publication is pending">
-          Original source files and legislative drafts have not been cleared for publication in this
-          public repository. Download links will appear after that review; no unavailable file is
-          offered as a download.
+        <Notice title="Draft legislation, not enacted law">
+          Both acts are proposals. An adopting state must resolve its particular legal authority,
+          sector rules, institutions and prospective surplus rate before official operation.
         </Notice>
+        <div className="source-downloads">
+          {sourceDocuments.map((source) => (
+            <article className="info-card" key={source.slug}>
+              <p className="eyebrow">
+                {source.format} · {Math.ceil(source.bytes / 1024).toLocaleString()} KB
+              </p>
+              <h3>{source.title}</h3>
+              <p>{source.role}</p>
+              <a className="text-link" href={`/documents/${source.slug}`}>
+                Download {source.title} <span aria-hidden="true">↓</span>
+              </a>
+              <details>
+                <summary>Verify the original</summary>
+                <p className="hash-value">SHA-256: {source.sha256}</p>
+              </details>
+            </article>
+          ))}
+        </div>
+        <p className="small-muted">
+          Original bytes preserved. Publication approved October 11, 2026. The source register’s
+          research screen is broader than the proposed statutory eligibility test.
+        </p>
         <h2>What an adopting state must resolve</h2>
         <p>
           Sector authority, constitutional restrictions, agency appointments, appropriations, local
