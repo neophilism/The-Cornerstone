@@ -62,7 +62,7 @@ try {
   await store.verifyRole();
   for (const a of [actor, outsider])
     await owner.query(
-      "INSERT INTO actors(id,realm,issuer,subject,roles) VALUES($1,'simulation','synthetic:record-pages',$1::text,ARRAY['participant'])",
+      "INSERT INTO actors(id,realm,issuer,subject,roles) VALUES($1::uuid,'simulation','synthetic:record-pages',$1::text,ARRAY['participant'])",
       [a.id],
     );
   const rows = await fixtures(actor.id, 207, 'Invented page boundary');
