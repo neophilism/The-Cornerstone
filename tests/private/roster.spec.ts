@@ -39,13 +39,11 @@ test('an organizer reviews a CSV roster before saving and invalid imports leave 
   await expect(roster.getByLabel('Eligible claim ID 2', { exact: true })).toHaveValue(
     units[1]!.claimId,
   );
-  await roster
-    .getByLabel('Synthetic roster CSV', { exact: true })
-    .setInputFiles({
-      name: 'invented-invalid.csv',
-      mimeType: 'text/csv',
-      buffer: Buffer.from(csv + '\n' + `${units[0]!.claimId},${units[0]!.personId}`),
-    });
+  await roster.getByLabel('Synthetic roster CSV', { exact: true }).setInputFiles({
+    name: 'invented-invalid.csv',
+    mimeType: 'text/csv',
+    buffer: Buffer.from(csv + '\n' + `${units[0]!.claimId},${units[0]!.personId}`),
+  });
   await expect(roster.getByRole('alert')).toContainText('only once');
   await expect(roster.getByLabel('Eligible claim ID 2', { exact: true })).toHaveValue(
     units[1]!.claimId,
