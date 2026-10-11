@@ -50,7 +50,7 @@ export class MembershipService {
     this.simulation(actor);
     return this.store.transaction(actor, async (tx) => {
       const invitations = await tx.query(
-        'SELECT *,closes_on::text AS closes_text FROM founding_invitations WHERE person_id=$1 ORDER BY created_at DESC LIMIT 200',
+        'SELECT i.*,i.closes_on::text AS closes_text,v.choice_cipher,v.commitment FROM founding_invitations i LEFT JOIN founding_scale_votes v ON v.invitation_id=i.id WHERE i.person_id=$1 ORDER BY i.created_at DESC LIMIT 200',
         [actor.id],
       );
       const units = await tx.query(
@@ -58,7 +58,7 @@ export class MembershipService {
         [actor.id],
       );
       return MembershipSnapshotSchema.parse({
-        invitations: invitations.rows.map((i) => this.invitation(i)),
+        invitations: invitations.rows.map((i) => this.invitation(i, actor.id)),
         units: units.rows.map((u) => ({
           unitId: u.id,
           associationId: u.association_id,
@@ -70,7 +70,22 @@ export class MembershipService {
       });
     });
   }
-  private invitation(i: Record<string, any>) {
+  private scaleChoice(i: Record<string, any>): 'yes' | 'no' | 'abstain' | null {
+    if (!i.choice_cipher) return null;
+    const body = this.store.open<{ choice: 'yes' | 'no' | 'abstain'; nonce: string }>(
+      i.choice_cipher,
+      `cornerstone:scale:${i.association_id}:${i.id}:${i.terms_digest}`,
+    );
+    requireCondition(
+      ['yes', 'no', 'abstain'].includes(body.choice) &&
+        /^[a-f0-9]{64}$/.test(body.nonce) &&
+        digest({ invitationId: i.id, termsDigest: i.terms_digest, ...body }) === i.commitment,
+      'SCALE_VOTE_INTEGRITY',
+      'A larger-association choice could not be verified.',
+    );
+    return body.choice;
+  }
+  private invitation(i: Record<string, any>, actorId: string) {
     return FoundingInvitationViewSchema.parse({
       id: i.id,
       associationId: i.association_id,
@@ -80,6 +95,7 @@ export class MembershipService {
       closesOn: String(i.closes_text),
       response: i.response,
       respondedAt: i.responded_at?.toISOString() ?? null,
+      ownScaleChoice: i.person_id === actorId ? this.scaleChoice(i) : null,
     });
   }
   async rollView(actor: Actor, id: string) {
@@ -96,12 +112,12 @@ export class MembershipService {
           actor.assignments.includes(id));
       const rows = (
         await tx.query(
-          'SELECT *,closes_on::text AS closes_text FROM founding_invitations WHERE association_id=$1 ORDER BY created_at,id',
+          'SELECT i.*,i.closes_on::text AS closes_text,v.choice_cipher,v.commitment FROM founding_invitations i LEFT JOIN founding_scale_votes v ON v.invitation_id=i.id WHERE i.association_id=$1 ORDER BY i.created_at,i.id',
           [id],
         )
       ).rows;
       return FoundingRollViewSchema.parse({
-        invitations: rows.map((i) => this.invitation(i)),
+        invitations: rows.map((i) => this.invitation(i, actor.id)),
         fullRoll,
         realm: 'simulation',
       });
@@ -158,6 +174,18 @@ export class MembershipService {
         input.response,
         invitation.terms_digest,
       ]);
+      const larger =
+        Array.isArray(record.data['units']) &&
+        record.data['units'].length > draftPolicy.ordinaryUnitLimit;
+      const scale = larger
+        ? {
+            choice: input.response === 'accepted' ? (input.scaleChoice ?? 'abstain') : 'abstain',
+            nonce: randomBytes(32).toString('hex'),
+          }
+        : null;
+      const commitment = scale
+        ? digest({ invitationId: invitation.id, termsDigest: invitation.terms_digest, ...scale })
+        : null;
       const now = new Date().toISOString();
       const next = {
         ...record,
@@ -165,6 +193,7 @@ export class MembershipService {
         updatedAt: now,
         data: {
           ...record.data,
+          ...(commitment ? { lastScaleCommitment: commitment } : {}),
           history: [
             ...(Array.isArray(record.data['history']) ? record.data['history'] : []),
             {
@@ -184,6 +213,18 @@ export class MembershipService {
         input.idempotencyKey,
         requestDigest,
       );
+      if (scale && commitment)
+        await tx.query('SELECT simulation_record_scale_vote($1,$2::jsonb,$3,$4)', [
+          invitation.id,
+          JSON.stringify(
+            this.store.seal(
+              scale,
+              `cornerstone:scale:${record.id}:${invitation.id}:${invitation.terms_digest}`,
+            ),
+          ),
+          commitment,
+          receipt.id,
+        ]);
       return { record: next, receipt };
     });
   }
@@ -195,9 +236,9 @@ export class MembershipService {
     );
     const units = record.data['units'] as { claimId: string; personId: string }[];
     requireCondition(
-      units.length >= 2 && units.length <= draftPolicy.ordinaryUnitLimit,
-      'LARGER_ROLL_ADAPTER_REQUIRED',
-      'Use an ordinary 2–2,500 unit roll in this simulation. Larger associations require their separate all-founder approval and written findings workflow.',
+      units.length >= 2,
+      'ASSOCIATION_TOO_SMALL',
+      'At least two founding units are required.',
     );
     requireCondition(
       new Set(units.map((u) => u.claimId)).size === units.length &&
@@ -231,24 +272,24 @@ export class MembershipService {
     const units = record.data['units'] as { claimId: string; personId: string }[];
     const rows = (
       await tx.query(
-        'SELECT claim_id,person_id,terms_digest,response FROM founding_invitations WHERE association_id=$1',
+        'SELECT i.*,v.choice_cipher,v.commitment FROM founding_invitations i LEFT JOIN founding_scale_votes v ON v.invitation_id=i.id WHERE i.association_id=$1',
         [record.id],
       )
     ).rows;
+    const byClaim = new Map(rows.map((i) => [i.claim_id, i]));
+    const terms = foundingTerms(record);
     requireCondition(
       rows.length === units.length &&
-        units.every((u) =>
-          rows.some(
-            (i) =>
-              i.claim_id === u.claimId &&
-              i.person_id === u.personId &&
-              i.response === 'accepted' &&
-              i.terms_digest === foundingTerms(record),
-          ),
-        ),
+        units.every((u) => {
+          const i = byClaim.get(u.claimId);
+          return (
+            i && i.person_id === u.personId && i.response === 'accepted' && i.terms_digest === terms
+          );
+        }),
       'PERSONAL_FOUNDING_CONSENT',
       'Every proposed founding person must personally accept these unchanged terms. A declined or unanswered invitation cannot create a unit.',
     );
+    return rows.filter((i) => this.scaleChoice(i) === 'yes').length;
   }
   async resolutionDraft(
     tx: Transaction,

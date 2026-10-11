@@ -417,7 +417,7 @@ export const workflows: WorkflowDefinition[] = [
     'Form a voluntary, bounded founding roll before ranking.',
     participant,
     [
-      f('eventId', 'Certified event ID'),
+      f('eventId', 'One represented certified event ID'),
       f(
         'units',
         'Founding units',
@@ -440,8 +440,30 @@ export const workflows: WorkflowDefinition[] = [
         'association',
         [
           f('pendingClaims', 'Unresolved timely claims', 'number'),
-          f('largerYes', 'Larger-roll yes votes', 'number', false),
-          f('largerFindings', 'Labor made larger-association findings', 'boolean', false),
+          f(
+            'accessibleMeetings',
+            'Accessible meetings remain practical at this scale',
+            'boolean',
+            false,
+          ),
+          f(
+            'accessibleVoting',
+            'Accessible voting remains practical at this scale',
+            'boolean',
+            false,
+          ),
+          f(
+            'accessibleRecords',
+            'Member access to records remains practical at this scale',
+            'boolean',
+            false,
+          ),
+          f(
+            'practicalDeliberation',
+            'Direct member deliberation remains practical at this scale',
+            'boolean',
+            false,
+          ),
           f('equalRights', 'Equal base rights and one founding vote', 'boolean'),
           f('voluntary', 'No forced work, relocation, capital or debt', 'boolean'),
           reasons,

@@ -111,6 +111,7 @@ export const FoundingInvitationViewSchema = z
     closesOn: DateSchema,
     response: z.enum(['pending', 'accepted', 'declined']),
     respondedAt: InstantSchema.nullable(),
+    ownScaleChoice: z.enum(['yes', 'no', 'abstain']).nullable(),
   })
   .strict();
 export type FoundingInvitationView = z.infer<typeof FoundingInvitationViewSchema>;
@@ -148,6 +149,7 @@ export const RespondFoundingInvitationSchema = z
     idempotencyKey: IdSchema,
     response: z.enum(['accepted', 'declined']),
     rightsAcknowledged: z.boolean(),
+    scaleChoice: z.enum(['yes', 'no', 'abstain']).optional(),
   })
   .strict()
   .refine(
