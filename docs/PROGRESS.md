@@ -2,7 +2,9 @@
 
 Updated October 11, 2026. The full program is unfinished. The earlier internal planning package remains private pending separate publication approval. The unverified canonical roadmap marker in registry/roadmap.json does not imply an empty implementation or assert a total planned-PR count.
 
-Last verified merged release: 338810a35756620be9c3a787aac143206d950121, with the same tree as the tested PR #8 head. Verify and database jobs passed in [Actions run 38154766940](https://github.com/neophilism/The-Cornerstone/actions/runs/38154766940): 52 unit tests, 36 public and 30 private browser checks, actual PostgreSQL integrations and production builds. PRs #1–#8 are merged. The Render deployment branch was advanced to this release. No independent security approval is claimed.
+Last verified merged application change: PR #9 at 0afd9bc59b9822e28b7ecf8778bf0c8db0f6b476. Its exact head 675ac5374d4755b4ad41736c055f65be3f6e9719 passed verification and database jobs in [Actions run 38159018769](https://github.com/neophilism/The-Cornerstone/actions/runs/38159018769); preview was inapplicable to that feature branch. Both unavailable-action desktop/mobile screenshots were inspected. PRs #1–#9 are merged. The deployment branch was last recorded at PR #8; a merge does not establish deployment. No independent security approval is claimed.
+
+Unavailable actions now explain missing integrations and reject direct commands before mutation. Availability-aware next-step guidance preserves draft editing and no longer promises submission for every draft. The added browser assertions require fresh CI acceptance.
 
 Guided evidence selection, related-record choices, income percentages, next-step guidance and record search are verified, including the full petition-to-individual-finding browser journey and six inspected desktop/mobile captures. See GUIDED_JOURNEYS.md.
 

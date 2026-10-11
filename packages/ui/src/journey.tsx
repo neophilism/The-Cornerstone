@@ -1,4 +1,5 @@
 import type { CaseRecord } from '@cornerstone/contracts';
+import { actionUnavailable, workflow } from '@cornerstone/domain';
 const preparation: Record<string, [string, string]> = {
   offer: [
     'Publish complete terms before choice',
@@ -45,10 +46,16 @@ export function PreparationGuide({ kind }: { kind: string }) {
   );
 }
 export function RecordNextStep({ record }: { record: CaseRecord }) {
+  const transitions = workflow(record.kind).actions.filter((action) =>
+    action.from.includes(record.state),
+  );
+  const blocked =
+    transitions.length > 0 &&
+    transitions.every((action) => actionUnavailable(record.kind, action.key) !== null);
   const copy: Record<string, [string, string]> = {
     draft: [
-      'Prepare, then submit',
-      'Review your saved details and add supporting material. You can return to a saved draft at any time. Available actions appear below.',
+      'Review your draft',
+      'Review your saved details and supporting material. Saving a draft does not submit it. Actions permitted for your current role and this record version appear below.',
     ],
     submitted: [
       'Submitted for assigned review',
@@ -71,8 +78,14 @@ export function RecordNextStep({ record }: { record: CaseRecord }) {
       'The request and receipt are saved. Use Hearing and review to prepare a related review record. Scheduling and a written decision are separate steps.',
     ],
   };
-  const message =
-    record.kind === 'event_petition' && record.state === 'certified'
+  const message = blocked
+    ? [
+        record.state === 'draft'
+          ? 'Prepare a draft; submission is unavailable'
+          : 'A required integration is unavailable',
+        'Read the prerequisites below. Preparing or exporting this record does not complete an unavailable action. The service will reject that action without changing the record.',
+      ]
+    : record.kind === 'event_petition' && record.state === 'certified'
       ? [
           'Event finding recorded in simulation',
           'People still need separate individual eligibility findings. The census itself cannot establish eligibility.',
