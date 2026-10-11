@@ -1,0 +1,13 @@
+# Guided preparation and review
+
+The private simulation now supports an event petition and a separate individual claim without copying attachment identifiers or writing JSON. A person saves the account, attaches invented text, validates its format and chooses supporting files by name when submitting. Staff choose the same scoped attachments when making written findings. An empty selection is rejected by the API; selected IDs replace the submission's evidence references atomically with its receipt. Existing API callers may omit the selection and retain the record's previously attached references, which still undergo the same integrity and scope checks.
+
+Only checked attachments from the current accessible record appear in the chooser. Rejected and quarantined material cannot be selected. Choosing a subset does not delete the underlying attachments or their immutable provenance. Upload and validation remain synthetic-only; these are not antivirus, authenticity or credibility findings.
+
+Related records can be selected by title. Event choices include only accessible certified simulation events, never research entries. A supplied-ID alternative preserves preparation against an existing reference without granting access or bypassing the server's later relationship checks. The chooser is not a public event register. At present it uses the accessible record list, which is capped at 200; broader discovery and pagination remain required.
+
+Income share is entered as a percentage and converted to the existing fraction contract. Editing a saved claim preserves that conversion. Annual hours remain an alternative baseline input. Guidance explains the separate event and individual decisions, voluntary association formation and the distinction between preparation, submission and a finding. Search filters accessible records by title, workflow and status. It does not query inaccessible records or store private text in local storage.
+
+Browser acceptance covers the complete invented petition-to-event-finding-to-individual-finding journey on desktop and mobile, including empty-evidence rejection, quarantine exclusion, persistence after reload, selected evidence in staff findings and accessibility checks. PostgreSQL integration independently checks explicit empty-selection rejection and selected-evidence submission. These checks do not activate a program, complete the public docket/legal-notice integrations or establish production suitability.
+
+CI runs desktop and mobile acceptance in separate server lifetimes so their cumulative traffic does not consume one shared API address budget. Session and address limits remain enabled and unchanged. Each run retains its own browser artifacts.

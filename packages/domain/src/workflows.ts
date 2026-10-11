@@ -131,7 +131,11 @@ const w = (
         }
       : field,
   ),
-  actions,
+  actions: actions.map((a) =>
+    a.key === 'submit' && createFields.some((field) => field.key === 'evidenceIds')
+      ? { ...a, fields: [{ ...evidence, required: false }, ...a.fields] }
+      : a,
+  ),
   official,
 });
 

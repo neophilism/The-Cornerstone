@@ -39,6 +39,44 @@
 .workspace-main {
   min-width: 0;
 }
+.journey-guide {
+  border-left: 4px solid var(--copper);
+  background: #f0eee5;
+  padding: 20px 24px;
+  margin: 20px 0;
+  border-radius: 0 10px 10px 0;
+}
+.journey-guide h2 {
+  font-size: 25px;
+  margin: 8px 0;
+}
+.journey-guide p {
+  max-width: 70ch;
+  font-size: 14px;
+}
+.journey-guide .eyebrow {
+  font-size: 10px;
+}
+.saved-details {
+  margin: 24px 0;
+}
+.saved-details > summary {
+  font-weight: 600;
+}
+.evidence-choice .check-field {
+  margin: 16px 0;
+}
+.evidence-description {
+  display: block;
+  margin-top: 5px;
+}
+.reference-toggle {
+  justify-self: start;
+}
+.record-search {
+  margin: 18px 0;
+  max-width: 560px;
+}
 .structured-field {
   min-width: 0;
   border: 1px solid var(--line);

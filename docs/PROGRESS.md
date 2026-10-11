@@ -2,7 +2,9 @@
 
 Updated October 11, 2026. The full program is unfinished. The earlier internal planning package remains private pending separate publication approval. The unverified canonical roadmap marker in registry/roadmap.json does not imply an empty implementation or assert a total planned-PR count.
 
-Last verified functional commit: 06832d9850882ff5864df20a8c934b99dfed7b83. Verify and database jobs passed in [Actions run 38129025613](https://github.com/neophilism/The-Cornerstone/actions/runs/38129025613): 46 unit tests, 36 public and 16 private browser checks, actual PostgreSQL record/worker/session/delegation/evidence/membership journeys and production builds. The public-only preview check is inapplicable to the membership branch; the deployed main release was independently verified by exact commit. PR #1 is merged into main, and [PR #2](https://github.com/neophilism/The-Cornerstone/pull/2) contains the membership release and its latest check results. No independent security approval is claimed.
+Last verified merged release: 622bb6d95d3009d9e02dc6567d5072acd994d8f4. Verify and database jobs passed in [Actions run 38129575848](https://github.com/neophilism/The-Cornerstone/actions/runs/38129575848): 46 unit tests, 36 public and 16 private browser checks, actual PostgreSQL record/worker/session/delegation/evidence/membership journeys and production builds. PRs #1 and [#2](https://github.com/neophilism/The-Cornerstone/pull/2) are merged. Render reports this release live. No independent security approval is claimed.
+
+The next change adds guided evidence selection, related-record choices, income percentages, next-step guidance and record search, with a full petition-to-individual-finding browser journey. Verification is in progress; see GUIDED_JOURNEYS.md for scope and limitations.
 
 The public website explains the policy, provides a starting guide and help, and offers research search, chronology and evidence pages. Seven approved source originals are downloadable and byte-verified. All six workbook sheets and 231 census IDs reconcile. Research entries never supply an event or individual finding, and the register remains open to unlisted events.
 

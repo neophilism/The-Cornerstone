@@ -430,8 +430,8 @@ test('two members vote privately on a frozen roll and retain their own receipts'
   const title = `Invented member decision ${info.project.name}`;
   await page.getByLabel('Record title', { exact: true }).fill(title);
   await page
-    .getByLabel('Association ID', { exact: true })
-    .selectOption({ label: 'Invented closed association' });
+    .getByLabel('Association', { exact: true })
+    .selectOption({ label: 'Invented closed association · ready' });
   await page.getByLabel('Reserved decision', { exact: true }).selectOption('compact');
   await page
     .getByLabel('Exact proposal', { exact: true })
