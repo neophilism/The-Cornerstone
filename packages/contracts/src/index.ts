@@ -101,6 +101,85 @@ export const DateSchema = z
     const d = new Date(`${v}T00:00:00Z`);
     return !Number.isNaN(d.valueOf()) && d.toISOString().slice(0, 10) === v;
   }, 'Use a valid calendar date');
+export const FoundingInvitationViewSchema = z
+  .object({
+    id: IdSchema,
+    associationId: IdSchema,
+    claimId: IdSchema,
+    personId: IdSchema,
+    termsDigest: z.string().regex(/^[a-f0-9]{64}$/),
+    closesOn: DateSchema,
+    response: z.enum(['pending', 'accepted', 'declined']),
+    respondedAt: InstantSchema.nullable(),
+  })
+  .strict();
+export type FoundingInvitationView = z.infer<typeof FoundingInvitationViewSchema>;
+export const FoundingMembershipViewSchema = z
+  .object({
+    unitId: IdSchema,
+    associationId: IdSchema,
+    claimId: IdSchema,
+    successor: z.boolean(),
+  })
+  .strict();
+export type FoundingMembershipView = z.infer<typeof FoundingMembershipViewSchema>;
+export const MembershipSnapshotSchema = z
+  .object({
+    invitations: z.array(FoundingInvitationViewSchema),
+    units: z.array(FoundingMembershipViewSchema),
+    realm: z.literal('simulation'),
+    officialMembership: z.literal(false),
+  })
+  .strict();
+export type MembershipSnapshot = z.infer<typeof MembershipSnapshotSchema>;
+export const FoundingRollViewSchema = z
+  .object({
+    invitations: z.array(FoundingInvitationViewSchema),
+    fullRoll: z.boolean(),
+    realm: z.literal('simulation'),
+  })
+  .strict();
+export type FoundingRollView = z.infer<typeof FoundingRollViewSchema>;
+export const RespondFoundingInvitationSchema = z
+  .object({
+    recordId: IdSchema,
+    invitationId: IdSchema,
+    expectedVersion: z.number().int().positive(),
+    idempotencyKey: IdSchema,
+    response: z.enum(['accepted', 'declined']),
+    rightsAcknowledged: z.boolean(),
+  })
+  .strict()
+  .refine(
+    (v) => v.response === 'declined' || v.rightsAcknowledged,
+    'Acknowledge voluntary membership and equal founding rights before accepting',
+  );
+export const MemberBallotViewSchema = z
+  .object({
+    resolutionId: IdSchema,
+    associationId: IdSchema,
+    unitCount: z.number().int().min(2).nullable(),
+    rollDigest: z
+      .string()
+      .regex(/^[a-f0-9]{64}$/)
+      .nullable(),
+    closesOn: DateSchema.nullable(),
+    ownUnits: z.array(IdSchema),
+    ownBallots: z.array(
+      z
+        .object({
+          unitId: IdSchema,
+          choice: z.enum(['yes', 'no', 'abstain']),
+          receiptId: IdSchema,
+          commitment: z.string().regex(/^[a-f0-9]{64}$/),
+        })
+        .strict(),
+    ),
+    realm: z.literal('simulation'),
+    cryptographicallySealed: z.literal(false),
+  })
+  .strict();
+export type MemberBallotView = z.infer<typeof MemberBallotViewSchema>;
 export const MAX_SYNTHETIC_EVIDENCE_BYTES = 262144;
 export const MAX_SYNTHETIC_ATTACHMENTS = 10;
 export const EvidenceFilenameSchema = z

@@ -17,7 +17,7 @@ const env = {
   API_INTERNAL_URL: 'http://127.0.0.1:4010',
   PORTAL_ORIGIN: 'http://127.0.0.1:3001',
   STAFF_ORIGIN: 'http://127.0.0.1:3002',
-  FIELD_ENCRYPTION_KEY: randomBytes(32).toString('base64'),
+  FIELD_ENCRYPTION_KEY: process.env['FIELD_ENCRYPTION_KEY'] || randomBytes(32).toString('base64'),
   SESSION_KEY: randomBytes(32).toString('base64'),
   NEXT_TELEMETRY_DISABLED: '1',
 };

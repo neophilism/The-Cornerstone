@@ -486,7 +486,6 @@ export const workflows: WorkflowDefinition[] = [
         'dissolution',
       ]),
       f('proposal', 'Exact proposal', 'textarea'),
-      f('unitCount', 'Frozen founding-unit count', 'number'),
     ],
     [
       action(

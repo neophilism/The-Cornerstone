@@ -140,9 +140,13 @@ export class Store {
     return r.rows[0] ? this.decode(r.rows[0]) : null;
   }
   async grants(tx: Transaction, id: string) {
+    return this.scopes(tx, [id]);
+  }
+  async scopes(tx: Transaction, ids: string[]) {
     const r = await tx.query(
-      'SELECT subject_id,record_id,expires_at,revoked_at,permissions FROM grants WHERE record_id=$1',
-      [id],
+      `SELECT subject_id,record_id,expires_at,revoked_at,permissions FROM grants WHERE record_id=ANY($1::uuid[])
+       UNION ALL SELECT subject_id,record_id,'9999-12-31'::timestamptz,NULL::timestamptz,permissions FROM simulation_member_scopes() WHERE record_id=ANY($1::uuid[])`,
+      [ids],
     );
     return r.rows.map((g) => ({
       subjectId: g.subject_id as string,

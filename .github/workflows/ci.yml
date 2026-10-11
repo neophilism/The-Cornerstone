@@ -79,10 +79,12 @@ jobs:
       - run: node --import tsx scripts/create-runtime-role.ts
       - run: pnpm db:migrate
       - run: pnpm db:seed:simulation
+      - run: node scripts/test-field-key.mjs
       - run: pnpm test:db
       - run: node --import tsx tests/activity.integration.ts
       - run: node --import tsx tests/identity-access.integration.ts
       - run: node --import tsx tests/evidence.integration.ts
+      - run: node --import tsx tests/membership.integration.ts
       - run: pnpm -r --filter @cornerstone/api --filter @cornerstone/portal --filter @cornerstone/staff --filter @cornerstone/worker build
         env:
           NODE_ENV: production

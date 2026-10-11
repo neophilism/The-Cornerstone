@@ -1,3 +1,4 @@
+import { fixtureKey } from './fixture-key.js';
 import pg from 'pg';
 import { randomUUID, randomBytes } from 'node:crypto';
 import { strict as assert } from 'node:assert';
@@ -16,7 +17,7 @@ if (
   throw Error('Isolated synthetic owner, runtime and worker connections required.');
 const owner = new pg.Client({ connectionString: process.env['MIGRATION_DATABASE_URL'] });
 await owner.connect();
-const store = new Store(process.env['DATABASE_URL'], randomBytes(32));
+const store = new Store(process.env['DATABASE_URL'], fixtureKey());
 const worker = new ActivityWorker(process.env['WORKER_DATABASE_URL']);
 const otherWorker = new ActivityWorker(process.env['WORKER_DATABASE_URL']);
 const actor: Actor = {

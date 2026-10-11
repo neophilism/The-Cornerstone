@@ -12,7 +12,7 @@ Use Node 24 and the pinned pnpm version. Run `pnpm install --frozen-lockfile`, `
 
 Synthetic in-app activity uses migration 004 and a separate `cornerstone_worker` connection. Set `NOTIFICATION_PROVIDER=in-app` and `WORKER_DATABASE_URL` only in isolated development; the default is disabled. `node --import tsx tests/activity.integration.ts` exercises actual worker SQL and recovery. Read `docs/ACTIVITY_AND_CALENDAR.md` for setup and the distinction between activity and legal service.
 
-Session controls and owner-managed draft access use migrations 005–006. Migration 007 adds bounded synthetic text evidence with explicit quarantine and validation; set EVIDENCE_STORAGE_PROVIDER=synthetic-postgres only for invented development data. Real document intake remains disabled. Read docs/SESSION_AND_ACCESS.md and docs/EVIDENCE.md.
+Session controls and owner-managed draft access use migrations 005–006. Migration 007 adds bounded synthetic text evidence with explicit quarantine and validation; set EVIDENCE_STORAGE_PROVIDER=synthetic-postgres only for invented development data. Real document intake remains disabled. Read docs/SESSION_AND_ACCESS.md and docs/EVIDENCE.md. Migration 008 adds personal founding consent, membership inspection and private synthetic member ballots; see docs/MEMBERSHIP_AND_VOTING.md.
 
 ## Deployment
 
