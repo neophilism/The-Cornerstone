@@ -8,16 +8,19 @@ import { addCalendarDays } from '@cornerstone/domain';
 import { fixtureKey } from './fixture-key.js';
 import { ProgramService } from '../apps/api/src/service.js';
 import { EvidenceService } from '../apps/api/src/evidence.js';
+import { ActivityWorker } from '../apps/worker/src/activity.js';
 import { MembershipService } from '../apps/api/src/membership.js';
 if (
   process.env['DATA_REALM'] !== 'simulation' ||
   process.env['CORNERSTONE_MODE'] !== 'simulation' ||
   !process.env['DATABASE_URL'] ||
-  !process.env['MIGRATION_DATABASE_URL']
+  !process.env['MIGRATION_DATABASE_URL'] ||
+  !process.env['WORKER_DATABASE_URL']
 )
   throw Error('Isolated synthetic connections required.');
 const owner = new pg.Client({ connectionString: process.env['MIGRATION_DATABASE_URL'] });
 await owner.connect();
+const worker = new ActivityWorker(process.env['WORKER_DATABASE_URL']);
 const store = new Store(process.env['DATABASE_URL'], fixtureKey());
 const today = new Date().toISOString().slice(0, 10);
 let day = today;
@@ -140,6 +143,22 @@ async function eligible(persona: string, eventId: string) {
   });
   return r.id;
 }
+async function delivered(receiptId: string) {
+  for (let attempt = 0; attempt < 20; attempt++) {
+    await worker.once(100);
+    const row = await owner.query('SELECT state FROM outbox WHERE receipt_id=$1', [receiptId]);
+    if (row.rows[0]?.state === 'delivered') return;
+  }
+  throw Error('Expected in-app delivery did not finish.');
+}
+async function hasNotice(persona: string, receiptId: string) {
+  return store.transaction(
+    await actor(persona),
+    async (tx) =>
+      (await tx.query('SELECT 1 FROM activity_notifications WHERE receipt_id=$1', [receiptId]))
+        .rowCount === 1,
+  );
+}
 async function respond(persona: string, id: string, response: 'accepted' | 'declined', ack = true) {
   const a = await actor(persona),
     invitation = (await members.list(a)).invitations.find((i) => i.associationId === id)!;
@@ -154,6 +173,7 @@ async function respond(persona: string, id: string, response: 'accepted' | 'decl
 }
 try {
   await store.verifyRole();
+  await worker.verifyRole();
   const p = await actor('participant'),
     m = await actor('member');
   const event = await certifiedEvent('Invented membership journey event');
@@ -192,7 +212,23 @@ try {
   await assert.rejects(command('participant', backdated.id, 'submit', { attested: true }), {
     code: 'FOUNDING_OPENING_DATE',
   });
-  await command('participant', association.id, 'submit', { attested: true });
+  const submitted = await command('participant', association.id, 'submit', { attested: true });
+  await delivered(submitted.receipt.id);
+  assert.equal(
+    await hasNotice('member', submitted.receipt.id),
+    true,
+    'invited founder receives a submission update',
+  );
+  assert.equal(
+    await hasNotice('labor', submitted.receipt.id),
+    true,
+    'assigned reviewer receives a submission update',
+  );
+  assert.equal(
+    await hasNotice('fiscal', submitted.receipt.id),
+    false,
+    'unassigned staff receive nothing',
+  );
   assert.ok(await get('member', association.id));
   assert.equal(await get('member', first), null);
   await assert.rejects(evidence.list(m, first), /Record not found/);
@@ -212,7 +248,13 @@ try {
   await respond('member', association.id, 'declined', false);
   assert.equal((await members.rollView(m, association.id)).fullRoll, false);
   assert.equal((await members.rollView(m, association.id)).invitations.length, 1);
-  await respond('participant', association.id, 'accepted');
+  const personalResponse = await respond('participant', association.id, 'accepted');
+  await delivered(personalResponse.receipt.id);
+  assert.equal(
+    await hasNotice('member', personalResponse.receipt.id),
+    false,
+    'individual responses are not broadcast to every founder',
+  );
   await command('labor', association.id, 'begin_review');
   await assert.rejects(command('labor', association.id, 'close_roll', closeInput), {
     code: 'FOUNDING_PERIOD_OPEN',
@@ -239,7 +281,13 @@ try {
     code: 'FOUNDING_PERIOD_OPEN',
   });
   day = addCalendarDays(today, 181);
-  await command('labor', association.id, 'close_roll', closeInput);
+  const closed = await command('labor', association.id, 'close_roll', closeInput);
+  await delivered(closed.receipt.id);
+  assert.equal(
+    await hasNotice('member', closed.receipt.id),
+    true,
+    'active members receive closure updates',
+  );
   day = today; // The injected clock is a test harness, never an API option.
   assert.equal((await get('participant', association.id))!.state, 'ready');
   assert.equal((await actor('participant')).assurance, 'draft');
@@ -261,6 +309,11 @@ try {
   ]);
   assert.equal((await members.list(await actor('member'))).units.length, 0);
   assert.equal(await get('member', association.id), null);
+  assert.equal(
+    await hasNotice('member', closed.receipt.id),
+    false,
+    'a conflict hides previous activity',
+  );
   await owner.query("UPDATE actors SET conflicts='{}' WHERE id=$1", [m.id]);
   const duplicate = await create('participant', 'association', 'Invented duplicate active roll', {
     eventId: event,
@@ -278,7 +331,15 @@ try {
   });
   assert.equal(resolution.data['unitCount'], 2);
   assert.equal(await get('member', resolution.id), null);
-  await command('participant', resolution.id, 'open_vote', { closesAt: addCalendarDays(today, 1) });
+  const opened = await command('participant', resolution.id, 'open_vote', {
+    closesAt: addCalendarDays(today, 1),
+  });
+  await delivered(opened.receipt.id);
+  assert.equal(
+    await hasNotice('member', opened.receipt.id),
+    true,
+    'frozen-roll members receive a voting update',
+  );
   assert.ok(await get('member', resolution.id));
   await assert.rejects(
     command('member', resolution.id, 'record_vote', { unitId: pu.unitId, choice: 'yes' }),
@@ -296,6 +357,12 @@ try {
     program.command(await actor('participant'), ballot),
   ]);
   assert.equal(b1.receipt.id, b2.receipt.id);
+  await delivered(b1.receipt.id);
+  assert.equal(
+    await hasNotice('member', b1.receipt.id),
+    false,
+    'a personal ballot is not broadcast',
+  );
   await assert.rejects(
     command('participant', resolution.id, 'record_vote', { unitId: pu.unitId, choice: 'no' }),
     { code: 'DUPLICATE_BALLOT' },
@@ -359,6 +426,7 @@ try {
     'PASS: actual synthetic event/claim findings, personal consent, 180-day roll, role/realm/conflict isolation, one active unit per claim, frozen voting, encrypted private choices, idempotent receipts and all-unit majority.',
   );
 } finally {
+  await worker.close();
   await store.close();
   await owner.end();
 }

@@ -2,7 +2,7 @@
 
 Updated October 11, 2026. The full program is unfinished. The earlier internal planning package remains private pending separate publication approval. The unverified canonical roadmap marker in registry/roadmap.json does not imply an empty implementation or assert a total planned-PR count.
 
-Last verified merged release: 20072566b2b9542182bb3b36d43249f73f640199, with the same tree as the tested PR #6 head. Verify and database jobs passed in [Actions run 38153419469](https://github.com/neophilism/The-Cornerstone/actions/runs/38153419469): 51 unit tests, 36 public and 24 private browser checks, actual PostgreSQL integrations and production builds. PRs #1–#6 are merged. The Render deployment branch was advanced to this release. No independent security approval is claimed.
+Last verified merged release: b453bfe461cf2bb288367dc8c61b3028f44071a9, with the same tree as the tested PR #7 head. Verify and database jobs passed in [Actions run 38154186337](https://github.com/neophilism/The-Cornerstone/actions/runs/38154186337): 52 unit tests, 36 public and 28 private browser checks, actual PostgreSQL integrations and production builds. PRs #1–#7 are merged. The Render deployment branch was advanced to this release. No independent security approval is claimed.
 
 Guided evidence selection, related-record choices, income percentages, next-step guidance and record search are verified, including the full petition-to-individual-finding browser journey and six inspected desktop/mobile captures. See GUIDED_JOURNEYS.md.
 
@@ -12,7 +12,9 @@ Roster preparation now includes staged CSV import, duplicate checks, a paged edi
 
 Private record browsing now has authenticated continuation pages, older-record loading and permission-checked reference lookup. The 207-record database acceptance and desktop/mobile checks passed in Actions 38153419469; PR #6 is merged and both browsing captures were inspected. See RECORD_BROWSING.md.
 
-Guided financial terms, cash schedules and calculation summaries are implemented; 52 local unit tests and production builds pass. Their database and browser acceptance is pending. See GUIDED_FINANCE.md.
+Guided financial terms, cash schedules and calculation summaries passed actual PostgreSQL and desktop/mobile acceptance in Actions 38154186337. PR #7 is merged; all six finance captures were inspected. See GUIDED_FINANCE.md.
+
+Membership activity now includes scoped founding invitations, assigned-review updates, roll closure and opened/tallied member decisions, without broadcasting personal responses or ballots. Older invitations open through current permission checks. Migration 010 and its database/browser acceptance remain pending. See ACTIVITY_AND_CALENDAR.md.
 
 The public website explains the policy, provides a starting guide and help, and offers research search, chronology and evidence pages. Seven approved source originals are downloadable and byte-verified. All six workbook sheets and 231 census IDs reconcile. Research entries never supply an event or individual finding, and the register remains open to unlisted events.
 
