@@ -1,15 +1,29 @@
 {
-  "base": "3c0bfac65623f094f6b76b93e8fce3b1437a72db",
+  "base": "434e9e5e964703583f3844f79a3dc534369dab42",
   "target": "cornerstone/unit-succession",
-  "message": "Format succession browser acceptance",
+  "message": "Keep record actions disabled through evidence validation and refresh",
   "changes": [
     {
-      "path": "tests/private/succession.spec.ts",
-      "beforeSha256": "326ab52d0eb47abfac2c15d5665678802e2cbb51c4111f1aa80f2f246e02ed1c",
-      "afterSha256": "962bc3446a70e9ccd3401690d388e99129a11e68feb5850bc84be74a6a0a0a7e",
+      "path": "packages/ui/src/evidence.tsx",
+      "beforeSha256": "236b9b22ce29693e1095c9b2691b9c70b93737c50e362750123a02c6d8d5e19e",
+      "afterSha256": "a079e4e03826c32689fad20365982e71824c8ffb417c539c59438c0d594979fc",
       "edits": [
-        {"find":"      .click();\n    await page.getByRole('button', { name: 'Begin assigned review', exact: true }).click();\n    const panel = page\n      .locator('.action-panel')\n      .filter({\n        has: page.getByRole('heading', { name: 'Approve one synthetic successor', exact: true }),\n      });\n    for (const checkbox of await panel.getByRole('checkbox').all()) await checkbox.check();\n    await panel\n","replace":"      .click();\n    await page.getByRole('button', { name: 'Begin assigned review', exact: true }).click();\n    const panel = page.locator('.action-panel').filter({\n      has: page.getByRole('heading', { name: 'Approve one synthetic successor', exact: true }),\n    });\n    for (const checkbox of await panel.getByRole('checkbox').all()) await checkbox.check();\n    await panel\n"},
-        {"find":"    ).toBeVisible();\n    await page.getByText('Attach a synthetic text file', { exact: true }).click();\n    await page\n      .getByLabel('Synthetic text file', { exact: true })\n      .setInputFiles({\n        name: 'invented-succession.txt',\n        mimeType: 'text/plain',\n        buffer: Buffer.from(findings),\n      });\n    await page\n      .getByLabel('What this item shows', { exact: true })\n","replace":"    ).toBeVisible();\n    await page.getByText('Attach a synthetic text file', { exact: true }).click();\n    await page.getByLabel('Synthetic text file', { exact: true }).setInputFiles({\n      name: 'invented-succession.txt',\n      mimeType: 'text/plain',\n      buffer: Buffer.from(findings),\n    });\n    await page\n      .getByLabel('What this item shows', { exact: true })\n"}
+        {"find":"    } finally {\n      setPending(false);\n    }\n  }\n","replace":"    } finally {\n      setPending(false);\n      onBusyChange(false);\n    }\n  }\n"},
+        {"find":"  }, [record.id, record.version]);\n  async function run(path: string, input: object, done?: () => void) {\n    setPending(true);\n    setError('');\n","replace":"  }, [record.id, record.version]);\n  async function run(path: string, input: object, done?: () => void) {\n    if (pending) return;\n    onBusyChange(true);\n    setPending(true);\n    setError('');\n"},
+        {"find":"  api: (path: string, body?: unknown) => Promise<any>;\n  onChanged: (result: Result) => Promise<void>;\n}) {\n  const [items, setItems] = useState<EvidenceView[]>([]),\n","replace":"  api: (path: string, body?: unknown) => Promise<any>;\n  onChanged: (result: Result) => Promise<void>;\n  onBusyChange: (busy: boolean) => void;\n}) {\n  const [items, setItems] = useState<EvidenceView[]>([]),\n"},
+        {"find":"  api,\n  onChanged,\n}: {\n  record: CaseRecord;\n","replace":"  api,\n  onChanged,\n  onBusyChange,\n}: {\n  record: CaseRecord;\n"}
+      ]
+    },
+    {
+      "path": "packages/ui/src/workspace.tsx",
+      "beforeSha256": "ab0c4471a1346a889d8488c758d90c7c7e9de253cf54696352d57c3076f6dbf6",
+      "afterSha256": "0fe72fbfec5ed013a7bf91910d4504b211c0900a504592923c360ec380eb5c47",
+      "edits": [
+        {"find":"                    );\n                  })}\n              </div>\n              {selected.kind === 'resolution' && !!selected.data['rollDigest'] && (\n                <details className=\"action-panel\" style={{ marginTop: 25 }}>\n","replace":"                    );\n                  })}\n              </fieldset>\n              {selected.kind === 'resolution' && !!selected.data['rollDigest'] && (\n                <details className=\"action-panel\" style={{ marginTop: 25 }}>\n"},
+        {"find":"                )}\n              </div>\n              <div className=\"workflow-actions\">\n                {workflow(selected.kind)\n                  .actions.filter(\n","replace":"                )}\n              </div>\n              <fieldset\n                className=\"workflow-actions\"\n                disabled={pending || evidenceBusy}\n                aria-busy={pending || evidenceBusy}\n                style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}\n              >\n                {workflow(selected.kind)\n                  .actions.filter(\n"},
+        {"find":"                    actorId={session.actor.id}\n                    canAttach={permitted.includes('attach_evidence')}\n                    api={api}\n                    onChanged={async (result) => {\n","replace":"                    actorId={session.actor.id}\n                    canAttach={permitted.includes('attach_evidence')}\n                    onBusyChange={evidenceBusyChanged}\n                    api={api}\n                    onChanged={async (result) => {\n"},
+        {"find":"  async function command(e: FormEvent<HTMLFormElement>, key: string) {\n    e.preventDefault();\n    if (!selected || pending) return;\n    const form = e.currentTarget;\n    setPending(true);\n","replace":"  async function command(e: FormEvent<HTMLFormElement>, key: string) {\n    e.preventDefault();\n    if (!selected || pending || evidenceBusyRef.current) return;\n    const form = e.currentTarget;\n    setPending(true);\n"},
+        {"find":"    [pending, setPending] = useState(false),\n    [local, setLocal] = useState(false);\n  const [recordSearch, setRecordSearch] = useState('');\n  const [nextCursor, setNextCursor] = useState<string | null>(null);\n","replace":"    [pending, setPending] = useState(false),\n    [local, setLocal] = useState(false);\n  const [evidenceBusy, setEvidenceBusy] = useState(false);\n  const evidenceBusyRef = useRef(false);\n  function evidenceBusyChanged(busy: boolean) {\n    evidenceBusyRef.current = busy;\n    setEvidenceBusy(busy);\n  }\n  const [recordSearch, setRecordSearch] = useState('');\n  const [nextCursor, setNextCursor] = useState<string | null>(null);\n"}
       ]
     }
   ]
