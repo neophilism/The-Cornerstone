@@ -9,6 +9,18 @@ concurrency:
   group: checks-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  preview:
+    if: github.event_name == 'pull_request' && github.head_ref == 'cornerstone/application' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+      - run: node scripts/preview-smoke.mjs
+        env:
+          EXPECTED_PREVIEW_COMMIT: ${{ github.event.pull_request.head.sha }}
   verify:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -68,6 +80,8 @@ jobs:
       - run: pnpm db:seed:simulation
       - run: pnpm test:db
       - run: pnpm -r --filter @cornerstone/api --filter @cornerstone/portal --filter @cornerstone/staff build
+        env:
+          NODE_ENV: production
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:private
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
