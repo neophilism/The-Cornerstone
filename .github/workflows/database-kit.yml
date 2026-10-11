@@ -14,7 +14,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          image=postgis/postgis:18-3.6
+          image=postgis/postgis:18-3.6@sha256:60f6ad1d21ea86a67d47780b9a0d1e1d200500f62b19293fa834d0dea80b8677
           docker pull "$image"
           id=$(docker create --entrypoint sleep "$image" infinity)
           trap 'docker rm -f "$id" >/dev/null' EXIT
@@ -22,7 +22,7 @@ jobs:
           mkdir -p /tmp/database-kit
           docker image inspect --format '{{index .RepoDigests 0}}' "$image" > /tmp/database-kit/IMAGE
           docker exec "$id" cat /etc/os-release > /tmp/database-kit/OS
-          docker exec "$id" sh -c 'printf "%s\n" /usr/lib/postgresql/18 /usr/share/postgresql/18 /usr/share/proj; ldd /usr/lib/postgresql/18/bin/* /usr/lib/postgresql/18/lib/*.so 2>/dev/null | awk '\''$1 ~ /^\// {print $1} $2 == "=>" && $3 ~ /^\// {print $3}'\''' | sed 's,^/,,' | sort -u > /tmp/database-kit/FILES
+          docker exec "$id" sh -c 'printf "%s\n" /usr/lib/postgresql/18 /usr/share/postgresql/18 /usr/share/proj; ldd /usr/lib/postgresql/18/bin/* /usr/lib/postgresql/18/lib/*.so 2>/dev/null | awk '\''$1 ~ /^\// && $1 !~ /:$/ {print $1} $2 == "=>" && $3 ~ /^\// {print $3}'\''' | sed 's,^/,,' | sort -u > /tmp/database-kit/FILES
           ! grep -E '(^|/)(var|etc|home|root|data|pgdata)(/|$)' /tmp/database-kit/FILES
           docker cp /tmp/database-kit/FILES "$id":/tmp/FILES
           docker exec "$id" tar -h -C / -czf - -T /tmp/FILES > /tmp/database-kit/runtime.tar.gz
