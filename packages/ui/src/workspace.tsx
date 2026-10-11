@@ -734,7 +734,7 @@ export function Workspace({
                         {labels.get(k) ||
                           (
                             {
-                              unitCount: 'Founding units in the vote',
+                              unitCount: 'Founding-unit count',
                               votesCast: 'Ballots received',
                               notCast: 'Units that did not vote',
                               rollClosedAt: 'Founding roll closed',

@@ -64,7 +64,7 @@ test('a private draft survives editing and reloading, with versioned receipts', 
   await expect(page.getByText('Simulation receipt · version 3', { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Edit draft', exact: true })).toHaveCount(0);
   await accessible(page);
-  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.evaluate(() => window.scrollTo({ top: 0, left: 0, behavior: 'instant' }));
   await page.screenshot({
     path: `test-results/private-dossier-${info.project.name}.png`,
     fullPage: true,
@@ -91,7 +91,7 @@ test('a private draft survives editing and reloading, with versioned receipts', 
   await update.getByRole('button', { name: 'Mark read', exact: true }).click();
   await expect(update.getByText('Read · simulation', { exact: true })).toBeVisible();
   await accessible(page);
-  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.evaluate(() => window.scrollTo({ top: 0, left: 0, behavior: 'instant' }));
   await page.screenshot({
     path: `test-results/private-activity-${info.project.name}.png`,
     fullPage: true,
@@ -138,7 +138,7 @@ test('assigned support can answer a request and the participant can see the pers
   await page.getByRole('button', { name: 'Provide a response', exact: true }).click();
   await expect(page.getByText('Simulation receipt · version 3', { exact: true })).toBeVisible();
   await accessible(page);
-  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.evaluate(() => window.scrollTo({ top: 0, left: 0, behavior: 'instant' }));
   await page.screenshot({
     path: `test-results/private-support-${info.project.name}.png`,
     fullPage: true,
@@ -220,7 +220,7 @@ test('account controls revoke other sessions without ending the current one', as
       page.getByRole('button', { name: 'Sign out other sessions', exact: true }),
     ).toBeEnabled();
     await accessible(page);
-    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.evaluate(() => window.scrollTo({ top: 0, left: 0, behavior: 'instant' }));
     await page.screenshot({
       path: `test-results/private-account-${info.project.name}.png`,
       fullPage: true,
@@ -269,7 +269,7 @@ test('an owner can grant read access and revoke it, with no edit controls for th
     await expect(page.getByText('Simulation receipt · version 2', { exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Revoke access', exact: true })).toBeVisible();
     await accessible(page);
-    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.evaluate(() => window.scrollTo({ top: 0, left: 0, behavior: 'instant' }));
     await page.screenshot({
       path: `test-results/private-access-${info.project.name}.png`,
       fullPage: true,
@@ -350,7 +350,7 @@ test('a synthetic attachment stays quarantined until text validation and downloa
   expect(download.suggestedFilename()).toBe('invented-source.txt');
   expect(await readFile((await download.path())!)).toEqual(body);
   await accessible(page);
-  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.evaluate(() => window.scrollTo({ top: 0, left: 0, behavior: 'instant' }));
   await page.mouse.move(0, 0);
   await page.screenshot({
     path: 'test-results/private-evidence-' + info.project.name + '.png',
@@ -392,7 +392,7 @@ test('a founder personally declines, accepts and withdraws an invitation', async
   await accessible(page);
   await page.evaluate(() => {
     (document.activeElement as HTMLElement | null)?.blur();
-    window.scrollTo(0, 0);
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   });
   await page.screenshot({
     path: `test-results/private-consent-${info.project.name}.png`,
@@ -414,7 +414,7 @@ test('a founder personally declines, accepts and withdraws an invitation', async
   await accessible(page);
   await page.evaluate(() => {
     (document.activeElement as HTMLElement | null)?.blur();
-    window.scrollTo(0, 0);
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   });
   await page.screenshot({
     path: `test-results/private-membership-${info.project.name}.png`,
@@ -451,7 +451,7 @@ test('two members vote privately on a frozen roll and retain their own receipts'
   await accessible(page);
   await page.evaluate(() => {
     (document.activeElement as HTMLElement | null)?.blur();
-    window.scrollTo(0, 0);
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   });
   await page.screenshot({
     path: `test-results/private-ballot-${info.project.name}.png`,

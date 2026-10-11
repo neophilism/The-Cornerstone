@@ -18,4 +18,4 @@ Official event/individual certification, licensure, public funding, legal notice
 
 The relevant E2EESA source repository was inspected at `ddfbd40c47d13890ebb81ea91c81fe329417058e`. Server-side field encryption is not advertised as end-to-end encryption. See `SECURITY_SCOPE.md` for unresolved trust boundaries.
 
-Membership development adds personal founding consent, closed-roll access, frozen member ballots and all-unit tallies. Migration 008 and its complete database/browser journeys require release verification; see MEMBERSHIP_AND_VOTING.md for adapter limits.
+Membership development adds personal founding consent, closed-roll access, frozen member ballots and all-unit tallies. Migration 008 is applied on development, and the complete database journey and 16 private browser checks passed in Actions run 38129025613; see MEMBERSHIP_AND_VOTING.md for adapter limits.
