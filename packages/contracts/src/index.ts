@@ -591,3 +591,126 @@ export const OpportunityBindingSchema = z
     'A planning mandate must identify the same opportunity and association as its frozen plan',
   );
 export type OpportunityBinding = z.infer<typeof OpportunityBindingSchema>;
+
+/** Technical bounds on a published choice menu; these are not a discretionary rate setting. */
+const CommercialKeySchema = z
+  .string()
+  .regex(/^[A-Za-z][A-Za-z0-9 _-]{0,79}$/)
+  .refine((key) => !['constructor', 'prototype', '__proto__'].includes(key), 'Reserved term name');
+export const CommercialChoiceSchema = z.union([
+  z.string().min(1).max(2000),
+  z.number().finite(),
+  z.boolean(),
+  z.null(),
+]);
+const CommercialObjectSchema = z.custom<Record<string, unknown>>(
+  (value) =>
+    value !== null &&
+    typeof value === 'object' &&
+    !Array.isArray(value) &&
+    [Object.prototype, null].includes(Object.getPrototypeOf(value)) &&
+    Reflect.ownKeys(value).every(
+      (key) => typeof key === 'string' && !['__proto__', 'constructor', 'prototype'].includes(key),
+    ),
+  'Use a plain commercial-term object without reserved keys',
+);
+export const CommercialMenuSchema = CommercialObjectSchema.pipe(
+  z
+    .record(
+      CommercialKeySchema,
+      z
+        .array(CommercialChoiceSchema)
+        .min(1)
+        .max(50)
+        .refine(
+          (values) => new Set(values.map((v) => JSON.stringify(v))).size === values.length,
+          'Published choices must be distinct',
+        ),
+    )
+    .refine((menu) => Object.keys(menu).length <= 50, 'At most 50 published commercial terms'),
+);
+export const CommercialTermsSchema = CommercialObjectSchema.pipe(
+  z
+    .record(CommercialKeySchema, CommercialChoiceSchema)
+    .refine((terms) => Object.keys(terms).length <= 50, 'At most 50 selected commercial terms'),
+);
+export const CompactPlanSchema = z
+  .object({
+    kind: z.literal('compact'),
+    recordId: IdSchema,
+    associationId: IdSchema,
+    offerId: IdSchema,
+    matchId: IdSchema,
+    policyVersion: z.string().min(1).max(100),
+    title: z.string().min(1).max(160),
+    terms: CommercialTermsSchema,
+    services: z.string().min(1).max(12000),
+    launchMilestones: z.string().min(1).max(12000),
+    publicProtections: z.string().min(1).max(12000),
+    initialYears: z.literal(30),
+    renewalYears: z.literal(10),
+    renewalLimit: z.literal(1),
+    investorRights: InvestorRightsSchema.refine(
+      (rights) => !Object.values(rights).some(Boolean),
+      'Outside capital cannot acquire beneficiary governance or compact control',
+    ),
+    offer: z
+      .object({
+        id: IdSchema,
+        version: z.number().int().positive(),
+        digest: z.string().regex(/^[a-f0-9]{64}$/),
+        title: z.string().min(1).max(160),
+        trade: z.string().min(1).max(12000),
+        district: z.string().min(1).max(12000),
+        financialTerms: StateTermsSchema,
+        commercialMenu: CommercialMenuSchema,
+      })
+      .strict(),
+    match: z
+      .object({ id: IdSchema, roundId: IdSchema, version: z.number().int().positive() })
+      .strict(),
+  })
+  .strict()
+  .refine(
+    (p) => p.offer.id === p.offerId && p.match.id === p.matchId,
+    'The frozen compact must use the same offer and match',
+  );
+export type CompactPlan = z.infer<typeof CompactPlanSchema>;
+export const CompactBindingSchema = z
+  .object({
+    recordId: IdSchema,
+    associationId: IdSchema,
+    version: z.number().int().positive(),
+    digest: z.string().regex(/^[a-f0-9]{64}$/),
+    plan: CompactPlanSchema,
+  })
+  .strict()
+  .refine(
+    (b) => b.recordId === b.plan.recordId && b.associationId === b.plan.associationId,
+    'The compact approval must identify the same record and association',
+  );
+export type CompactBinding = z.infer<typeof CompactBindingSchema>;
+
+export const CompactApprovalSchema = z
+  .object({
+    resolutionId: IdSchema,
+    resolutionVersion: z.number().int().positive(),
+    resolutionDigest: z.string().regex(/^[a-f0-9]{64}$/),
+    associationId: IdSchema,
+    binding: CompactBindingSchema,
+    unitCount: z.number().int().positive(),
+    yes: z.number().int().nonnegative(),
+    no: z.number().int().nonnegative(),
+    abstain: z.number().int().nonnegative(),
+    notCast: z.number().int().nonnegative(),
+    rollDigest: z.string().regex(/^[a-f0-9]{64}$/),
+    source: z.literal('verified-terminal-tally-at-submission'),
+  })
+  .strict()
+  .refine(
+    (a) =>
+      a.associationId === a.binding.associationId &&
+      a.yes + a.no + a.abstain + a.notCast === a.unitCount &&
+      a.yes * 2 > a.unitCount,
+    'The unchanged compact requires a verified majority of all frozen units',
+  );

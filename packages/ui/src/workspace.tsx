@@ -29,6 +29,7 @@ import { CalculationSummary } from './financial-fields.js';
 import { SuccessionSummary } from './succession.js';
 import { ClaimSurvivalSummary } from './claim-survival.js';
 import { GovernanceSummary } from './governance.js';
+import { CommercialTermsEditor, CompactSummary } from './compacts.js';
 
 type Session = { actor: Actor; csrf: string; mode: string; local: boolean };
 export function WorkflowFields({
@@ -46,6 +47,7 @@ export function WorkflowFields({
   record?: CaseRecord;
   api?: (path: string, body?: unknown) => Promise<any>;
 }) {
+  const [offerId, setOfferId] = useState(String(values['offerId'] ?? ''));
   return (
     <>
       {fields
@@ -81,6 +83,17 @@ export function WorkflowFields({
               prefix={prefix}
               value={values[f.key]}
               records={records}
+              onChange={f.key === 'offerId' ? setOfferId : undefined}
+            />
+          ) : f.key === 'terms' ? (
+            <CommercialTermsEditor
+              key={f.key}
+              field={f}
+              prefix={prefix}
+              value={values[f.key]}
+              records={records}
+              offerId={offerId}
+              api={api}
             />
           ) : f.key === 'earnedIncomeShare' ? (
             <IncomeShare key={f.key} prefix={prefix} value={values[f.key]} />
@@ -776,6 +789,7 @@ export function Workspace({
                   prefix="create"
                   values={creationDefaults}
                   records={records}
+                  api={api}
                 />
                 <button className="button" disabled={pending}>
                   Save synthetic draft
@@ -797,6 +811,30 @@ export function Workspace({
                 </button>
               </div>
               <RecordNextStep record={selected} />
+              <CompactSummary
+                record={selected}
+                onOpen={(id) => void openRecord(id)}
+                {...(selected.kind === 'compact' &&
+                selected.state === 'draft' &&
+                permitted.includes('submit') &&
+                session.actor.roles.includes('member')
+                  ? {
+                      onVote: () => {
+                        setCreationDefaults({
+                          title: ('Compact vote: ' + selected.title).slice(0, 160),
+                          associationId: selected.data['associationId'],
+                          decision: 'compact',
+                          compactId: selected.id,
+                          proposal:
+                            'Approve only this complete compact and immutable published offer, subject to ordinary legal prerequisites and voluntary individual participation.',
+                        });
+                        setCreating('resolution');
+                        setSelected(null);
+                        setEditing(false);
+                      },
+                    }
+                  : {})}
+              />
               <GovernanceSummary
                 record={selected}
                 onOpen={(id) => void openRecord(id)}
@@ -887,6 +925,8 @@ export function Workspace({
                           'lastBallotCommitment',
                           'lastScaleCommitment',
                           'opportunityBinding',
+                          'compactBinding',
+                          'compactApproval',
                         ].includes(k),
                     )
                     .map(([k, v]) => (

@@ -254,7 +254,7 @@ export class Simulation {
   async resolution(person: Actor, association: CaseRecord, title = 'Invented succession decision') {
     const r = await this.create(await this.actor(person.id), 'resolution', title, {
       associationId: association.id,
-      decision: 'compact',
+      decision: 'dissolution',
       proposal: 'Invented exact proposal; no compact is executed by this fixture.',
     });
     await this.command(person, r, 'open_vote', { closesAt: addCalendarDays(this.today, 2) });

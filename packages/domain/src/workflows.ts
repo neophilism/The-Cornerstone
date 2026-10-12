@@ -9,6 +9,8 @@ import {
   InvestorRightsSchema,
   StateTermsSchema,
   SurplusPreparationSchema,
+  CommercialMenuSchema,
+  CommercialTermsSchema,
 } from '@cornerstone/contracts';
 import {
   type Field,
@@ -727,6 +729,19 @@ export const workflows: WorkflowDefinition[] = [
         false,
         'Required only for an opportunity-plan vote. The server freezes the exact shared proposal.',
       ),
+      f(
+        'compactId',
+        'Proposed compact ID',
+        'text',
+        false,
+        'Required for a compact vote. Members receive the exact offer, financial method, commercial choices and public commitments.',
+      ),
+      f(
+        'shareCompactTerms',
+        'Allow all founding members to inspect the frozen compact terms when voting opens',
+        'boolean',
+        false,
+      ),
     ],
     [
       action(
@@ -1135,7 +1150,10 @@ export const workflows: WorkflowDefinition[] = [
       f('associationId', 'Ready association ID'),
       f('matchId', 'Accepted match ID'),
       f('terms', 'Selected terms from published menu', 'json'),
-      f('memberResolutionId', 'Approved compact resolution ID'),
+      f('services', 'Services and service obligations', 'textarea', false),
+      f('launchMilestones', 'Launch milestones and deadlines', 'textarea', false),
+      f('publicProtections', 'Public protections and ordinary law obligations', 'textarea', false),
+      f('investorRights', 'Proposed outside capital rights', 'json'),
     ],
     [
       action(
@@ -1145,8 +1163,8 @@ export const workflows: WorkflowDefinition[] = [
         'submitted',
         ['member'],
         null,
-        [consent],
-        'No unpublished tax, rate, market or governance concession.',
+        [consent, f('memberResolutionId', 'Approved compact resolution ID')],
+        'The majority-of-all member vote must cover this exact unchanged draft, fixed offer and complete commercial menu.',
       ),
       review('supervisor', 'compact'),
       action(
@@ -1159,7 +1177,6 @@ export const workflows: WorkflowDefinition[] = [
         [
           f('withinMenu', 'All terms remain in published menu', 'boolean'),
           f('workerControl', 'Founding members retain voting control', 'boolean'),
-          f('investorRights', 'Outside capital rights', 'json'),
           f('publishedDate', 'Publication date', 'date'),
           reasons,
         ],
@@ -1760,6 +1777,8 @@ export function parseFields(
       else if (field.key === 'investorRights') out[field.key] = InvestorRightsSchema.parse(value);
       else if (field.key === 'financialTerms') out[field.key] = StateTermsSchema.parse(value);
       else if (field.key === 'schedule') out[field.key] = SurplusPreparationSchema.parse(value);
+      else if (field.key === 'commercialMenu') out[field.key] = CommercialMenuSchema.parse(value);
+      else if (field.key === 'terms') out[field.key] = CommercialTermsSchema.parse(value);
       else out[field.key] = value;
     } else {
       requireCondition(

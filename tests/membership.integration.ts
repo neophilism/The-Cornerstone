@@ -326,8 +326,8 @@ try {
   });
   const resolution = await create('participant', 'resolution', 'Invented denominator decision', {
     associationId: association.id,
-    decision: 'compact',
-    proposal: 'Invented exact compact decision',
+    decision: 'dissolution',
+    proposal: 'Invented denominator-only decision; no dissolution is executed',
   });
   assert.equal(resolution.data['unitCount'], 2);
   assert.equal(await get('member', resolution.id), null);

@@ -432,10 +432,10 @@ test('two members vote privately on a frozen roll and retain their own receipts'
   await page
     .getByLabel('Association', { exact: true })
     .selectOption({ label: 'Invented closed association · ready' });
-  await page.getByLabel('Reserved decision', { exact: true }).selectOption('compact');
+  await page.getByLabel('Reserved decision', { exact: true }).selectOption('dissolution');
   await page
     .getByLabel('Exact proposal', { exact: true })
-    .fill('Invented compact proposal for inspection before a voluntary vote.');
+    .fill('Invented reserved proposal for inspection; no dissolution is executed.');
   await page.getByRole('button', { name: 'Save synthetic draft', exact: true }).click();
   await expect(page.getByText('Simulation receipt · version 1', { exact: true })).toBeVisible();
   await page

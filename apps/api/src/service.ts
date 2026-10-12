@@ -24,6 +24,7 @@ import { MembershipService } from './membership.js';
 import { SuccessionService } from './succession.js';
 import { ClaimSurvivalService } from './claim-survival.js';
 import { GovernanceService } from './governance.js';
+import { CompactService } from './compacts.js';
 import { Store, type Transaction } from '@cornerstone/store';
 import {
   cents,
@@ -82,6 +83,7 @@ export class ProgramService {
       if (input.kind === 'resolution') {
         await members.resolutionDraft(tx, actor, data);
         await new GovernanceService(this.store).bindResolution(tx, actor, data);
+        await new CompactService(this.store).bindResolution(tx, actor, data);
       }
       const record: CaseRecord = {
         id: randomUUID(),
@@ -181,9 +183,12 @@ export class ProgramService {
       if (record.kind === 'resolution' && a.key === 'save_draft') {
         await members.resolutionDraft(tx, actor, data, record.id);
         await new GovernanceService(this.store).bindResolution(tx, actor, data);
+        await new CompactService(this.store).bindResolution(tx, actor, data);
       }
       if (record.kind === 'opportunity')
         await new GovernanceService(this.store).prepareOpportunity(tx, actor, record, a.key, data);
+      if (record.kind === 'compact')
+        await new CompactService(this.store).requireApproval(tx, actor, record, a.key, data);
       data = await this.linkedRules(tx, actor, record, command, data, now);
       if (record.kind === 'succession')
         data = await new SuccessionService().prepare(tx, actor, record, a.key, data);
@@ -380,6 +385,7 @@ export class ProgramService {
     }
     if (r.kind === 'resolution' && k === 'open_vote') {
       await new GovernanceService(this.store).assertResolutionBinding(tx, actor, d);
+      await new CompactService(this.store).assertResolutionBinding(tx, actor, d);
       await this.linked(tx, d['associationId'], 'association', [
         'ready',
         'provisional',
@@ -398,41 +404,6 @@ export class ProgramService {
         'PUBLISHED_FINANCIAL_METHOD',
         'The published rate act and method version must match the financial terms.',
       );
-    }
-    if (r.kind === 'compact' && k === 'publish') {
-      const offer = await this.linked(tx, d['offerId'], 'offer', ['published']);
-      await this.linked(tx, d['associationId'], 'association', ['ready', 'provisional']);
-      const match = await this.linked(tx, d['matchId'], 'match', ['accepted']);
-      requireCondition(
-        match.data['offerId'] === offer.id && match.data['associationId'] === d['associationId'],
-        'MATCH_MISMATCH',
-        'The compact must use the accepted offer and association.',
-      );
-      const resolution = await this.linked(tx, d['memberResolutionId'], 'resolution', ['tallied']);
-      requireCondition(
-        resolution.data['approved'] === true &&
-          resolution.data['decision'] === 'compact' &&
-          resolution.data['associationId'] === d['associationId'],
-        'MEMBER_APPROVAL',
-        'A valid all-unit-majority compact resolution is required.',
-      );
-      const menu = offer.data['commercialMenu'];
-      requireCondition(
-        menu && typeof menu === 'object' && d['terms'] && typeof d['terms'] === 'object',
-        'PUBLISHED_MENU',
-        'Use published terms.',
-      );
-      for (const [key, value] of Object.entries(d['terms'] as object)) {
-        const choices = (menu as Record<string, unknown>)[key];
-        requireCondition(
-          Array.isArray(choices) && choices.some((v) => digest(v) === digest(value)),
-          'OUTSIDE_MENU',
-          'A selected term is outside the immutable published menu.',
-        );
-      }
-      d['initialYears'] = 30;
-      d['renewalYears'] = 10;
-      d['renewalCount'] = 0;
     }
     if (r.kind === 'permit' && k === 'verify')
       await this.linked(tx, d['compactId'], 'compact', ['effective']);
