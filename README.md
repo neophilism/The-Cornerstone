@@ -32,4 +32,6 @@ Synthetic founding-unit succession, unchanged frozen votes and predecessor-ballo
 
 The synthetic inbox supports scoped continuation pages and a full unread count; see `docs/ACTIVITY_PAGES.md`. Marking an update read is not legal service.
 
+Draft editing preserves unsaved input through version conflicts and supports exact-request retry after an uncertain save. See `docs/DRAFT_RECOVERY.md` for explicit comparison, permission checks and the in-memory-only recovery boundary.
+
 Private portal/staff transport preserves uncertain write outcomes and enforces bounded, non-cached requests. After building those apps, `pnpm test:proxy` checks their compiled routes against a synthetic loopback upstream. See `docs/PRIVATE_PROXY.md`; these HTTP checks do not replace browser acceptance or protected-production review.

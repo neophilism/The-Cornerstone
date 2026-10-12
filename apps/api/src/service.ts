@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import type { Actor, CaseRecord, Command, Mode, Realm } from '@cornerstone/contracts';
+import type { Actor, CaseRecord, Command, Mode, Realm, Receipt } from '@cornerstone/contracts';
 import {
   CreateRecordSchema,
   CommandSchema,
@@ -18,7 +18,7 @@ import {
   DomainError,
 } from '@cornerstone/domain';
 import { assertAuthority, draftPolicy } from '@cornerstone/policy';
-import { canAct, digest } from '@cornerstone/security';
+import { canAct, canRead, digest } from '@cornerstone/security';
 import { EvidenceService } from './evidence.js';
 import { MembershipService } from './membership.js';
 import { SuccessionService } from './succession.js';
@@ -55,6 +55,20 @@ export class ProgramService {
       'Protected production intake requires independently reviewed recipient security and approved authority; this release is synthetic-only.',
     );
   }
+  private async replay(tx: Transaction, actor: Actor, receipt: Receipt) {
+    // An actor may retain an old receipt while no longer having case access.
+    // Do not label an inaccessible historical record as a successful recovery.
+    const current = await this.store.get(tx, receipt.recordId);
+    if (
+      !current ||
+      !canRead(actor, current, await this.store.grants(tx, current.id), this.clock().toISOString())
+    )
+      throw new DomainError('NOT_FOUND', 'Record not found or no longer accessible.', 404);
+    const record = await this.store.getVersion(tx, receipt.recordId, receipt.version);
+    if (!record)
+      throw new DomainError('NOT_FOUND', 'Record not found or no longer accessible.', 404);
+    return { receipt, record };
+  }
   async create(actor: Actor, raw: unknown) {
     this.writable(actor);
     const input = CreateRecordSchema.parse(raw);
@@ -74,11 +88,7 @@ export class ProgramService {
         input.idempotencyKey,
         requestDigest,
       );
-      if (previous)
-        return {
-          receipt: previous,
-          record: await this.store.getVersion(tx, previous.recordId, previous.version),
-        };
+      if (previous) return this.replay(tx, actor, previous);
       const members = new MembershipService(this.store, this.mode, this.realm);
       if (input.kind === 'resolution') {
         await members.resolutionDraft(tx, actor, data);
@@ -128,11 +138,7 @@ export class ProgramService {
         command.idempotencyKey,
         requestDigest,
       );
-      if (previous)
-        return {
-          receipt: previous,
-          record: await this.store.getVersion(tx, previous.recordId, previous.version),
-        };
+      if (previous) return this.replay(tx, actor, previous);
       const record = await this.store.get(tx, command.recordId, true);
       if (!record) throw new DomainError('NOT_FOUND', 'Record not found.', 404);
       if (record.version !== command.expectedVersion)
