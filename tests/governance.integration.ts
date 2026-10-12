@@ -150,7 +150,10 @@ try {
   assert.equal(adopted.record!.state, 'adopted');
   assert.equal(adopted.record!.data['operatingAuthority'], false);
   assert.equal(adopted.receipt.id, replay.receipt.id);
-  assert.equal(adopted.receipt.digest, digest(adopted.record));
+  assert.equal(
+    adopted.receipt.digest,
+    digest({ record: adopted.record, action: command.action, actorId: a.id }),
+  );
   await assert.rejects(
     w.command(first, plan, 'adopt_plan', { memberResolutionId: approved.id }),
     /unavailable/,
