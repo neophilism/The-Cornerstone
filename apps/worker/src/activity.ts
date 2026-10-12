@@ -34,17 +34,22 @@ export class ActivityWorker {
     if (Object.values(privileges.rows[0] ?? {}).some(Boolean))
       throw Error('Activity worker must not read private records, sessions or evidence.');
   }
-  async once(batch = 25) {
+  async once(batch = 25, signal?: AbortSignal) {
+    if (signal?.aborted) return { leased: 0, delivered: 0 };
     const jobs = await this.pool.query('SELECT * FROM lease_activity_events($1,$2)', [
       this.id,
       batch,
     ]);
     let delivered = 0;
     for (const job of jobs.rows) {
+      // Stop before another delivery, but let an already-started transaction settle.
+      if (signal?.aborted) break;
       try {
         await this.pool.query('SELECT deliver_activity_event($1,$2)', [job.event_id, job.token]);
         delivered++;
       } catch {
+        // Unstarted/rejected work retains its lease for recovery instead of doing more SQL during drain.
+        if (signal?.aborted) break;
         // Do not export exceptions: provider/SQL errors can contain private inputs.
         try {
           await this.pool.query('SELECT fail_activity_event($1,$2,$3)', [
