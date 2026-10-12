@@ -28,11 +28,11 @@ protocols and retain gated activation for unverified protected flows/releases.
 
 ## Three stages
 
-| Record | Completion rule |
-| --- | --- |
-| `implementation.complete` | Reviewed complete component/flow scope, actual applicable controls implemented, evidence for all 19 secure-development practices, and exact assessed source binding. |
-| `testing.complete` | All six required gates passed, plus applicable real integration/runtime/platform checks; immutable tools/configuration/reports bind the same source. |
-| `independentReview.complete` | Qualified independent experts reviewed that same source and scope, real authenticated review evidence is retained, and the owner accepted it. |
+| Record                       | Completion rule                                                                                                                                                      |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `implementation.complete`    | Reviewed complete component/flow scope, actual applicable controls implemented, evidence for all 19 secure-development practices, and exact assessed source binding. |
+| `testing.complete`           | All six required gates passed, plus applicable real integration/runtime/platform checks; immutable tools/configuration/reports bind the same source.                 |
+| `independentReview.complete` | Qualified independent experts reviewed that same source and scope, real authenticated review evidence is retained, and the owner accepted it.                        |
 
 The expert-review stage is intentionally initialized unchecked. Author self-review,
 synthetic fixtures, AI self-assessment and CI success cannot complete this stage.
