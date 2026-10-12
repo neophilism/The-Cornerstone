@@ -31,3 +31,5 @@ The owner's approved public-implementation tracking baseline is [registry/roadma
 Synthetic founding-unit succession, unchanged frozen votes and predecessor-ballot privacy are described in `docs/SUCCESSION.md`. Continuing an existing un-enrolled claim is described in `docs/CLAIM_SURVIVAL.md`. Apply all checked migrations before running the matching API revision; the public site has no database dependency. Neither route activates real probate, identity, legal-notice or private-intake services.
 
 The synthetic inbox supports scoped continuation pages and a full unread count; see `docs/ACTIVITY_PAGES.md`. Marking an update read is not legal service.
+
+Draft editing preserves unsaved input through version conflicts and supports exact-request retry after an uncertain save. See `docs/DRAFT_RECOVERY.md` for explicit comparison, permission checks and the in-memory-only recovery boundary.

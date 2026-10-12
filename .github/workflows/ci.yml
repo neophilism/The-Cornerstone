@@ -83,6 +83,7 @@ jobs:
       - run: pnpm db:seed:simulation
       - run: node scripts/test-field-key.mjs
       - run: pnpm test:db
+      - run: node --import tsx tests/draft-recovery.integration.ts
       - run: node --import tsx tests/activity.integration.ts
       - run: node --import tsx tests/activity-pages.integration.ts
       - run: node --import tsx tests/identity-access.integration.ts
