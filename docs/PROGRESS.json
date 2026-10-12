@@ -1,23 +1,47 @@
 {
-  "updated": "2026-10-11",
-  "scope": "public policy website and synthetic preparation, evidence, membership and voting; full program unfinished",
-  "lastVerifiedCommit": "f948607412830a73a98d549c06a945c8f70b2320",
-  "lastVerifiedRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/38168575128",
+  "updated": "2026-10-12",
+  "observedAt": "2026-10-12T22:34:00Z",
+  "scope": "public proposal and synthetic preparation; full program unfinished; no deployment inferred",
+  "lastVerifiedCommit": "afbdffdca03d4fd6856fc755541190ed43c99263",
+  "lastVerifiedTree": "97962feb8c315a34680a0c990513dbe19a13d33b",
+  "testedHead": "f3ee2d76b3a83b4c7fda70347715de95c5611c3a",
+  "lastVerifiedRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/38313896033",
+  "sourceEvidenceRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/38313895710",
+  "releasePullRequest": "https://github.com/neophilism/The-Cornerstone/pull/18",
+  "observedMergedPullRequests": [
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 23, 24
+  ],
+  "openPullRequestsAtCheckpoint": [22, 25],
+  "localUnitTests": 236,
   "livePublicUrl": "https://cornerstone-policy-preview.onrender.com",
+  "deploymentVerifiedAtCheckpoint": false,
   "protectedIntake": false,
   "sourcePublicationApproved": true,
   "internalPlanPublicationApproved": false,
+  "securityAssessment": "security/e2eesa-status.json",
   "pending": [
-    "existing-claim survival CI and browser acceptance",
+    "recoverable new-record creation and other mutation/export boundaries",
     "new deceased-worker filings and complete program journeys",
-    "protected integrations and independent review"
+    "protected integrations, provider compatibility and independent review",
+    "separate CircleCI connection and exact-suite acceptance"
   ],
-  "releasePullRequest": "https://github.com/neophilism/The-Cornerstone/pull/11",
+  "repositoryMigrations": 15,
   "developmentMigrations": 10,
+  "providerObservation": {
+    "basis": "earlier October 12 inspection; not refreshed by this handoff",
+    "changed": false,
+    "productionApplicationTables": false
+  },
   "migrationRehearsal": {
     "branch": "br-super-frost-b4ga2f8q",
     "parent": "br-falling-band-b4eeukqt",
-    "appliedMigrations": 12,
+    "appliedMigrations": 13,
     "productionChanged": false
+  },
+  "trackingBaseline": {
+    "units": 25,
+    "originalVerifiedMappings": 11,
+    "changed": false,
+    "wholeProgramCompletionPercent": null
   }
 }
