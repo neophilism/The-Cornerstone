@@ -2,7 +2,7 @@ name: engineering-edits
 on:
   push:
     branches: [cornerstone/engineering-kit]
-    paths: [engineering/edits.json]
+    paths: [engineering/edits.json, .github/workflows/engineering-edits.yml]
 permissions:
   contents: write
 concurrency:
@@ -53,7 +53,7 @@ jobs:
           assert api('/git/ref/heads/' + target)['object']['sha'] == base, 'Feature base changed'
           subprocess.run(['git', 'fetch', '--no-tags', '--depth=1', 'origin', base], check=True)
           subprocess.run(['git', 'checkout', '--detach', base], check=True)
-          elements, names, total = [], set(), 0
+          elements, names, deferred, total = [], set(), [], 0
           for change in request['changes']:
               name = change['path']
               assert re.fullmatch(r'[A-Za-z0-9_./\[\]-]+', name) and '..' not in name.split('/')
@@ -84,13 +84,18 @@ jobs:
               total += len(raw)
               assert total <= 5000000
               assert hashlib.sha256(raw).hexdigest() == change['afterSha256'], 'Result mismatch: ' + name
-              elements.append({'path': name, 'mode': '100644', 'type': 'blob', 'content': content})
+              if name.startswith('.github/workflows/'):
+                  # The job token cannot modify workflows. Apply these through the owner's connector.
+                  deferred.append(name)
+              else:
+                  elements.append({'path': name, 'mode': '100644', 'type': 'blob', 'content': content})
+          assert elements
           parent = api('/git/commits/' + base)
           tree = api('/git/trees', {'base_tree': parent['tree']['sha'], 'tree': elements})
           commit = api('/git/commits', {'message': request['message'], 'tree': tree['sha'], 'parents': [base]})
           assert api('/git/ref/heads/' + target)['object']['sha'] == base, 'Feature base changed before write'
           api('/git/refs/heads/' + target, {'sha': commit['sha'], 'force': False}, 'PATCH')
-          result = {'branch': target, 'base': base, 'commit': commit['sha'], 'tree': tree['sha'], 'paths': sorted(names)}
+          result = {'branch': target, 'base': base, 'commit': commit['sha'], 'tree': tree['sha'], 'paths': sorted(names - set(deferred)), 'deferredWorkflowPaths': deferred}
           pathlib.Path('/tmp/change-result.json').write_text(json.dumps(result, indent=2) + '\n')
           print(json.dumps(result, indent=2))
           PY
