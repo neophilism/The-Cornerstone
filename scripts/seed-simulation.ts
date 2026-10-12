@@ -63,6 +63,7 @@ try {
       'succession',
       'claim_survival',
       'association',
+      'opportunity',
       'launch',
       'resolution',
     ],

@@ -98,6 +98,7 @@ export function EvidenceChoice({
 const referenceKinds: Record<string, string[]> = {
   eventId: ['event_petition'],
   associationId: ['association'],
+  opportunityId: ['opportunity'],
   offerId: ['offer'],
   compactId: ['compact'],
   resolutionId: ['resolution'],

@@ -28,6 +28,7 @@ import { PreparationGuide, RecordNextStep } from './journey.js';
 import { CalculationSummary } from './financial-fields.js';
 import { SuccessionSummary } from './succession.js';
 import { ClaimSurvivalSummary } from './claim-survival.js';
+import { GovernanceSummary } from './governance.js';
 
 type Session = { actor: Actor; csrf: string; mode: string; local: boolean };
 export function WorkflowFields({
@@ -216,6 +217,7 @@ export function Workspace({
     [loading, setLoading] = useState(true),
     [pending, setPending] = useState(false),
     [local, setLocal] = useState(false);
+  const [creationDefaults, setCreationDefaults] = useState<Record<string, unknown>>({});
   const [evidenceBusy, setEvidenceBusy] = useState(false);
   const evidenceBusyRef = useRef(false);
   function evidenceBusyChanged(busy: boolean) {
@@ -760,11 +762,19 @@ export function Workspace({
               <form className="form-stack action-panel" onSubmit={create}>
                 <div className="field">
                   <label htmlFor="record-title">Record title</label>
-                  <input id="record-title" name="title" required minLength={3} maxLength={160} />
+                  <input
+                    id="record-title"
+                    name="title"
+                    required
+                    minLength={3}
+                    maxLength={160}
+                    defaultValue={String(creationDefaults['title'] ?? '')}
+                  />
                 </div>
                 <WorkflowFields
                   fields={workflow(creating).createFields}
                   prefix="create"
+                  values={creationDefaults}
                   records={records}
                 />
                 <button className="button" disabled={pending}>
@@ -787,6 +797,27 @@ export function Workspace({
                 </button>
               </div>
               <RecordNextStep record={selected} />
+              <GovernanceSummary
+                record={selected}
+                onOpen={(id) => void openRecord(id)}
+                {...(selected.kind === 'opportunity' && permitted.includes('adopt_plan')
+                  ? {
+                      onVote: () => {
+                        setCreationDefaults({
+                          title: ('Plan vote: ' + selected.title).slice(0, 160),
+                          associationId: selected.data['associationId'],
+                          decision: 'opportunity_plan',
+                          opportunityId: selected.id,
+                          proposal:
+                            'Adopt this exact shared planning proposal, subject to separate legal and operational prerequisites and voluntary individual participation.',
+                        });
+                        setCreating('resolution');
+                        setSelected(null);
+                        setError('');
+                      },
+                    }
+                  : {})}
+              />
               <SuccessionSummary record={selected} />
               <ClaimSurvivalSummary record={selected} onOpen={(id) => void openRecord(id)} />
               <div className="record-links">
@@ -855,6 +886,7 @@ export function Workspace({
                           'rollDigest',
                           'lastBallotCommitment',
                           'lastScaleCommitment',
+                          'opportunityBinding',
                         ].includes(k),
                     )
                     .map(([k, v]) => (
@@ -1221,6 +1253,7 @@ export function Workspace({
                       <button
                         className="button button-secondary"
                         onClick={() => {
+                          setCreationDefaults({});
                           setCreating(w.kind);
                           setError('');
                         }}

@@ -1,6 +1,10 @@
 import type { CaseRecord } from '@cornerstone/contracts';
 import { actionUnavailable, workflow } from '@cornerstone/domain';
 const preparation: Record<string, [string, string]> = {
+  opportunity: [
+    'Prepare first; share only with your members',
+    'Explore feasibility privately. A current founder can then share a fixed plan, with accessible training, enterprise financing and ordinary legal prerequisites, for an optional all-unit-majority planning vote. Planning never authorizes operations or compels individual participation.',
+  ],
   offer: [
     'Publish complete terms before choice',
     'Identify the currently prohibited trade and district, existing rights protected, prospective Rate Act, common calculation and bounded commercial menu. A state offer cannot choose favored workers or displace an existing lawful market.',
