@@ -1,0 +1,39 @@
+name: engineering-db-tools
+on:
+  push:
+    branches: [cornerstone/engineering-kit]
+    paths: [.github/workflows/engineering-db-tools.yml]
+permissions:
+  contents: read
+jobs:
+  tools:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Obtain distribution-verified PostgreSQL tooling
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y postgresql-16 postgresql-16-postgis-3 postgresql-contrib-16
+          root="$RUNNER_TEMP/pg-tools"
+          mkdir -p "$root/lib" "$root/usr/lib/postgresql" "$root/usr/share/postgresql"
+          cp -a /usr/lib/postgresql/16 "$root/usr/lib/postgresql/"
+          cp -a /usr/share/postgresql/16 "$root/usr/share/postgresql/"
+          ldd /usr/lib/postgresql/16/bin/postgres /usr/lib/postgresql/16/bin/initdb /usr/lib/postgresql/16/bin/pg_ctl /usr/lib/postgresql/16/bin/psql /usr/lib/postgresql/16/lib/pgcrypto.so /usr/lib/postgresql/16/lib/pg_trgm.so /usr/lib/postgresql/16/lib/postgis-3.so | awk '/=> \// {print $3}' | sort -u > "$root/libraries.txt"
+          while IFS= read -r library; do
+            case "$(basename "$library")" in libc.so.*|libm.so.*|libpthread.so.*|libdl.so.*|librt.so.*|ld-linux*) continue;; esac
+            cp -L "$library" "$root/lib/"
+          done < "$root/libraries.txt"
+          dpkg-query -W postgresql-16 postgresql-16-postgis-3 > "$root/VERSIONS"
+          printf '%s\n' 'Public development tooling only; no databases, credentials, keys, fonts, or private records.' > "$root/SCOPE"
+          cd "$root"
+          find lib usr -type f -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS
+          tar -czf "$RUNNER_TEMP/pg-tools.tar.gz" .
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: postgres-offline-tools
+          path: ${{ runner.temp }}/pg-tools.tar.gz
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
