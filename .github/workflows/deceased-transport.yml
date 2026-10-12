@@ -1,0 +1,44 @@
+name: deceased-transport-recovery
+on:
+  push:
+    branches: [cornerstone/engineering-kit]
+    paths: [.github/workflows/deceased-transport.yml]
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Repair only the exact known wire and run existing source guards
+        env:
+          TRANSPORT_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import base64, gzip, hashlib, json, pathlib, subprocess, textwrap
+          path = pathlib.Path('engineering/edits.json')
+          assert subprocess.check_output(['git','hash-object',str(path)]).decode().strip() == 'd005c60c99ecb40f4d75cb19a946033b0050b4c6'
+          wire = json.loads(path.read_bytes())
+          for old, new in [('+Wx2aXhmf5','+Wx2aXmf5'),('SucmEc02f','Sucm02f')]:
+              assert wire['payload'].count(old) == 1
+              wire['payload'] = wire['payload'].replace(old,new,1)
+          raw = gzip.decompress(base64.b64decode(wire['payload'],validate=True))
+          assert hashlib.sha256(raw).hexdigest() == wire['payloadSha256'] == 'e6ebfa737548a82eea5a2a34f9a225ce2e8887137045adc74884df8ba29199f1'
+          fixed = pathlib.Path('/tmp/deceased-wire.json')
+          fixed.write_text(json.dumps(wire))
+          workflow = pathlib.Path('.github/workflows/engineering-edits.yml')
+          assert subprocess.check_output(['git','hash-object',str(workflow)]).decode().strip() == 'f4761b3ce0df2bed9a1ddf1f50db63fa1e3dcf25'
+          code = workflow.read_text().split("python3 - <<'PY'\n",1)[1].split('\n          PY\n',1)[0]
+          assert code.count("pathlib.Path('engineering/edits.json')") == 1
+          code = code.replace("pathlib.Path('engineering/edits.json')","pathlib.Path('/tmp/deceased-wire.json')",1)
+          exec(compile(textwrap.dedent(code),'exact-source-guards','exec'),{})
+          PY
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: deceased-transport-result
+          path: /tmp/change-result.json
+          retention-days: 1
+          if-no-files-found: error
