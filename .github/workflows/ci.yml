@@ -84,6 +84,7 @@ jobs:
       - run: node scripts/test-field-key.mjs
       - run: pnpm test:db
       - run: node --import tsx tests/activity.integration.ts
+      - run: node --import tsx tests/activity-pages.integration.ts
       - run: node --import tsx tests/identity-access.integration.ts
       - run: node --import tsx tests/evidence.integration.ts
       - run: node --import tsx tests/membership.integration.ts
