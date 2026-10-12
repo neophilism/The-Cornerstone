@@ -1,23 +1,100 @@
 {
-  "updated": "2026-10-11",
-  "scope": "public policy website and synthetic preparation, evidence, membership and voting; full program unfinished",
-  "lastVerifiedCommit": "f948607412830a73a98d549c06a945c8f70b2320",
-  "lastVerifiedRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/38168575128",
+  "updated": "2026-10-12",
+  "scope": "public policy website and synthetic preparation; main through PR19, later changes are open PRs; full program unfinished",
+  "lastVerifiedCommit": "71151085bbed3529d49327fbbd7782fa509270b5",
+  "lastVerifiedRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/38260510160",
   "livePublicUrl": "https://cornerstone-policy-preview.onrender.com",
   "protectedIntake": false,
   "sourcePublicationApproved": true,
   "internalPlanPublicationApproved": false,
   "pending": [
-    "existing-claim survival CI and browser acceptance",
+    "current-head CI execution and browser acceptance for open PRs20,21,23,24",
+    "CircleCI project connection and complete verified native CI adoption in PR22",
+    "independent security implementation/testing/review tracked separately in PR18",
     "new deceased-worker filings and complete program journeys",
-    "protected integrations and independent review"
+    "protected integrations, provider deployment and independent review"
   ],
-  "releasePullRequest": "https://github.com/neophilism/The-Cornerstone/pull/11",
+  "releasePullRequest": "https://github.com/neophilism/The-Cornerstone/pull/19",
   "developmentMigrations": 10,
   "migrationRehearsal": {
     "branch": "br-super-frost-b4ga2f8q",
     "parent": "br-falling-band-b4eeukqt",
-    "appliedMigrations": 12,
-    "productionChanged": false
-  }
+    "appliedMigrations": 13,
+    "productionChanged": false,
+    "observation": "Historical provider inspection; not promoted to parent or production and not changed during this continuation."
+  },
+  "observedAt": "2026-10-12T20:38:00Z",
+  "verificationBasis": "PR19 exact tested tree and merged commit; not a claim that the latest main push passed or was deployed",
+  "lastVerifiedHead": "01aa1568f0f782a0f2c98d6be178fc6a772929ce",
+  "lastVerifiedTree": "d7e845438fbf39c77ac9eae2db08ebc62bc6c8e8",
+  "sourceEvidenceRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/38260510281",
+  "livePublicUrlVerification": "repository-listed URL; deployment and availability not reverified in this continuation",
+  "providerObservation": "Historical October 12 read-only inspection: development through 010, isolated child through 013, production without application tables. Not refreshed or changed during this continuation.",
+  "openPullRequests": [
+    {
+      "number": 18,
+      "scope": "E2EESA status and independent review tracking",
+      "status": "open; not conformance or approval"
+    },
+    {
+      "number": 20,
+      "head": "6c69b47f9591f3a4af607a7dc5f6f71b3abc1c00",
+      "tree": "4eb18d8ea0000648668a959c55f05fa1335d1ffd",
+      "scope": "personal reminders and strict access-response validation",
+      "localUnitTestsPassed": 156,
+      "privateAppBuildsPassed": 4,
+      "browserAcceptance": "blocked before feature assertions by local administrator policy",
+      "merged": false
+    },
+    {
+      "number": 21,
+      "head": "efef3b37683072696b1f5a690e68d5f8ad89bf77",
+      "scope": "recoverable draft edits and permission-aware receipt replay",
+      "verification": "prior local evidence recorded in PR; not rerun in this continuation; remote/browser gate unresolved",
+      "merged": false
+    },
+    {
+      "number": 22,
+      "head": "1c8539ae70bc5433d902455859d731ea775e0bbe",
+      "scope": "native CircleCI full-suite port",
+      "status": "open; provider connection and green execution not verified"
+    },
+    {
+      "number": 23,
+      "head": "572fe29dc1cbd89278e5fd4ea04e57b9b3979bda",
+      "tree": "815e6c062648cbd1b79c1c282bef136097ce3b2e",
+      "scope": "bounded private proxy and uncertain write outcomes",
+      "localUnitTestsPassed": 155,
+      "localPostgresIntegrationSuitesPassed": 15,
+      "compiledHttpJourneysPassed": 2,
+      "privateAppBuildsPassed": 4,
+      "merged": false
+    },
+    {
+      "number": 24,
+      "head": "ea9476125be8d9e025bff01a7b27a8a4330af50d",
+      "tree": "b6a766e54d92ebffcbf5faa16936b429ca3d4e3b",
+      "scope": "single-owner worker shutdown and recovery leases",
+      "localUnitTestsPassed": 124,
+      "localPostgresIntegrationSuitesPassed": 16,
+      "compiledProcessScenariosPassed": 5,
+      "privateAppBuildsPassed": 4,
+      "merged": false
+    }
+  ],
+  "localVerificationEnvironment": {
+    "node": "24.19.0",
+    "pnpm": "11.25.0",
+    "postgres": "16.15",
+    "postgis": "3.4.2",
+    "data": "isolated synthetic only",
+    "dependencySource": "previously verified offline artifact; fresh online frozen install remains CI work"
+  },
+  "verificationLimitations": [
+    "Counts are per branch, not additive unique test totals.",
+    "Latest PR23 and PR24 verify/database jobs report failure with no executed steps; platform/account cause unverified.",
+    "Local Chromium 144 navigation reports ERR_BLOCKED_BY_ADMINISTRATOR; policy left unchanged.",
+    "No remote CI, browser, independent security, E2EE or production approval is implied by local results."
+  ],
+  "handoff": "docs/RELEASE_HANDOFF.md"
 }
