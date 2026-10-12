@@ -313,7 +313,7 @@ route('get', '/governance', async (req, res) =>
   ),
 );
 route('get', '/notifications', async (req, res) =>
-  res.json({ notifications: await requireStore().notifications(await actor(req)) }),
+  res.json(await requireStore().notificationPage(await actor(req), req.query)),
 );
 route('post', '/notifications/read', async (req, res) => {
   const a = await actor(req, true);
@@ -324,8 +324,7 @@ route('post', '/notifications/read', async (req, res) => {
       503,
     );
   const input = MarkActivityReadSchema.parse(req.body);
-  await requireStore().markActivityRead(a, input.ids);
-  res.json({ read: true, legalService: false });
+  res.json(await requireStore().markActivityRead(a, input.ids));
 });
 route('post', '/records', async (req, res) => {
   const a = await actor(req, true);

@@ -1,7 +1,8 @@
 'use client';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import {
-  ActivityNotificationSchema,
+  ActivityPageSchema,
+  ActivityReadResultSchema,
   draftAccessKinds,
   RecordCapabilitiesSchema,
   type RecordCapabilities,
@@ -237,6 +238,10 @@ export function Workspace({
     evidenceBusyRef.current = busy;
     setEvidenceBusy(busy);
   }
+  const [activityCursor, setActivityCursor] = useState<string | null>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [activityPending, setActivityPending] = useState(false);
+  const activityGeneration = useRef(0);
   const [recordSearch, setRecordSearch] = useState('');
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [pagePending, setPagePending] = useState(false);
@@ -275,6 +280,9 @@ export function Workspace({
         setSession(null);
         setRecords([]);
         setNotifications([]);
+        setActivityCursor(null);
+        setUnreadCount(0);
+        activityGeneration.current++;
         setCapabilities([]);
         setSelected(null);
         setReceipt(null);
@@ -286,6 +294,7 @@ export function Workspace({
   }
   async function refresh() {
     const generation = ++recordGeneration.current;
+    activityGeneration.current++;
     try {
       const me = await api('me');
       if (generation !== recordGeneration.current) return [];
@@ -295,9 +304,11 @@ export function Workspace({
       setRecords(list.records);
       setNextCursor(list.nextCursor);
       setCapabilities(RecordCapabilitiesSchema.array().parse(list.capabilities));
-      const inbox = await api('notifications');
+      const inbox = ActivityPageSchema.parse(await api('notifications'));
       if (generation !== recordGeneration.current) return [];
-      setNotifications(ActivityNotificationSchema.array().parse(inbox.notifications));
+      setNotifications(inbox.notifications);
+      setActivityCursor(inbox.nextCursor);
+      setUnreadCount(inbox.unreadCount);
       return list.records as CaseRecord[];
     } catch (e) {
       if (generation === recordGeneration.current)
@@ -305,6 +316,50 @@ export function Workspace({
       return [];
     } finally {
       setLoading(false);
+    }
+  }
+  async function loadOlderActivity() {
+    if (!activityCursor || activityPending || pending) return;
+    const generation = recordGeneration.current;
+    const request = ++activityGeneration.current;
+    setActivityPending(true);
+    setError('');
+    try {
+      const page = ActivityPageSchema.parse(
+        await api('notifications?cursor=' + encodeURIComponent(activityCursor)),
+      );
+      if (generation !== recordGeneration.current || request !== activityGeneration.current) return;
+      setNotifications((previous) => [
+        ...new Map([...previous, ...page.notifications].map((n) => [n.id, n])).values(),
+      ]);
+      setActivityCursor(page.nextCursor);
+      setUnreadCount(page.unreadCount);
+    } catch (e) {
+      if (generation === recordGeneration.current && request === activityGeneration.current)
+        setError(e instanceof Error ? e.message : 'Older activity could not be loaded.');
+    } finally {
+      setActivityPending(false);
+    }
+  }
+  async function markRead(id: string) {
+    if (pending || activityPending) return;
+    const generation = recordGeneration.current;
+    const request = ++activityGeneration.current;
+    setPending(true);
+    setError('');
+    try {
+      const result = ActivityReadResultSchema.parse(await api('notifications/read', { ids: [id] }));
+      if (generation !== recordGeneration.current || request !== activityGeneration.current) return;
+      const marked = new Map(result.marked.map((n) => [n.id, n.readAt]));
+      setNotifications((previous) =>
+        previous.map((n) => (marked.has(n.id) ? { ...n, readAt: marked.get(n.id)! } : n)),
+      );
+      setUnreadCount(result.unreadCount);
+    } catch (e) {
+      if (generation === recordGeneration.current && request === activityGeneration.current)
+        setError(e instanceof Error ? e.message : 'Update could not be marked read.');
+    } finally {
+      setPending(false);
     }
   }
   async function loadOlderRecords() {
@@ -384,6 +439,9 @@ export function Workspace({
       setReceipt(null);
       setEditing(false);
       setNotifications([]);
+      setActivityCursor(null);
+      setUnreadCount(0);
+      activityGeneration.current++;
       setCapabilities([]);
       retries.current.clear();
       await refresh();
@@ -584,9 +642,7 @@ export function Workspace({
               }}
             >
               Activity
-              {notifications.some((n) => !n.readAt)
-                ? ` (${notifications.filter((n) => !n.readAt).length} unread)`
-                : ''}
+              {unreadCount ? ` (${unreadCount} unread)` : ''}
             </a>
             <a
               href="#workspace"
@@ -627,6 +683,9 @@ export function Workspace({
                   setSession(null);
                   setRecords([]);
                   setNotifications([]);
+                  setActivityCursor(null);
+                  setUnreadCount(0);
+                  activityGeneration.current++;
                   setCapabilities([]);
                   setView('home');
                   setSelected(null);
@@ -659,11 +718,15 @@ export function Workspace({
               </p>
               <button
                 className="button button-secondary"
-                disabled={pending}
+                disabled={pending || activityPending}
                 onClick={() => void refresh()}
               >
                 Refresh updates
               </button>
+              <p className="hint" role="status">
+                {notifications.length} loaded updates. {unreadCount} unread across your currently
+                accessible activity at the latest check. Refresh to see new changes.
+              </p>
               {notifications.length ? (
                 <ol className="activity-list">
                   {notifications.map((n) => {
@@ -695,23 +758,8 @@ export function Workspace({
                           {!n.readAt && (
                             <button
                               className="quiet-button"
-                              disabled={pending}
-                              onClick={async () => {
-                                setPending(true);
-                                setError('');
-                                try {
-                                  await api('notifications/read', { ids: [n.id] });
-                                  await refresh();
-                                } catch (e) {
-                                  setError(
-                                    e instanceof Error
-                                      ? e.message
-                                      : 'Update could not be marked read.',
-                                  );
-                                } finally {
-                                  setPending(false);
-                                }
-                              }}
+                              disabled={pending || activityPending}
+                              onClick={() => void markRead(n.id)}
                             >
                               Mark read
                             </button>
@@ -727,6 +775,17 @@ export function Workspace({
                   <p>Your records and their version history remain available.</p>
                 </div>
               )}
+              {activityCursor ? (
+                <button
+                  className="button button-secondary"
+                  disabled={pending || activityPending}
+                  onClick={() => void loadOlderActivity()}
+                >
+                  {activityPending ? 'Loading older updates...' : 'Load older updates'}
+                </button>
+              ) : notifications.length ? (
+                <p className="hint">All available updates loaded.</p>
+              ) : null}
             </section>
           )}
           {view === 'account' && !selected && !creating && (
