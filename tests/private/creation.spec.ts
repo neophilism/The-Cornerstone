@@ -21,6 +21,8 @@ async function prepare(page: Page, label: string) {
   await page.getByLabel('Direct loss', { exact: true }).fill('Invented creation loss');
   return title;
 }
+const creationAlert = (page: Page) =>
+  page.getByRole('region', { name: 'Prepare your new record', exact: true }).getByRole('alert');
 const endpoint = '**/api/private/records';
 const save = (page: Page) =>
   page.getByRole('button', { name: 'Save synthetic draft', exact: true });
@@ -65,11 +67,11 @@ test('a committed lost response and denied retry keep one immutable creation int
     else await route.fulfill({ response });
   });
   await save(page).click();
-  await expect(page.getByRole('alert')).toContainText('Creation is unconfirmed.');
+  await expect(creationAlert(page)).toContainText('Creation is unconfirmed.');
   await expect(page.getByLabel('Record title', { exact: true })).toBeDisabled();
   await expect(save(page)).toBeDisabled();
   await retry(page).click();
-  await expect(page.getByRole('alert')).toContainText('Creation is unconfirmed.');
+  await expect(creationAlert(page)).toContainText('Creation is unconfirmed.');
   await expect(page.getByLabel('Direct loss', { exact: true })).toBeDisabled();
   await accessibleCapture(page, 'private-creation-uncertain-' + info.project.name);
   await retry(page).click();
@@ -97,7 +99,7 @@ test('a malformed success after commit stays frozen until its original receipt i
     await route.fulfill({ response });
   });
   await save(page).click();
-  await expect(page.getByRole('alert')).toContainText('Creation is unconfirmed.');
+  await expect(creationAlert(page)).toContainText('Creation is unconfirmed.');
   await expect(save(page)).toBeDisabled();
   await retry(page).click();
   await expect(page.getByRole('heading', { name: title, exact: true })).toBeVisible();
@@ -116,7 +118,7 @@ test('a definite first rejection preserves editable input without claiming a sav
     }),
   );
   await save(page).click();
-  await expect(page.getByRole('alert')).toContainText('Synthetic fields need correction');
+  await expect(creationAlert(page)).toContainText('Synthetic fields need correction');
   await expect(page.getByLabel('Direct loss', { exact: true })).toHaveValue(
     'Invented creation loss',
   );
