@@ -29,7 +29,7 @@ import {
   decrypt,
   type Envelope,
 } from '@cornerstone/security';
-import { Store, PersistenceError } from '@cornerstone/store';
+import { Store, PersistenceError, verifySchema } from '@cornerstone/store';
 import { ProgramService } from './service.js';
 import { DraftAccessService } from './access.js';
 import { EvidenceService } from './evidence.js';
@@ -61,6 +61,7 @@ if (env['DATABASE_URL']) {
     readKey(env['FIELD_ENCRYPTION_KEY'], 'FIELD_ENCRYPTION_KEY'),
   );
   await store.verifyRole();
+  await verifySchema(store.pool);
   service = new ProgramService(store, mode, realm);
 }
 const app = await NestFactory.create<NestExpressApplication>(ApplicationModule, {

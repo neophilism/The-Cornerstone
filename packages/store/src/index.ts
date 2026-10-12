@@ -9,6 +9,12 @@ import {
 } from '@cornerstone/contracts';
 import { encrypt, decrypt, digest, type Envelope } from '@cornerstone/security';
 import { randomUUID } from 'node:crypto';
+export {
+  assertSchemaInventory,
+  verifySchema,
+  schemaInventory,
+  SchemaReadinessError,
+} from './readiness.js';
 
 export class PersistenceError extends Error {
   constructor(
