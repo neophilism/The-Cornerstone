@@ -63,7 +63,7 @@ test('unavailable exchange actions explain the prerequisite and reject direct su
       idempotencyKey: randomUUID(),
     },
   });
-  expect(rejected.status()).toBe(503);
+  expect(rejected.status()).toBe(409);
   expect(JSON.stringify(await rejected.json())).toContain('CUSTODY_REVIEW_REQUIRED');
   const current = await (
     await page.request.get(origin + '/api/private/records?recordId=' + record.id)
