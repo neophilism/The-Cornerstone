@@ -1,18 +1,19 @@
 {
   "updated": "2026-10-12",
-  "observedAt": "2026-10-12T22:34:00Z",
+  "observedAt": "2026-10-12T23:32:00Z",
   "scope": "public proposal and synthetic preparation; full program unfinished; no deployment inferred",
-  "lastVerifiedCommit": "afbdffdca03d4fd6856fc755541190ed43c99263",
-  "lastVerifiedTree": "97962feb8c315a34680a0c990513dbe19a13d33b",
-  "testedHead": "f3ee2d76b3a83b4c7fda70347715de95c5611c3a",
-  "lastVerifiedRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/38313896033",
-  "sourceEvidenceRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/38313895710",
-  "releasePullRequest": "https://github.com/neophilism/The-Cornerstone/pull/18",
+  "lastVerifiedCommit": "dc94adfb7085ec989c2a86aebce44ce1d0ab025a",
+  "lastVerifiedTree": "6b51dcba56acee94a2ff879eb04122a5ae3b6cb0",
+  "testedHead": "f1c0b3d3ac2e67f4b3d5cbfc156cad355435188c",
+  "lastVerifiedRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/38321432792",
+  "sourceEvidenceRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/38321432881",
+  "releasePullRequest": "https://github.com/neophilism/The-Cornerstone/pull/28",
   "observedMergedPullRequests": [
-    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 23, 24
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 23, 24, 25, 26, 27,
+    28
   ],
-  "openPullRequestsAtCheckpoint": [22, 25],
-  "localUnitTests": 236,
+  "openPullRequestsAtCheckpoint": [22],
+  "localUnitTests": 292,
   "livePublicUrl": "https://cornerstone-policy-preview.onrender.com",
   "deploymentVerifiedAtCheckpoint": false,
   "protectedIntake": false,
@@ -20,7 +21,7 @@
   "internalPlanPublicationApproved": false,
   "securityAssessment": "security/e2eesa-status.json",
   "pending": [
-    "recoverable new-record creation and other mutation/export boundaries",
+    "remaining non-draft commands and receipt/print/copy disclosure boundaries",
     "new deceased-worker filings and complete program journeys",
     "protected integrations, provider compatibility and independent review",
     "separate CircleCI connection and exact-suite acceptance"
@@ -43,5 +44,19 @@
     "originalVerifiedMappings": 11,
     "changed": false,
     "wholeProgramCompletionPercent": null
+  },
+  "verificationCounts": {
+    "unitTests": 292,
+    "postgresIntegrationSuites": 19,
+    "privateBrowserCases": 72,
+    "newInspectedCaptures": 10,
+    "additionalRosterCaptures": 2,
+    "scope": "combined accepted synthetic source; not an independent security assessment"
+  },
+  "ciDatabaseImage": {
+    "image": "postgis/postgis:18-3.6@sha256:60f6ad1d21ea86a67d47780b9a0d1e1d200500f62b19293fa834d0dea80b8677",
+    "observedPassingRun": "38319682293",
+    "observedJob": "115044519623",
+    "scope": "exact test image, not a production database or security certification"
   }
 }
