@@ -118,7 +118,7 @@ test('a stale save preserves input and requires explicit overlap choices before 
   expect(await page.evaluate(() => localStorage.length)).toBe(0);
 });
 
-test('a committed but lost save retries exactly once logically, without a second version', async ({
+test('a committed but lost save survives a denied retry without losing its original intent', async ({
   page,
 }, info) => {
   const { record } = await openDraft(page, 'lost response ' + info.project.name);
@@ -134,6 +134,8 @@ test('a committed but lost save retries exactly once logically, without a second
       expect(response.ok()).toBe(true);
       accepted = await response.json();
       await route.abort('failed');
+    } else if (requests.length === 2) {
+      await route.fulfill({ status: 403, json: { message: 'Synthetic transient retry denial' } });
     } else await route.continue();
   });
   await page.getByRole('button', { name: 'Save draft changes', exact: true }).click();
@@ -146,12 +148,30 @@ test('a committed but lost save retries exactly once logically, without a second
     path: `test-results/private-draft-uncertain-${info.project.name}.png`,
     fullPage: true,
   });
+  const denied = page.waitForResponse(
+    (response) => response.url().endsWith('/api/private/commands') && response.status() === 403,
+  );
+  await page.getByRole('button', { name: 'Retry exact save', exact: true }).click();
+  await denied;
+  await expect(page.getByRole('button', { name: 'Retry exact save', exact: true })).toBeEnabled();
+  await expect(page.getByLabel('Direct loss', { exact: true })).toBeDisabled();
+  await expect(
+    page.getByRole('button', { name: 'Save draft changes', exact: true }),
+  ).toBeDisabled();
+  await expect(
+    page.getByRole('alert').filter({ hasText: 'The save outcome is unknown.' }),
+  ).toBeVisible();
+  await page.screenshot({
+    path: `test-results/private-draft-denied-retry-${info.project.name}.png`,
+    fullPage: true,
+  });
   await page.getByRole('button', { name: 'Retry exact save', exact: true }).click();
   await expect(
     page.getByText('Simulation receipt \u00b7 version 2', { exact: true }),
   ).toBeVisible();
-  expect(requests).toHaveLength(2);
+  expect(requests).toHaveLength(3);
   expect(requests[1]).toEqual(requests[0]);
+  expect(requests[2]).toEqual(requests[0]);
   const actual = await (
     await page.request.get('/api/private/records?recordId=' + record.id)
   ).json();

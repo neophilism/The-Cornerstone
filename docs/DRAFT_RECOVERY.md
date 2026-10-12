@@ -12,6 +12,8 @@ A `STALE_VERSION` rejection means the attempted save did not write. The form ret
 
 A network interruption, timeout, server error or malformed success response can occur after a commit. The editor therefore freezes the exact command, original expected version and idempotency key, disables field changes, and offers **Retry exact save**. It does not label the save as failed or invent a new key. A matching historical record and receipt resolve the retry; current server permissions still govern recovery. Receipt correlation in the client is not a digital-signature or independent-attestation check.
 
+A rejected retry does not establish the outcome of the original unconfirmed save. The editor retains the frozen command after any unsuccessful retry, including authorization, rate-limit or stale-version responses; it neither unlocks changed input nor starts a three-way rebase from that later response. The user can keep retrying the original intent or deliberately close the editor under the stated in-memory recovery boundary. A definite first rejection still permits correction or the normal stale-version review.
+
 Program create/command replay now requires an accessible current record and an accessible historical version. Previously, access loss could produce a success-shaped result containing a receipt and `record: null`. The replay path now returns a clear not-found/no-longer-accessible rejection. This does not delete receipts or change their underlying retention policy. An allowed historical replay returns its original version, not a claim that it is the latest record version, and never overwrites a later saved version.
 
 ## Navigation and privacy

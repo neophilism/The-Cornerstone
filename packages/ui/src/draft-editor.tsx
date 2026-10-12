@@ -97,7 +97,7 @@ export function DraftEditor({
     setAttempt(command);
   }
 
-  async function send(command: Command) {
+  async function send(command: Command, retry = false) {
     const current = start();
     remember(command);
     let accepted: ReturnType<typeof draftSaveResult> | null = null;
@@ -109,7 +109,7 @@ export function DraftEditor({
       setDirty(false);
     } catch (e) {
       if (generation.current !== current) return;
-      const outcome = saveFailure(e);
+      const outcome = saveFailure(e, retry);
       if (outcome !== 'uncertain') remember(null);
       if (outcome === 'stale') {
         setStale(true);
@@ -264,7 +264,7 @@ export function DraftEditor({
             className="button"
             disabled={busy || disabled}
             onClick={() => {
-              if (!active.current && attemptRef.current) void send(attemptRef.current);
+              if (!active.current && attemptRef.current) void send(attemptRef.current, true);
             }}
           >
             Retry exact save
