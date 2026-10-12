@@ -1,3 +1,4 @@
+import { ReminderPanel } from './reminder.js';
 import type { CaseRecord } from '@cornerstone/contracts';
 import { actionUnavailable, workflow } from '@cornerstone/domain';
 const preparation: Record<string, [string, string]> = {
@@ -100,12 +101,16 @@ export function RecordNextStep({ record }: { record: CaseRecord }) {
             'You may voluntarily organize with other eligible people. Founding consent and a closed roll come before opportunity rankings.',
           ]
         : copy[record.state];
-  if (!message) return null;
   return (
-    <aside className="journey-guide">
-      <p className="eyebrow">Your next step</p>
-      <h2>{message[0]}</h2>
-      <p>{message[1]}</p>
-    </aside>
+    <>
+      {message && (
+        <aside className="journey-guide">
+          <p className="eyebrow">Your next step</p>
+          <h2>{message[0]}</h2>
+          <p>{message[1]}</p>
+        </aside>
+      )}
+      <ReminderPanel key={record.id} recordId={record.id} />
+    </>
   );
 }
