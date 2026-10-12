@@ -26,6 +26,7 @@ import { GovernanceSummary } from './governance.js';
 import { CompactSummary } from './compacts.js';
 import { WorkflowFields, formInput } from './workflow-fields.js';
 import { DraftEditor } from './draft-editor.js';
+import { RecordExporter } from './record-exporter.js';
 import { WorkspaceRequestError } from './draft-review.js';
 export { WorkflowFields } from './workflow-fields.js';
 
@@ -757,12 +758,6 @@ export function Workspace({
                     {editing ? 'Cancel editing' : 'Edit draft'}
                   </button>
                 ) : null}
-                <button
-                  className="button button-secondary"
-                  onClick={() => download(selected, 'cornerstone-synthetic-record.json')}
-                >
-                  Export record
-                </button>
                 <button className="quiet-button" onClick={() => window.print()}>
                   Print record
                 </button>
@@ -779,6 +774,20 @@ export function Workspace({
                   Copy record ID
                 </button>
               </div>
+              <RecordExporter
+                key={
+                  session.actor.id +
+                  ':' +
+                  selected.realm +
+                  ':' +
+                  selected.id +
+                  ':' +
+                  selected.version
+                }
+                record={selected}
+                api={api}
+                disabled={pending || editing || evidenceBusy}
+              />
               {editing ? (
                 <DraftEditor
                   key={selected.id}
