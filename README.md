@@ -35,3 +35,7 @@ The synthetic inbox supports scoped continuation pages and a full unread count; 
 Draft editing preserves unsaved input through version conflicts and supports exact-request retry after an uncertain save. See `docs/DRAFT_RECOVERY.md` for explicit comparison, permission checks and the in-memory-only recovery boundary.
 
 Private portal/staff transport preserves uncertain write outcomes and enforces bounded, non-cached requests. After building those apps, `pnpm test:proxy` checks their compiled routes against a synthetic loopback upstream. See `docs/PRIVATE_PROXY.md`; these HTTP checks do not replace browser acceptance or protected-production review.
+
+## End-to-End Everywhere progress
+
+The canonical [security/e2eesa-status.json](security/e2eesa-status.json) records standard implementation, complete testing and independent expert review separately. Engine Room reads it automatically from GitHub. All initial stages are pending; existing profile locks and approved decisions remain authoritative. Read [adoption and independent-account instructions](docs/E2EESA_ADOPTION.md), and run `python3 scripts/validate_e2eesa_status.py`. Record validation does not establish product security or certification.
