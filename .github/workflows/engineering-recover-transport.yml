@@ -13,7 +13,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - name: Recover exact checksummed input and use unchanged guarded application
+      - name: Recover exact checksummed input and use guarded application
         env:
           TRANSPORT_TOKEN: ${{ github.token }}
         run: |
@@ -32,15 +32,18 @@ jobs:
           request = json.loads(raw)
           assert request['target'] == 'cornerstone/activity-pages'
           assert request['base'] == 'fdf142a4093d905a326edbe27a74e0a6124c19f5'
-          path.write_text(json.dumps(wire))
+          pathlib.Path('/tmp/repaired-transport.json').write_text(json.dumps(wire))
           workflow = pathlib.Path('.github/workflows/engineering-edits.yml')
           assert subprocess.check_output(['git', 'hash-object', str(workflow)]).decode().strip() == 'd8c490e647486aa8120b003baf8ff83ac7f0d354'
-          code = workflow.read_text().split("python3 - <<'PY'\n", 1)[1].split('\n          PY\n', 1)[0]
+          code = textwrap.dedent(workflow.read_text().split("python3 - <<'PY'\n", 1)[1].split('\n          PY\n', 1)[0])
+          needle = "pathlib.Path('engineering/edits.json').read_bytes()"
+          assert code.count(needle) == 1
+          code = code.replace(needle, "pathlib.Path('/tmp/repaired-transport.json').read_bytes()", 1)
           os.environ['GIT_TERMINAL_PROMPT'] = '0'
           os.environ['GIT_CONFIG_COUNT'] = '1'
           os.environ['GIT_CONFIG_KEY_0'] = 'http.https://github.com/.extraheader'
           os.environ['GIT_CONFIG_VALUE_0'] = 'AUTHORIZATION: basic ' + base64.b64encode(('x-access-token:' + os.environ['TRANSPORT_TOKEN']).encode()).decode()
-          exec(compile(textwrap.dedent(code), 'guarded-engineering-edits', 'exec'), {})
+          exec(compile(code, 'guarded-engineering-edits', 'exec'), {})
           PY
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
