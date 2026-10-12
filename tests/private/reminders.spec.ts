@@ -79,6 +79,15 @@ test('personal reminders require consent, omit case data and do not escape a clo
   ).toBeVisible();
   expect(downloads).toBe(2);
   await page.unroute(endpoint);
+  await page.route(endpoint, (route) =>
+    route.fulfill({ status: 200, json: { records: [{ id: record.id }] } }),
+  );
+  await button.click();
+  await expect(
+    page.getByRole('alert').filter({ hasText: 'No reminder was exported.' }),
+  ).toBeVisible();
+  expect(downloads).toBe(2);
+  await page.unroute(endpoint);
   let release!: () => void;
   let observed!: () => void;
   let settled!: () => void;

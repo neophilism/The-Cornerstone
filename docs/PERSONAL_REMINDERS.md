@@ -11,3 +11,5 @@ The writer accepts only `date` and `consent: true`. It validates actual dates, l
 Standards basis: RFC 5545 sections 3.1, 3.6.1, 3.8.2.2, 3.8.2.4, 3.8.4.7 and 3.8.7.2; https://www.rfc-editor.org/rfc/rfc5545.html. No live calendar-provider behavior is attested.
 
 Verification is in `tests/reminders.test.ts` and `tests/private/reminders.spec.ts`. The browser journey covers consent, actual file bytes, repeat export, revoked access, navigation during a held response, accessibility and desktop/mobile layout. Local and remote execution results are recorded separately in the PR and progress checkpoint; a test's presence is not evidence it passed. No migration or protected-production activation is included.
+
+Access-check responses must contain exactly one complete, schema-valid record with the requested ID. A success status with only an ID, multiple records, an invalid record or an unrelated record does not authorize an export. The validation helper returns no case data. Unit regressions are in `tests/reminder-access.test.ts`; the browser scenario additionally checks an ID-only success response. The consent disclosure includes the generation timestamp.

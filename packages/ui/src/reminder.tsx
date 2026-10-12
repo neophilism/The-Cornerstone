@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
 import { personalCalendarReminder } from '@cornerstone/domain/reminders';
+import { verifyReminderAccess } from './reminder-access.js';
 
 /** Independent from case fields: only access is checked, never copied into the file. */
 export function ReminderPanel({ recordId }: { recordId: string }) {
@@ -49,20 +50,7 @@ export function ReminderPanel({ recordId }: { recordId: string }) {
         throw Error('Current record access could not be verified. No reminder was exported.');
       const result: unknown = await response.json();
       if (generation.current !== current || request.signal.aborted) return;
-      if (
-        !result ||
-        typeof result !== 'object' ||
-        !('records' in result) ||
-        !Array.isArray(result.records) ||
-        !result.records.some(
-          (record: unknown) =>
-            record !== null &&
-            typeof record === 'object' &&
-            'id' in record &&
-            record.id === recordId,
-        )
-      )
-        throw Error('Current record access could not be verified. No reminder was exported.');
+      verifyReminderAccess(result, recordId);
       prepared.current = { date, content };
       const url = URL.createObjectURL(new Blob([content], { type: 'text/calendar;charset=utf-8' }));
       const link = document.createElement('a');
@@ -129,10 +117,11 @@ export function ReminderPanel({ recordId }: { recordId: string }) {
           </label>
         </div>
         <p className="hint">
-          The file contains a generic title, date, random event identifier and software name. It
-          excludes case titles, record identifiers, private text, contacts and links. Imported
-          copies cannot be recalled; a calendar may ignore the private classification. Repeated
-          downloads here reuse the event identifier, but import behavior varies.
+          The file contains a generic title, chosen date, generation timestamp, random event
+          identifier and software name. It excludes case titles, record identifiers, private text,
+          contacts and links. Imported copies cannot be recalled; a calendar may ignore the private
+          classification. Repeated downloads here reuse the event identifier, but import behavior
+          varies.
         </p>
         <button className="button button-secondary" disabled={busy || !date || !consent}>
           {busy ? 'Preparing reminder...' : 'Download calendar reminder'}
