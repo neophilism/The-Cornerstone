@@ -115,6 +115,35 @@ export const ActivityNotificationSchema = z
   })
   .strict();
 export type ActivityNotification = z.infer<typeof ActivityNotificationSchema>;
+export const ActivityPageQuerySchema = z
+  .object({
+    limit: z.coerce.number().int().min(1).max(100).default(50),
+    cursor: z
+      .string()
+      .min(1)
+      .max(2048)
+      .regex(/^[A-Za-z0-9_-]+$/)
+      .optional(),
+  })
+  .strict();
+export const ActivityCursorSchema = z
+  .object({ version: z.literal(1), id: IdSchema, createdAt: InstantSchema })
+  .strict();
+export const ActivityPageSchema = z
+  .object({
+    notifications: z.array(ActivityNotificationSchema).max(100),
+    nextCursor: z.string().max(2048).nullable(),
+    unreadCount: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),
+  })
+  .strict();
+export const ActivityReadResultSchema = z
+  .object({
+    read: z.literal(true),
+    legalService: z.literal(false),
+    marked: z.array(z.object({ id: IdSchema, readAt: InstantSchema }).strict()).max(100),
+    unreadCount: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),
+  })
+  .strict();
 export const MarkActivityReadSchema = z.object({ ids: z.array(IdSchema).min(1).max(100) }).strict();
 export const DateSchema = z
   .string()

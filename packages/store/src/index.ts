@@ -1,6 +1,9 @@
 import pg from 'pg';
 import {
-  ActivityNotificationSchema,
+  ActivityPageQuerySchema,
+  ActivityCursorSchema,
+  ActivityPageSchema,
+  ActivityReadResultSchema,
   RecordPageQuerySchema,
   RecordCursorSchema,
   type Actor,
@@ -353,33 +356,95 @@ export class Store {
     await this.pool.end();
   }
   async notifications(actor: Actor) {
+    return (await this.notificationPage(actor, { limit: 100 })).notifications;
+  }
+  async notificationPage(actor: Actor, input: unknown = {}) {
+    const query = ActivityPageQuerySchema.parse(input);
+    const binding = `cornerstone:activity-page:${actor.realm}:${actor.id}`;
+    let before: { id: string; createdAt: string } | undefined;
+    if (query.cursor) {
+      try {
+        before = ActivityCursorSchema.parse(
+          this.open(JSON.parse(Buffer.from(query.cursor, 'base64url').toString('utf8')), binding),
+        );
+      } catch {
+        throw new PersistenceError(
+          'INVALID_CURSOR',
+          'This activity page is unavailable. Refresh your updates to continue.',
+          400,
+        );
+      }
+    }
     return this.transaction(actor, async (tx) => {
-      const r = await tx.query(
-        'SELECT * FROM activity_notifications ORDER BY created_at DESC,id LIMIT 100',
+      // One statement gives the page and unread total the same database snapshot.
+      // RLS checks current ownership/grants/conflicts again on every request.
+      const result = await tx.query(
+        `WITH page AS (
+          SELECT * FROM activity_notifications
+          WHERE realm=$1 AND recipient_id=$2 AND NOT(record_id=ANY($3::uuid[]))
+          AND ($4::timestamptz IS NULL OR (created_at,id)<($4::timestamptz,$5::uuid))
+          ORDER BY created_at DESC,id DESC LIMIT $6
+        ) SELECT
+          (SELECT count(*) FROM activity_notifications
+           WHERE realm=$1 AND recipient_id=$2 AND read_at IS NULL
+           AND NOT(record_id=ANY($3::uuid[]))) AS unread_count,
+          COALESCE((SELECT jsonb_agg(jsonb_build_object(
+            'id',id,'recordId',record_id,'receiptId',receipt_id,'version',record_version,
+            'action',action,'createdAt',to_char(created_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"'),
+            'readAt',to_char(read_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"'),
+            'classification','activity','channel','in_app','legalService',false,'realm',realm
+          ) ORDER BY created_at DESC,id DESC) FROM page),'[]'::jsonb) AS notifications`,
+        [
+          actor.realm,
+          actor.id,
+          actor.conflicts,
+          before?.createdAt ?? null,
+          before?.id ?? null,
+          query.limit + 1,
+        ],
       );
-      return r.rows.map((n) =>
-        ActivityNotificationSchema.parse({
-          id: n.id,
-          recordId: n.record_id,
-          receiptId: n.receipt_id,
-          version: n.record_version,
-          action: n.action,
-          createdAt: n.created_at.toISOString(),
-          readAt: n.read_at?.toISOString() ?? null,
-          classification: 'activity',
-          channel: 'in_app',
-          legalService: false,
-          realm: n.realm,
-        }),
-      );
+      const row = result.rows[0];
+      if (!row)
+        throw new PersistenceError('ACTIVITY_UNAVAILABLE', 'Activity could not be read.', 503);
+      const all = row.notifications as Array<{ id: string; createdAt: string }>;
+      const notifications = all.slice(0, query.limit);
+      const last = notifications.at(-1);
+      // Keep PostgreSQL microseconds: Date would truncate the page boundary.
+      const nextCursor =
+        all.length > query.limit && last
+          ? Buffer.from(
+              JSON.stringify(
+                this.seal({ version: 1, id: last.id, createdAt: last.createdAt }, binding),
+              ),
+            ).toString('base64url')
+          : null;
+      return ActivityPageSchema.parse({
+        notifications,
+        nextCursor,
+        unreadCount: Number(row.unread_count),
+      });
     });
   }
   async markActivityRead(actor: Actor, ids: string[]) {
     return this.transaction(actor, async (tx) => {
-      await tx.query(
-        'UPDATE activity_notifications SET read_at=COALESCE(read_at,now()) WHERE id=ANY($1::uuid[])',
-        [ids],
+      const result = await tx.query(
+        `UPDATE activity_notifications SET read_at=COALESCE(read_at,now())
+         WHERE id=ANY($1::uuid[]) AND realm=$2 AND recipient_id=$3
+         AND NOT(record_id=ANY($4::uuid[]))
+         RETURNING id,to_char(read_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS read_at`,
+        [ids, actor.realm, actor.id, actor.conflicts],
       );
+      const count = await tx.query(
+        `SELECT count(*) AS total FROM activity_notifications
+         WHERE realm=$1 AND recipient_id=$2 AND read_at IS NULL AND NOT(record_id=ANY($3::uuid[]))`,
+        [actor.realm, actor.id, actor.conflicts],
+      );
+      return ActivityReadResultSchema.parse({
+        read: true,
+        legalService: false,
+        marked: result.rows.map((n) => ({ id: n.id, readAt: n.read_at })),
+        unreadCount: Number(count.rows[0]?.total ?? -1),
+      });
     });
   }
 }

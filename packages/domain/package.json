@@ -9,6 +9,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./reminders": {
+      "types": "./dist/reminders.d.ts",
+      "default": "./dist/reminders.js"
     }
   },
   "scripts": {

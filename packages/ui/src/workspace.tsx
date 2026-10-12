@@ -1,7 +1,8 @@
 'use client';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import {
-  ActivityNotificationSchema,
+  ActivityPageSchema,
+  ActivityReadResultSchema,
   draftAccessKinds,
   RecordCapabilitiesSchema,
   type RecordCapabilities,
@@ -11,196 +12,24 @@ import {
   type Kind,
   type Receipt,
 } from '@cornerstone/contracts';
-import {
-  workflows,
-  workflowGroups,
-  workflow,
-  actionUnavailable,
-  type Field,
-} from '@cornerstone/domain';
-import { StructuredField, listFields } from './structured-field.js';
+import { workflows, workflowGroups, workflow, actionUnavailable } from '@cornerstone/domain';
 import { AccountPanel } from './account.js';
 import { DraftAccessPanel } from './draft-access.js';
 import { EvidencePanel } from './evidence.js';
 import { MembershipPanel, FoundingConsentPanel, MemberBallotPanel } from './membership.js';
-import { EvidenceChoice, RecordChoice, IncomeShare, isRecordReference } from './record-fields.js';
+import { isRecordReference } from './record-fields.js';
 import { PreparationGuide, RecordNextStep } from './journey.js';
 import { CalculationSummary } from './financial-fields.js';
 import { SuccessionSummary } from './succession.js';
 import { ClaimSurvivalSummary } from './claim-survival.js';
 import { GovernanceSummary } from './governance.js';
-import { CommercialTermsEditor, CompactSummary } from './compacts.js';
+import { CompactSummary } from './compacts.js';
+import { WorkflowFields, formInput } from './workflow-fields.js';
+import { DraftEditor } from './draft-editor.js';
+import { WorkspaceRequestError } from './draft-review.js';
+export { WorkflowFields } from './workflow-fields.js';
 
 type Session = { actor: Actor; csrf: string; mode: string; local: boolean };
-export function WorkflowFields({
-  fields,
-  prefix,
-  values = {},
-  records = [],
-  record,
-  api,
-}: {
-  fields: Field[];
-  prefix: string;
-  values?: Record<string, unknown>;
-  records?: CaseRecord[];
-  record?: CaseRecord;
-  api?: (path: string, body?: unknown) => Promise<any>;
-}) {
-  const [offerId, setOfferId] = useState(String(values['offerId'] ?? ''));
-  return (
-    <>
-      {fields
-        .filter(
-          (f) =>
-            !fields.some((other) => other.key === 'financialTerms') ||
-            !['rateAct', 'financialVersion'].includes(f.key),
-        )
-        .filter(
-          (f) =>
-            ![
-              'accessibleMeetings',
-              'accessibleVoting',
-              'accessibleRecords',
-              'practicalDeliberation',
-            ].includes(f.key) ||
-            (Array.isArray(record?.data['units']) && record.data['units'].length > 2500),
-        )
-        .map((f) =>
-          f.key === 'evidenceIds' ? (
-            <EvidenceChoice
-              key={`${prefix}:${record?.id}:${record?.version}:${f.key}`}
-              field={f}
-              prefix={prefix}
-              record={record}
-              value={values[f.key]}
-              api={api}
-            />
-          ) : isRecordReference(f.key) ? (
-            <RecordChoice
-              key={f.key}
-              field={f}
-              prefix={prefix}
-              value={values[f.key]}
-              records={records}
-              onChange={f.key === 'offerId' ? setOfferId : undefined}
-            />
-          ) : f.key === 'terms' ? (
-            <CommercialTermsEditor
-              key={f.key}
-              field={f}
-              prefix={prefix}
-              value={values[f.key]}
-              records={records}
-              offerId={offerId}
-              api={api}
-            />
-          ) : f.key === 'earnedIncomeShare' ? (
-            <IncomeShare key={f.key} prefix={prefix} value={values[f.key]} />
-          ) : f.type === 'json' ? (
-            <StructuredField
-              key={f.key}
-              field={f}
-              prefix={prefix}
-              value={values[f.key]}
-              records={records}
-            />
-          ) : f.type === 'boolean' ? (
-            <div className="check-field" key={f.key}>
-              <input
-                type="checkbox"
-                name={f.key}
-                id={`${prefix}-${f.key}`}
-                defaultChecked={values[f.key] === true}
-              />
-              <label htmlFor={`${prefix}-${f.key}`}>
-                {f.label}
-                {f.required ? ' (required finding)' : ''}
-              </label>
-            </div>
-          ) : (
-            <div className="field" key={f.key}>
-              <label htmlFor={`${prefix}-${f.key}`}>
-                {f.label}
-                {!f.required ? ' (optional)' : ''}
-              </label>
-              {f.type === 'select' ? (
-                <select
-                  id={`${prefix}-${f.key}`}
-                  name={f.key}
-                  required={f.required}
-                  defaultValue={String(values[f.key] ?? '')}
-                >
-                  <option value="">Choose an option</option>
-                  {f.options?.map((o) => (
-                    <option value={o} key={o}>
-                      {o.replaceAll('_', ' ')}
-                    </option>
-                  ))}
-                </select>
-              ) : f.type === 'textarea' ? (
-                <textarea
-                  id={`${prefix}-${f.key}`}
-                  name={f.key}
-                  required={f.required}
-                  rows={3}
-                  defaultValue={String(values[f.key] ?? '')}
-                />
-              ) : (
-                <input
-                  id={`${prefix}-${f.key}`}
-                  name={f.key}
-                  type={f.type === 'date' ? 'date' : f.type === 'number' ? 'number' : 'text'}
-                  required={f.required}
-                  min={f.type === 'number' ? 0 : undefined}
-                  step={f.type === 'number' ? 'any' : undefined}
-                  inputMode={f.type === 'money' ? 'decimal' : undefined}
-                  pattern={f.type === 'money' ? '(0|[1-9][0-9]*)(\\.[0-9]{2})?' : undefined}
-                  defaultValue={String(values[f.key] ?? '')}
-                />
-              )}
-              <span className="hint">
-                {f.help ||
-                  (f.type === 'money' ? 'Use USD, with two digits for cents when included.' : '')}
-              </span>
-            </div>
-          ),
-        )}
-    </>
-  );
-}
-function formInput(form: HTMLFormElement, fields: Field[]) {
-  const data = new FormData(form);
-  const input: Record<string, unknown> = {};
-  for (const f of fields) {
-    const v = data.get(f.key);
-    if (f.key === 'evidenceIds') {
-      if (v !== null)
-        input[f.key] = String(v)
-          .split(/\r?\n/)
-          .map((s) => s.trim())
-          .filter(Boolean);
-      continue;
-    }
-    if (f.type === 'boolean') {
-      input[f.key] = v === 'on';
-      continue;
-    }
-    if (typeof v !== 'string' || !v.trim()) continue;
-    input[f.key] =
-      f.type === 'number'
-        ? Number(v)
-        : f.type === 'json'
-          ? listFields.has(f.key)
-            ? v
-                .split(/\r?\n/)
-                .map((s) => s.trim())
-                .filter(Boolean)
-            : JSON.parse(v)
-          : v;
-  }
-  return input;
-}
 function download(value: unknown, name: string) {
   const url = URL.createObjectURL(
     new Blob([JSON.stringify(value, null, 2)], { type: 'application/json' }),
@@ -237,6 +66,10 @@ export function Workspace({
     evidenceBusyRef.current = busy;
     setEvidenceBusy(busy);
   }
+  const [activityCursor, setActivityCursor] = useState<string | null>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [activityPending, setActivityPending] = useState(false);
+  const activityGeneration = useRef(0);
   const [recordSearch, setRecordSearch] = useState('');
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [pagePending, setPagePending] = useState(false);
@@ -268,24 +101,33 @@ export function Workspace({
       },
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
     });
+    // Expired sessions clear private UI even if a proxy returns a non-JSON error body.
+    if (response.status === 401) {
+      recordGeneration.current++;
+      setSession(null);
+      setRecords([]);
+      setNotifications([]);
+      setActivityCursor(null);
+      setUnreadCount(0);
+      activityGeneration.current++;
+      setCapabilities([]);
+      setSelected(null);
+      setReceipt(null);
+      setNextCursor(null);
+    }
     const data = await response.json();
     if (!response.ok) {
-      if (response.status === 401) {
-        recordGeneration.current++;
-        setSession(null);
-        setRecords([]);
-        setNotifications([]);
-        setCapabilities([]);
-        setSelected(null);
-        setReceipt(null);
-        setNextCursor(null);
-      }
-      throw Error(data.message || 'The request could not be completed.');
+      throw new WorkspaceRequestError(
+        response.status,
+        typeof data?.code === 'string' ? data.code : 'REQUEST_FAILED',
+        typeof data?.message === 'string' ? data.message : 'The request could not be completed.',
+      );
     }
     return data;
   }
   async function refresh() {
     const generation = ++recordGeneration.current;
+    activityGeneration.current++;
     try {
       const me = await api('me');
       if (generation !== recordGeneration.current) return [];
@@ -295,9 +137,11 @@ export function Workspace({
       setRecords(list.records);
       setNextCursor(list.nextCursor);
       setCapabilities(RecordCapabilitiesSchema.array().parse(list.capabilities));
-      const inbox = await api('notifications');
+      const inbox = ActivityPageSchema.parse(await api('notifications'));
       if (generation !== recordGeneration.current) return [];
-      setNotifications(ActivityNotificationSchema.array().parse(inbox.notifications));
+      setNotifications(inbox.notifications);
+      setActivityCursor(inbox.nextCursor);
+      setUnreadCount(inbox.unreadCount);
       return list.records as CaseRecord[];
     } catch (e) {
       if (generation === recordGeneration.current)
@@ -305,6 +149,50 @@ export function Workspace({
       return [];
     } finally {
       setLoading(false);
+    }
+  }
+  async function loadOlderActivity() {
+    if (!activityCursor || activityPending || pending) return;
+    const generation = recordGeneration.current;
+    const request = ++activityGeneration.current;
+    setActivityPending(true);
+    setError('');
+    try {
+      const page = ActivityPageSchema.parse(
+        await api('notifications?cursor=' + encodeURIComponent(activityCursor)),
+      );
+      if (generation !== recordGeneration.current || request !== activityGeneration.current) return;
+      setNotifications((previous) => [
+        ...new Map([...previous, ...page.notifications].map((n) => [n.id, n])).values(),
+      ]);
+      setActivityCursor(page.nextCursor);
+      setUnreadCount(page.unreadCount);
+    } catch (e) {
+      if (generation === recordGeneration.current && request === activityGeneration.current)
+        setError(e instanceof Error ? e.message : 'Older activity could not be loaded.');
+    } finally {
+      setActivityPending(false);
+    }
+  }
+  async function markRead(id: string) {
+    if (pending || activityPending) return;
+    const generation = recordGeneration.current;
+    const request = ++activityGeneration.current;
+    setPending(true);
+    setError('');
+    try {
+      const result = ActivityReadResultSchema.parse(await api('notifications/read', { ids: [id] }));
+      if (generation !== recordGeneration.current || request !== activityGeneration.current) return;
+      const marked = new Map(result.marked.map((n) => [n.id, n.readAt]));
+      setNotifications((previous) =>
+        previous.map((n) => (marked.has(n.id) ? { ...n, readAt: marked.get(n.id)! } : n)),
+      );
+      setUnreadCount(result.unreadCount);
+    } catch (e) {
+      if (generation === recordGeneration.current && request === activityGeneration.current)
+        setError(e instanceof Error ? e.message : 'Update could not be marked read.');
+    } finally {
+      setPending(false);
     }
   }
   async function loadOlderRecords() {
@@ -384,6 +272,9 @@ export function Workspace({
       setReceipt(null);
       setEditing(false);
       setNotifications([]);
+      setActivityCursor(null);
+      setUnreadCount(0);
+      activityGeneration.current++;
       setCapabilities([]);
       retries.current.clear();
       await refresh();
@@ -584,9 +475,7 @@ export function Workspace({
               }}
             >
               Activity
-              {notifications.some((n) => !n.readAt)
-                ? ` (${notifications.filter((n) => !n.readAt).length} unread)`
-                : ''}
+              {unreadCount ? ` (${unreadCount} unread)` : ''}
             </a>
             <a
               href="#workspace"
@@ -627,6 +516,9 @@ export function Workspace({
                   setSession(null);
                   setRecords([]);
                   setNotifications([]);
+                  setActivityCursor(null);
+                  setUnreadCount(0);
+                  activityGeneration.current++;
                   setCapabilities([]);
                   setView('home');
                   setSelected(null);
@@ -659,11 +551,15 @@ export function Workspace({
               </p>
               <button
                 className="button button-secondary"
-                disabled={pending}
+                disabled={pending || activityPending}
                 onClick={() => void refresh()}
               >
                 Refresh updates
               </button>
+              <p className="hint" role="status">
+                {notifications.length} loaded updates. {unreadCount} unread across your currently
+                accessible activity at the latest check. Refresh to see new changes.
+              </p>
               {notifications.length ? (
                 <ol className="activity-list">
                   {notifications.map((n) => {
@@ -695,23 +591,8 @@ export function Workspace({
                           {!n.readAt && (
                             <button
                               className="quiet-button"
-                              disabled={pending}
-                              onClick={async () => {
-                                setPending(true);
-                                setError('');
-                                try {
-                                  await api('notifications/read', { ids: [n.id] });
-                                  await refresh();
-                                } catch (e) {
-                                  setError(
-                                    e instanceof Error
-                                      ? e.message
-                                      : 'Update could not be marked read.',
-                                  );
-                                } finally {
-                                  setPending(false);
-                                }
-                              }}
+                              disabled={pending || activityPending}
+                              onClick={() => void markRead(n.id)}
                             >
                               Mark read
                             </button>
@@ -727,6 +608,17 @@ export function Workspace({
                   <p>Your records and their version history remain available.</p>
                 </div>
               )}
+              {activityCursor ? (
+                <button
+                  className="button button-secondary"
+                  disabled={pending || activityPending}
+                  onClick={() => void loadOlderActivity()}
+                >
+                  {activityPending ? 'Loading older updates...' : 'Load older updates'}
+                </button>
+              ) : notifications.length ? (
+                <p className="hint">All available updates loaded.</p>
+              ) : null}
             </section>
           )}
           {view === 'account' && !selected && !creating && (
@@ -814,7 +706,8 @@ export function Workspace({
               <CompactSummary
                 record={selected}
                 onOpen={(id) => void openRecord(id)}
-                {...(selected.kind === 'compact' &&
+                {...(!editing &&
+                selected.kind === 'compact' &&
                 selected.state === 'draft' &&
                 permitted.includes('submit') &&
                 session.actor.roles.includes('member')
@@ -838,7 +731,7 @@ export function Workspace({
               <GovernanceSummary
                 record={selected}
                 onOpen={(id) => void openRecord(id)}
-                {...(selected.kind === 'opportunity' && permitted.includes('adopt_plan')
+                {...(!editing && selected.kind === 'opportunity' && permitted.includes('adopt_plan')
                   ? {
                       onVote: () => {
                         setCreationDefaults({
@@ -887,28 +780,21 @@ export function Workspace({
                 </button>
               </div>
               {editing ? (
-                <form
-                  key={`${selected.id}:${selected.version}`}
-                  className="action-panel form-stack"
-                  onSubmit={(e) => void command(e, 'save_draft')}
-                >
-                  <h2>Continue your draft</h2>
-                  <p className="muted">
-                    Saving preserves the previous version and creates a new receipt. It does not
-                    submit the record for review.
-                  </p>
-                  <WorkflowFields
-                    fields={workflow(selected.kind).createFields}
-                    prefix="edit"
-                    values={selected.data}
-                    records={records}
-                    record={selected}
-                    api={api}
-                  />
-                  <button className="button" disabled={pending}>
-                    {pending ? 'Saving…' : 'Save draft changes'}
-                  </button>
-                </form>
+                <DraftEditor
+                  key={selected.id}
+                  record={selected}
+                  records={records}
+                  api={api}
+                  disabled={pending || evidenceBusy}
+                  onBusyChange={setPending}
+                  onSaved={(result) => {
+                    setReceipt(result.receipt);
+                    setSelected(result.record);
+                    setEditing(false);
+                    setError('');
+                    void refresh();
+                  }}
+                />
               ) : null}
               {selected.kind === 'financial_schedule' && (
                 <CalculationSummary value={selected.data['calculation']} />
@@ -986,153 +872,167 @@ export function Workspace({
                     ))}
                 </dl>
               </details>
-              {selected.kind === 'association' && (
-                <FoundingConsentPanel
-                  record={selected}
-                  actorId={session.actor.id}
-                  api={api}
-                  onChanged={async (result) => {
-                    setReceipt(result.receipt);
-                    setSelected(result.record);
-                    await refresh();
-                  }}
-                />
+              {editing && (
+                <p className="hint">
+                  Finish or cancel draft editing before using other record actions. Closing this
+                  view discards unsaved input.
+                </p>
               )}
-              {selected.kind === 'resolution' && (
-                <MemberBallotPanel
-                  record={selected}
-                  canVote={permitted.includes('record_vote')}
-                  api={api}
-                  onChanged={async (result) => {
-                    setReceipt(result.receipt);
-                    setSelected(result.record);
-                    await refresh();
-                  }}
-                />
-              )}
-              <div className="record-evidence">
-                {!['sealed_ranking', 'draw', 'round'].includes(selected.kind) && (
-                  <EvidencePanel
-                    record={selected}
-                    actorId={session.actor.id}
-                    canAttach={permitted.includes('attach_evidence')}
-                    onBusyChange={evidenceBusyChanged}
-                    api={api}
-                    onChanged={async (result) => {
-                      setReceipt(result.receipt);
-                      setSelected(result.record);
-                      setEditing(false);
-                      await refresh();
-                    }}
-                  />
-                )}
-              </div>
               <fieldset
-                className="workflow-actions"
-                disabled={pending || evidenceBusy}
-                aria-busy={pending || evidenceBusy}
+                disabled={editing}
+                aria-label="Other record actions"
                 style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}
               >
-                {workflow(selected.kind)
-                  .actions.filter(
-                    (a) =>
-                      a.from.includes(selected.state) &&
-                      permitted.includes(a.key) &&
-                      !(selected.kind === 'resolution' && a.key === 'record_vote'),
-                  )
-                  .map((a) => {
-                    const unavailable = actionUnavailable(selected.kind, a.key);
-                    if (unavailable)
-                      return (
-                        <section
-                          className="action-panel"
-                          key={a.key}
-                          aria-labelledby={`unavailable-${a.key}`}
-                        >
-                          <h2 id={`unavailable-${a.key}`}>{a.label}</h2>
-                          <p>
-                            <strong>Not available in this release</strong>
-                          </p>
-                          <p>{unavailable.message}</p>
-                          <p className="hint">
-                            You can keep preparing this synthetic record. This action cannot be
-                            submitted, and no completed action or external acceptance is recorded.
-                          </p>
-                        </section>
-                      );
-                    const form = (
-                      <form
-                        key={`${a.key}:${selected.version}`}
-                        className="action-panel form-stack"
-                        onSubmit={(e) => void command(e, a.key)}
-                      >
-                        <h2>{a.label}</h2>
-                        <p className="muted">{a.help}</p>
-                        <WorkflowFields
-                          fields={a.fields}
-                          prefix={a.key}
-                          records={records}
-                          record={selected}
-                          api={api}
-                          values={{
-                            evidenceIds: selected.data['evidenceIds'],
-                            ...(a.key === 'correct' ? { schedule: selected.data['schedule'] } : {}),
-                          }}
-                        />
-                        <button className="button" disabled={pending}>
-                          {pending ? 'Submitting…' : a.label}
-                        </button>
-                      </form>
-                    );
-                    return selected.kind === 'financial_schedule' && a.key === 'correct' ? (
-                      <details className="saved-details" key={`${a.key}:${selected.version}`}>
-                        <summary>Prepare a calculation correction</summary>
-                        {form}
-                      </details>
-                    ) : (
-                      form
-                    );
-                  })}
-              </fieldset>
-              {selected.kind === 'resolution' && !!selected.data['rollDigest'] && (
-                <details className="action-panel" style={{ marginTop: 25 }}>
-                  <summary>Vote verification details</summary>
-                  <p className="hint">
-                    These fingerprints bind the frozen roll and most recently received ballot. They
-                    do not reveal individual choices.
-                  </p>
-                  <dl className="record-data">
-                    <dt>Frozen roll fingerprint</dt>
-                    <dd>{String(selected.data['rollDigest'])}</dd>
-                    {!!selected.data['lastBallotCommitment'] && (
-                      <>
-                        <dt>Latest ballot commitment</dt>
-                        <dd>{String(selected.data['lastBallotCommitment'])}</dd>
-                      </>
-                    )}
-                  </dl>
-                </details>
-              )}
-              <details className="action-panel" style={{ marginTop: 25 }}>
-                <summary>Version history</summary>
-                <pre style={{ whiteSpace: 'pre-wrap', fontSize: 12 }}>
-                  {JSON.stringify(selected.data['history'] || [], null, 2)}
-                </pre>
-              </details>
-              {selected.ownerId === session.actor.id &&
-                (draftAccessKinds as readonly string[]).includes(selected.kind) && (
-                  <DraftAccessPanel
-                    key={selected.id}
+                {selected.kind === 'association' && (
+                  <FoundingConsentPanel
                     record={selected}
+                    actorId={session.actor.id}
                     api={api}
                     onChanged={async (result) => {
                       setReceipt(result.receipt);
                       setSelected(result.record);
-                      setEditing(false);
                       await refresh();
                     }}
                   />
                 )}
+                {selected.kind === 'resolution' && (
+                  <MemberBallotPanel
+                    record={selected}
+                    canVote={permitted.includes('record_vote')}
+                    api={api}
+                    onChanged={async (result) => {
+                      setReceipt(result.receipt);
+                      setSelected(result.record);
+                      await refresh();
+                    }}
+                  />
+                )}
+                <div className="record-evidence">
+                  {!['sealed_ranking', 'draw', 'round'].includes(selected.kind) && (
+                    <EvidencePanel
+                      record={selected}
+                      actorId={session.actor.id}
+                      canAttach={permitted.includes('attach_evidence')}
+                      onBusyChange={evidenceBusyChanged}
+                      api={api}
+                      onChanged={async (result) => {
+                        setReceipt(result.receipt);
+                        setSelected(result.record);
+                        setEditing(false);
+                        await refresh();
+                      }}
+                    />
+                  )}
+                </div>
+                <fieldset
+                  className="workflow-actions"
+                  disabled={pending || evidenceBusy}
+                  aria-busy={pending || evidenceBusy}
+                  style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}
+                >
+                  {workflow(selected.kind)
+                    .actions.filter(
+                      (a) =>
+                        a.from.includes(selected.state) &&
+                        permitted.includes(a.key) &&
+                        !(selected.kind === 'resolution' && a.key === 'record_vote'),
+                    )
+                    .map((a) => {
+                      const unavailable = actionUnavailable(selected.kind, a.key);
+                      if (unavailable)
+                        return (
+                          <section
+                            className="action-panel"
+                            key={a.key}
+                            aria-labelledby={`unavailable-${a.key}`}
+                          >
+                            <h2 id={`unavailable-${a.key}`}>{a.label}</h2>
+                            <p>
+                              <strong>Not available in this release</strong>
+                            </p>
+                            <p>{unavailable.message}</p>
+                            <p className="hint">
+                              You can keep preparing this synthetic record. This action cannot be
+                              submitted, and no completed action or external acceptance is recorded.
+                            </p>
+                          </section>
+                        );
+                      const form = (
+                        <form
+                          key={`${a.key}:${selected.version}`}
+                          className="action-panel form-stack"
+                          onSubmit={(e) => void command(e, a.key)}
+                        >
+                          <h2>{a.label}</h2>
+                          <p className="muted">{a.help}</p>
+                          <WorkflowFields
+                            fields={a.fields}
+                            prefix={a.key}
+                            records={records}
+                            record={selected}
+                            api={api}
+                            values={{
+                              evidenceIds: selected.data['evidenceIds'],
+                              ...(a.key === 'correct'
+                                ? { schedule: selected.data['schedule'] }
+                                : {}),
+                            }}
+                          />
+                          <button className="button" disabled={pending}>
+                            {pending ? 'Submitting…' : a.label}
+                          </button>
+                        </form>
+                      );
+                      return selected.kind === 'financial_schedule' && a.key === 'correct' ? (
+                        <details className="saved-details" key={`${a.key}:${selected.version}`}>
+                          <summary>Prepare a calculation correction</summary>
+                          {form}
+                        </details>
+                      ) : (
+                        form
+                      );
+                    })}
+                </fieldset>
+                {selected.kind === 'resolution' && !!selected.data['rollDigest'] && (
+                  <details className="action-panel" style={{ marginTop: 25 }}>
+                    <summary>Vote verification details</summary>
+                    <p className="hint">
+                      These fingerprints bind the frozen roll and most recently received ballot.
+                      They do not reveal individual choices.
+                    </p>
+                    <dl className="record-data">
+                      <dt>Frozen roll fingerprint</dt>
+                      <dd>{String(selected.data['rollDigest'])}</dd>
+                      {!!selected.data['lastBallotCommitment'] && (
+                        <>
+                          <dt>Latest ballot commitment</dt>
+                          <dd>{String(selected.data['lastBallotCommitment'])}</dd>
+                        </>
+                      )}
+                    </dl>
+                  </details>
+                )}
+                <details className="action-panel" style={{ marginTop: 25 }}>
+                  <summary>Version history</summary>
+                  <pre style={{ whiteSpace: 'pre-wrap', fontSize: 12 }}>
+                    {JSON.stringify(selected.data['history'] || [], null, 2)}
+                  </pre>
+                </details>
+                {selected.ownerId === session.actor.id &&
+                  (draftAccessKinds as readonly string[]).includes(selected.kind) && (
+                    <DraftAccessPanel
+                      key={selected.id}
+                      record={selected}
+                      api={api}
+                      onChanged={async (result) => {
+                        setReceipt(result.receipt);
+                        setSelected(result.record);
+                        setEditing(false);
+                        await refresh();
+                      }}
+                    />
+                  )}
+              </fieldset>
             </div>
           ) : ['activity', 'account', 'memberships'].includes(view) ? null : (
             <>
