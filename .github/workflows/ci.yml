@@ -86,6 +86,7 @@ jobs:
       - run: node scripts/test-field-key.mjs
       - run: pnpm test:db
       - run: node --import tsx tests/draft-recovery.integration.ts
+      - run: node --import tsx tests/creation.integration.ts
       - run: node --import tsx tests/activity.integration.ts
       - run: node --import tsx tests/worker-drain.integration.ts
       - run: node --import tsx tests/activity-pages.integration.ts
