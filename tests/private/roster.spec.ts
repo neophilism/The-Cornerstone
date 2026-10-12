@@ -8,11 +8,37 @@ test('an organizer reviews a CSV roster before saving and invalid imports leave 
     .getByRole('button', { name: 'participant · synthetic development', exact: true })
     .click();
   await expect(page.getByRole('heading', { name: 'Your next step, made clear.' })).toBeVisible();
-  const data = await (await page.request.get('/api/private/records')).json();
-  const source = data.records.find(
+  // Other journeys add records. Find the fixture through authenticated pages rather than
+  // assuming its related event remains in the newest fifty loaded records.
+  let data = await (await page.request.get('/api/private/records?limit=200')).json();
+  let source = data.records.find(
     (r: { title: string }) => r.title === 'Invented closed association',
   );
+  const seen = new Set<string>();
+  while (!source && data.nextCursor) {
+    expect(seen.has(data.nextCursor)).toBe(false);
+    seen.add(data.nextCursor);
+    data = await (
+      await page.request.get(
+        '/api/private/records?limit=200&cursor=' + encodeURIComponent(data.nextCursor),
+      )
+    ).json();
+    source = data.records.find((r: { title: string }) => r.title === 'Invented closed association');
+  }
+  expect(source).toBeTruthy();
   const units = source.data.units as { claimId: string; personId: string }[];
+  const eventResponse = await page.request.get(
+    '/api/private/records?recordId=' + encodeURIComponent(source.data.eventId),
+  );
+  expect(eventResponse.ok()).toBe(true);
+  const event = (await eventResponse.json()).records[0];
+  expect(event.id).toBe(source.data.eventId);
+  expect(event.state).toBe('certified');
+  await page.getByText('Open a record by reference', { exact: true }).click();
+  await page.getByLabel('Record reference', { exact: true }).fill(event.id);
+  await page.getByRole('button', { name: 'Open reference', exact: true }).click();
+  await expect(page.getByRole('heading', { name: event.title, exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Back to records', exact: true }).click();
   await page
     .locator('.workflow-card')
     .filter({ has: page.getByRole('heading', { name: 'Cornerstone Association', exact: true }) })

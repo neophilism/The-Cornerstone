@@ -1,0 +1,17 @@
+# Reviewed synthetic record export
+
+Record JSON export is an explicit disclosure of the saved record, not a download of the previously displayed in-memory object. Opening **Export record** performs a fresh authenticated read. The review shows the title, identifier and version, and offers the complete proposed file contents. The user must affirm consent to an unencrypted file on their device. Unsaved draft changes are not included; opening an editor closes the review and disables export.
+
+**Download reviewed record** performs another authenticated read. The response must contain exactly one complete schema-valid record matching the selected identifier, kind and simulation realm. An older version, ambiguous/ID-only response or unexplained content drift within the reviewed version is rejected. A newer saved version replaces the review, clears consent and requires a new explicit confirmation; it does not silently export revised contents.
+
+The canonical JSON envelope is `cornerstone-synthetic-record/v1`, with a synthetic-use notice and the complete saved record. It includes owner/record identifiers, title, status, policy reference, timestamps and saved data. Evidence references can appear in saved data; this path does not retrieve attachment bytes or private ballot tables. The filename is generic. JSON property ordering is normalized; non-JSON values, cycles, nesting beyond fifty levels and UTF-8 output above two million bytes are rejected rather than silently truncated.
+
+Review and consent exist only in component memory. Cancel, navigation, session expiry and a newly disabled editor invalidate pending responses, so a late read cannot trigger a download. No browser storage or provider integration is added. The app reports that a file was prepared, not that an operating-system save or external delivery succeeded. Device backups and shared folders may retain downloaded copies; access verification is point-in-time and cannot revoke bytes already disclosed.
+
+This is only synthetic JSON record export. Receipt downloads, print and copy actions retain their separate existing behavior; no claim of comprehensive data-loss prevention is made. Real-data export, institutional filing, signatures and E2EESA approval remain gated.
+
+## Verification
+
+`tests/record-export.test.ts` checks consent, response correlation, version changes, canonical contents and size/type limits. `tests/record-export.integration.ts` exercises current PostgreSQL/RLS reads, changed saved versions, unchanged receipt counts and revoked/outsider access. `tests/private/record-export.spec.ts` covers downloaded bytes, concurrent writes, renewed consent, denied/malformed reads, cancellation, editing and expiry on desktop/mobile, with accessibility checks and four captures. Test presence is not execution evidence; exact-head results are recorded in the PR.
+
+No applied migration, server authorization rule, original policy source, dependency or separate security-assessment record is changed.

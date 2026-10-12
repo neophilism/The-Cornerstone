@@ -99,6 +99,7 @@ jobs:
       - run: node --import tsx tests/compact.integration.ts
       - run: node --import tsx tests/association-scale.integration.ts
       - run: node --import tsx tests/record-pages.integration.ts
+      - run: node --import tsx tests/record-export.integration.ts
       - run: node --import tsx tests/financial-journey.integration.ts
       - run: pnpm -r --filter @cornerstone/api --filter @cornerstone/portal --filter @cornerstone/staff --filter @cornerstone/worker build
         env:
