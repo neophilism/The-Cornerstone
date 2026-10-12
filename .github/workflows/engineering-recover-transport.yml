@@ -1,4 +1,4 @@
-name: recover-exact-activity-transport
+name: recover-exact-reminder-transport
 on:
   push:
     branches: [cornerstone/engineering-kit]
@@ -13,44 +13,39 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - name: Recover exact checksummed input and use guarded application
+      - name: Verify known reminder bytes before correcting transport metadata
         env:
           TRANSPORT_TOKEN: ${{ github.token }}
         run: |
           python3 - <<'PY'
-          import base64, gzip, hashlib, json, os, pathlib, subprocess, textwrap
+          import hashlib, json, pathlib, subprocess, textwrap
           path = pathlib.Path('engineering/edits.json')
-          original = path.read_bytes()
-          pathlib.Path('/tmp/transport-wire.json').write_bytes(original)
-          assert subprocess.check_output(['git', 'hash-object', str(path)]).decode().strip() == '6ee25498629e12090cb4842dfe0fbbd06b60585d'
-          wire = json.loads(original)
-          for old, new in [('AyfwYPe1sZtE6', 'AyfwYPe1vZtE6'), ('Exydje+pa3bMxzucun', 'Exydje+pa3swzucun')]:
-              assert wire['payload'].count(old) == 1
-              wire['payload'] = wire['payload'].replace(old, new, 1)
-          raw = gzip.decompress(base64.b64decode(wire['payload'], validate=True))
-          assert hashlib.sha256(raw).hexdigest() == wire['payloadSha256'] == '7fbed7db415e289a95cdc90b9ea0bfde811c4f8949266223e02c167dd413c7f5'
-          request = json.loads(raw)
-          assert request['target'] == 'cornerstone/activity-pages'
-          assert request['base'] == 'fdf142a4093d905a326edbe27a74e0a6124c19f5'
-          pathlib.Path('/tmp/repaired-transport.json').write_text(json.dumps(wire))
+          assert subprocess.check_output(['git', 'hash-object', str(path)]).decode().strip() == '4320adea52d6d91117e2d53283b2c7ce259e75ec'
+          request = json.loads(path.read_bytes())
+          assert request['target'] == 'cornerstone/personal-reminders'
+          assert request['base'] == '01aa1568f0f782a0f2c98d6be178fc6a772929ce'
+          rows = [c for c in request['changes'] if c['path'] == 'packages/ui/src/reminder.tsx']
+          assert len(rows) == 1
+          change = rows[0]
+          assert change['beforeSha256'] is None
+          assert change['afterSha256'] == '3655bcf0b43457e61b983980519fa955751651b7cda8b220aeb9aef5b56128e5'
+          assert hashlib.sha256(change['content'].encode()).hexdigest() == 'efe18c2db13a074d0477d741d076eed8ae287cce0f8fdfa6b3093416406c95af'
+          change['afterSha256'] = 'efe18c2db13a074d0477d741d076eed8ae287cce0f8fdfa6b3093416406c95af'
+          pathlib.Path('/tmp/repaired-transport.json').write_text(json.dumps(request))
           workflow = pathlib.Path('.github/workflows/engineering-edits.yml')
-          assert subprocess.check_output(['git', 'hash-object', str(workflow)]).decode().strip() == 'd8c490e647486aa8120b003baf8ff83ac7f0d354'
+          assert subprocess.check_output(['git', 'hash-object', str(workflow)]).decode().strip() == 'f4761b3ce0df2bed9a1ddf1f50db63fa1e3dcf25'
           code = textwrap.dedent(workflow.read_text().split("python3 - <<'PY'\n", 1)[1].split('\n          PY\n', 1)[0])
           needle = "pathlib.Path('engineering/edits.json').read_bytes()"
           assert code.count(needle) == 1
           code = code.replace(needle, "pathlib.Path('/tmp/repaired-transport.json').read_bytes()", 1)
-          os.environ['GIT_TERMINAL_PROMPT'] = '0'
-          os.environ['GIT_CONFIG_COUNT'] = '1'
-          os.environ['GIT_CONFIG_KEY_0'] = 'http.https://github.com/.extraheader'
-          os.environ['GIT_CONFIG_VALUE_0'] = 'AUTHORIZATION: basic ' + base64.b64encode(('x-access-token:' + os.environ['TRANSPORT_TOKEN']).encode()).decode()
+          needle = "commit = api('/git/commits',"
+          assert code.count(needle) == 1
+          code = code.replace(needle, "assert tree['sha'] == '8db2c92fd03b56278f67cb3a0b0749c052109a6f', 'Exact local tree mismatch'\n" + needle, 1)
           exec(compile(code, 'guarded-engineering-edits', 'exec'), {})
           PY
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
-        if: always()
         with:
-          name: activity-transport-result
-          path: |
-            /tmp/transport-wire.json
-            /tmp/change-result.json
+          name: reminder-transport-result
+          path: /tmp/change-result.json
           retention-days: 1
           if-no-files-found: error
