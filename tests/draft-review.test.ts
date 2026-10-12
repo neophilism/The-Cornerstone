@@ -128,6 +128,19 @@ describe('explicit three-way draft review', () => {
   });
 });
 describe('draft outcome and current-access checks', () => {
+  it.each([400, 403, 404, 408, 409, 422, 429, 503])(
+    'keeps an uncertain intent frozen when a later retry is rejected with %s',
+    (status) => {
+      expect(saveFailure(new WorkspaceRequestError(status, 'REJECTED', 'denied'), true)).toBe(
+        'uncertain',
+      );
+    },
+  );
+  it('does not rebase an unconfirmed original save after a later stale retry response', () => {
+    const error = new WorkspaceRequestError(409, 'STALE_VERSION', 'changed');
+    expect(saveFailure(error)).toBe('stale');
+    expect(saveFailure(error, true)).toBe('uncertain');
+  });
   it.each([
     new Error('network interruption'),
     new TypeError('invalid JSON'),

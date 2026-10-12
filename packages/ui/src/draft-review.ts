@@ -20,7 +20,9 @@ export class WorkspaceRequestError extends Error {
     this.name = 'WorkspaceRequestError';
   }
 }
-export function saveFailure(error: unknown): 'stale' | 'rejected' | 'uncertain' {
+export function saveFailure(error: unknown, retry = false): 'stale' | 'rejected' | 'uncertain' {
+  // A later denial cannot establish whether the original unconfirmed save committed.
+  if (retry) return 'uncertain';
   if (!(error instanceof WorkspaceRequestError) || error.status === 408) return 'uncertain';
   if (error.status === 409 && error.code === 'STALE_VERSION') return 'stale';
   return error.status >= 400 && error.status < 500 ? 'rejected' : 'uncertain';
