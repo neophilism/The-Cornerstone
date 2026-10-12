@@ -458,6 +458,7 @@ export const kinds = [
   'hearing',
   'succession',
   'claim_survival',
+  'deceased_filing',
   'association',
   'resolution',
   'opportunity',

@@ -22,6 +22,10 @@ const preparation: Record<string, [string, string]> = {
     'Explain the government action',
     'Describe the implemented action, the lawful industry and evidence that its destruction or material contraction was deliberate. Include contrary evidence. Unlisted and historical events may be considered with reliable proof.',
   ],
+  deceased_filing: [
+    'Establish your standing to file',
+    'Use a supplied synthetic worker identity reference and evidence of death, identity and authority. Approval permits one new claim draft, not eligibility or access to another account.',
+  ],
   claim: [
     'Explain your own livelihood and injury',
     'An event finding does not decide your claim. Describe your established livelihood and direct material loss. Retained part-time work, later employment and ordinary transition benefits do not by themselves erase eligibility.',

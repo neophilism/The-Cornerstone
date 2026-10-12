@@ -13,3 +13,7 @@ This dependency-ordered implementation queue is supplementary engineering work u
 For each slice: implement forms/API/persistence/permission behavior together where applicable, run unit and relevant integration/browser checks, inspect affected captures, update its scope and progress, then merge only the exact GitHub-verified safe head after all actual required checks/reviews pass. Continue dependent work from the merged base. No production migrations, new real-data providers or statutory authority are activated by this queue.
 
 PR17 evidence: application-checks 38251707785 and source-evidence 38251707686 passed for head 63d6a13ced3aaeefe758fb505c44038a7b8577e0, tree bed050c9b3bc7cce23fc285f6b9b5ebdbcdbbc9f. Six desktop/mobile compact captures and the source archive checksums were inspected. This is engineering verification, not independent review.
+
+## New deceased-worker filing slice
+
+The next implemented slice separates personal standing to open one new worker claim from its eligibility determination. It adds guarded migration 016, participant/reviewer journeys, duplicate/race protections and explicit immutable claim origins; see `DECEASED_FILINGS.md`. Exact verification and merge state belong in the PR and current release checkpoint, not inferred from this queue. The public proposal site remains database-free; no hosted migration or protected authority is activated.

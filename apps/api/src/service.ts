@@ -23,6 +23,7 @@ import { EvidenceService } from './evidence.js';
 import { MembershipService } from './membership.js';
 import { SuccessionService } from './succession.js';
 import { ClaimSurvivalService } from './claim-survival.js';
+import { DeceasedFilingService } from './deceased-filings.js';
 import { GovernanceService } from './governance.js';
 import { CompactService } from './compacts.js';
 import { Store, type Transaction } from '@cornerstone/store';
@@ -95,6 +96,7 @@ export class ProgramService {
         await new GovernanceService(this.store).bindResolution(tx, actor, data);
         await new CompactService(this.store).bindResolution(tx, actor, data);
       }
+      if (input.kind === 'claim') await new DeceasedFilingService().prepareClaim(tx, actor, data);
       const record: CaseRecord = {
         id: randomUUID(),
         realm: actor.realm,
@@ -110,15 +112,11 @@ export class ProgramService {
         createdAt: now,
         updatedAt: now,
       };
-      const receipt = await this.store.save(
-        tx,
-        actor,
-        record,
-        'create',
-        input.idempotencyKey,
-        requestDigest,
-        true,
+      const receipt = await new DeceasedFilingService().checked(() =>
+        this.store.save(tx, actor, record, 'create', input.idempotencyKey, requestDigest, true),
       );
+      if (record.kind === 'claim')
+        await new DeceasedFilingService().registerClaim(tx, record, receipt);
       if (record.kind === 'resolution')
         await tx.query('SELECT simulation_link_resolution($1,$2)', [
           record.id,
@@ -186,6 +184,7 @@ export class ProgramService {
       const retained = { ...record.data };
       if (a.key === 'save_draft') for (const field of wf.createFields) delete retained[field.key];
       let data = validateAction({ ...record, data: retained }, a.key, input, now.slice(0, 10));
+      if (record.kind === 'claim') new DeceasedFilingService().assertBinding(record, data);
       const members = new MembershipService(this.store, this.mode, this.realm);
       if (record.kind === 'resolution' && a.key === 'save_draft') {
         await members.resolutionDraft(tx, actor, data, record.id);
@@ -201,6 +200,8 @@ export class ProgramService {
         data = await new SuccessionService().prepare(tx, actor, record, a.key, data);
       if (record.kind === 'claim_survival')
         data = await new ClaimSurvivalService(this.store).prepare(tx, actor, record, a.key, data);
+      if (record.kind === 'deceased_filing')
+        data = await new DeceasedFilingService().prepare(tx, actor, record, a.key, data);
       const ballot =
         record.kind === 'resolution' && a.key === 'record_vote'
           ? await members.prepareBallot(tx, actor, record, data, now.slice(0, 10))
@@ -242,6 +243,8 @@ export class ProgramService {
         await new SuccessionService().finish(tx, next, receipt);
       if (record.kind === 'claim_survival' && a.key === 'approve')
         await new ClaimSurvivalService(this.store).finish(tx, actor, next, receipt);
+      if (record.kind === 'deceased_filing')
+        await new DeceasedFilingService().finish(tx, next, receipt);
       if (ballot)
         await tx.query('SELECT simulation_cast_ballot($1,$2,$3,$4::jsonb,$5,$6)', [
           ballot.id,
