@@ -180,7 +180,8 @@ export class ProgramService {
           policyVersion: record.policyVersion,
         });
       const unavailable = actionUnavailable(record.kind, a.key);
-      if (unavailable) throw new DomainError(unavailable.code, unavailable.message, 503);
+      // A known, pre-mutation prerequisite rejection is not an uncertain server failure.
+      if (unavailable) throw new DomainError(unavailable.code, unavailable.message, 409);
       const input = parseFields(a.fields, command.input);
       const retained = { ...record.data };
       if (a.key === 'save_draft') for (const field of wf.createFields) delete retained[field.key];
