@@ -31,3 +31,5 @@ The owner's approved public-implementation tracking baseline is [registry/roadma
 Synthetic founding-unit succession, unchanged frozen votes and predecessor-ballot privacy are described in `docs/SUCCESSION.md`. Continuing an existing un-enrolled claim is described in `docs/CLAIM_SURVIVAL.md`. Apply all checked migrations before running the matching API revision; the public site has no database dependency. Neither route activates real probate, identity, legal-notice or private-intake services.
 
 The synthetic inbox supports scoped continuation pages and a full unread count; see `docs/ACTIVITY_PAGES.md`. Marking an update read is not legal service.
+
+Private portal/staff transport preserves uncertain write outcomes and enforces bounded, non-cached requests. After building those apps, `pnpm test:proxy` checks their compiled routes against a synthetic loopback upstream. See `docs/PRIVATE_PROXY.md`; these HTTP checks do not replace browser acceptance or protected-production review.
