@@ -1,0 +1,46 @@
+name: engineering-runtime
+on:
+  push:
+    branches: [cornerstone/engineering-kit]
+    paths: [.github/workflows/engineering-runtime.yml]
+permissions:
+  contents: read
+jobs:
+  runtime:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 63d6a13ced3aaeefe758fb505c44038a7b8577e0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version-file: .node-version
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - name: Package installed public dependencies and pinned executables only
+        shell: bash
+        run: |
+          set -euo pipefail
+          output="$RUNNER_TEMP/offline-runtime"
+          mkdir -p "$output/tools/bin"
+          cp "$(command -v node)" "$output/tools/bin/node"
+          npm install --ignore-scripts --no-audit --no-fund --prefix "$output/tools/pnpm" pnpm@11.25.0
+          node --version > "$output/NODE_VERSION"
+          pnpm --version > "$output/PNPM_VERSION"
+          git rev-parse HEAD > "$output/SOURCE_COMMIT"
+          sha256sum pnpm-lock.yaml > "$output/LOCK_SHA256"
+          printf '%s\n' 'Public dependency executables only; no databases, credentials, keys, private records or provider configuration. Not production approval.' > "$output/SCOPE"
+          tar -czf "$output/dependencies.tar.gz" node_modules apps/*/node_modules packages/*/node_modules
+          tar -czf "$output/tools.tar.gz" -C "$output" tools
+          rm -rf "$output/tools"
+          cd "$output"
+          sha256sum NODE_VERSION PNPM_VERSION SOURCE_COMMIT LOCK_SHA256 SCOPE dependencies.tar.gz tools.tar.gz > SHA256SUMS
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: cornerstone-offline-runtime
+          path: ${{ runner.temp }}/offline-runtime/
+          retention-days: 1
+          compression-level: 0
+          if-no-files-found: error
