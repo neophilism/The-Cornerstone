@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { setTimeout } from 'node:timers/promises';
 import { ActivityWorker } from './activity.js';
+import { verifySchema } from '@cornerstone/store';
 class WorkerModule {}
 Module({})(WorkerModule);
 const app = await NestFactory.createApplicationContext(WorkerModule, { logger: ['warn', 'error'] });
@@ -21,7 +22,10 @@ if (
 if (provider === 'in-app' && !env['WORKER_DATABASE_URL'])
   throw Error('Separate restricted worker credentials required.');
 const worker = provider === 'in-app' ? new ActivityWorker(env['WORKER_DATABASE_URL']!) : null;
-if (worker) await worker.verifyRole();
+if (worker) {
+  await worker.verifyRole();
+  await verifySchema(worker.pool);
+}
 const stop = new AbortController();
 process.once('SIGTERM', () => stop.abort());
 process.once('SIGINT', () => stop.abort());

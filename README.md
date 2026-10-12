@@ -20,6 +20,8 @@ Render hosts the application services; Neon supplies PostgreSQL. `render.yaml` d
 
 The seven approved source originals are preserved in `policy/` with verified hashes and download links. The research explorer imports all six workbook sheets and reconciles 231 census IDs; entries remain research-only. Run `python scripts/import-research.py --check` to verify extraction using the documented offline dependencies.
 
+The private API and enabled worker require the exact compiled migration inventory before startup. Run `pnpm check:schema` after changing migrations and read `docs/RUNTIME_READINESS.md` for checked generation, upgrade and rollback rules. This does not activate protected production.
+
 Read `AGENTS.md`, `docs/DEVELOPMENT.md` and `docs/PROGRESS.md` to continue the implementation. The earlier internal planning package remains private pending separate publication approval. Synthetic fixtures cannot certify events or people.
 
 ## Roadmap verification
