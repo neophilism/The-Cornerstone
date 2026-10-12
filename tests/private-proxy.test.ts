@@ -275,6 +275,19 @@ describe('private server proxy transport', () => {
     expect(await response.json()).toEqual(value);
     privateResponse(response);
   });
+  it.each(['CUSTODY_REVIEW_REQUIRED', 'EXCHANGE_RESULT_REQUIRED', 'TREASURY_ADAPTER_REQUIRED'])(
+    'preserves a definite pre-mutation prerequisite rejection %s',
+    async (code) => {
+      const upstream = send(
+        Response.json({ code, message: 'Prerequisite not satisfied.' }, { status: 409 }),
+      );
+      const response = await forwardPrivateRequest(req(), ['commands'], config, upstream);
+      expect(response.status).toBe(409);
+      expect((await response.json()).code).toBe(code);
+      expect(upstream).toHaveBeenCalledTimes(1);
+      privateResponse(response);
+    },
+  );
   it('preserves exact binary downloads and attachment headers', async () => {
     const bytes = new Uint8Array([0, 255, 128, 17]);
     const response = await forwardPrivateRequest(
