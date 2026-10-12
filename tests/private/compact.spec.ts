@@ -119,11 +119,9 @@ test('members choose every published term, inspect the exact compact ballot and 
       .filter({ has: page.getByRole('heading', { name: title, exact: true }) })
       .getByRole('button', { name: 'Open', exact: true })
       .click();
-    const submission = page
-      .locator('.action-panel')
-      .filter({
-        has: page.getByRole('heading', { name: 'Submit compact for review', exact: true }),
-      });
+    const submission = page.locator('.action-panel').filter({
+      has: page.getByRole('heading', { name: 'Submit compact for review', exact: true }),
+    });
     await submission
       .getByLabel('Approved compact resolution', { exact: true })
       .selectOption(resolution.id);
