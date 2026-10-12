@@ -1,4 +1,5 @@
 name: engineering-edits
+run-name: Apply exact feature edits at ${{ github.sha }}
 on:
   push:
     branches: [cornerstone/engineering-kit]
