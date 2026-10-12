@@ -23,6 +23,7 @@ import { EvidenceService } from './evidence.js';
 import { MembershipService } from './membership.js';
 import { SuccessionService } from './succession.js';
 import { ClaimSurvivalService } from './claim-survival.js';
+import { GovernanceService } from './governance.js';
 import { Store, type Transaction } from '@cornerstone/store';
 import {
   cents,
@@ -78,7 +79,10 @@ export class ProgramService {
           record: await this.store.getVersion(tx, previous.recordId, previous.version),
         };
       const members = new MembershipService(this.store, this.mode, this.realm);
-      if (input.kind === 'resolution') await members.resolutionDraft(tx, actor, data);
+      if (input.kind === 'resolution') {
+        await members.resolutionDraft(tx, actor, data);
+        await new GovernanceService(this.store).bindResolution(tx, actor, data);
+      }
       const record: CaseRecord = {
         id: randomUUID(),
         realm: actor.realm,
@@ -174,8 +178,12 @@ export class ProgramService {
       if (a.key === 'save_draft') for (const field of wf.createFields) delete retained[field.key];
       let data = validateAction({ ...record, data: retained }, a.key, input, now.slice(0, 10));
       const members = new MembershipService(this.store, this.mode, this.realm);
-      if (record.kind === 'resolution' && a.key === 'save_draft')
+      if (record.kind === 'resolution' && a.key === 'save_draft') {
         await members.resolutionDraft(tx, actor, data, record.id);
+        await new GovernanceService(this.store).bindResolution(tx, actor, data);
+      }
+      if (record.kind === 'opportunity')
+        await new GovernanceService(this.store).prepareOpportunity(tx, actor, record, a.key, data);
       data = await this.linkedRules(tx, actor, record, command, data, now);
       if (record.kind === 'succession')
         data = await new SuccessionService().prepare(tx, actor, record, a.key, data);
@@ -191,7 +199,11 @@ export class ProgramService {
         { version: record.version + 1, action: a.key, at: now, actorId: actor.id },
       ];
       let institution = record.institutionId;
-      if (a.key === 'submit' || (record.kind === 'resolution' && a.key === 'open_vote')) {
+      if (
+        a.key === 'submit' ||
+        (record.kind === 'resolution' && a.key === 'open_vote') ||
+        (record.kind === 'opportunity' && a.key === 'propose')
+      ) {
         const routed = await tx.query('SELECT simulation_assign($1,$2)', [record.id, record.kind]);
         institution = routed.rows[0]?.simulation_assign || institution;
       }
@@ -212,6 +224,8 @@ export class ProgramService {
         requestDigest,
       );
       if (record.kind === 'association' && a.key === 'submit') await members.invite(tx, next);
+      if (record.kind === 'opportunity' && a.key === 'propose')
+        await new GovernanceService(this.store).share(tx, next, receipt);
       if (record.kind === 'succession' && a.key === 'approve')
         await new SuccessionService().finish(tx, next, receipt);
       if (record.kind === 'claim_survival' && a.key === 'approve')
@@ -365,6 +379,7 @@ export class ProgramService {
       d['rollClosedAt'] = today;
     }
     if (r.kind === 'resolution' && k === 'open_vote') {
+      await new GovernanceService(this.store).assertResolutionBinding(tx, actor, d);
       await this.linked(tx, d['associationId'], 'association', [
         'ready',
         'provisional',

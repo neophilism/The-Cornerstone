@@ -717,8 +717,16 @@ export const workflows: WorkflowDefinition[] = [
         'consortium',
         'merger',
         'dissolution',
+        'opportunity_plan',
       ]),
       f('proposal', 'Exact proposal', 'textarea'),
+      f(
+        'opportunityId',
+        'Proposed opportunity ID',
+        'text',
+        false,
+        'Required only for an opportunity-plan vote. The server freezes the exact shared proposal.',
+      ),
     ],
     [
       action(
@@ -776,6 +784,51 @@ export const workflows: WorkflowDefinition[] = [
         null,
         [consent],
         'Preparation does not legalize the trade.',
+      ),
+      action(
+        'propose',
+        'Share a plan with founding members',
+        ['ready'],
+        'proposed',
+        ['member'],
+        null,
+        [
+          f('associationId', 'Association ID'),
+          f('trainingPlan', 'Accessible training and first opportunities', 'textarea'),
+          f('capitalPlan', 'Feasible enterprise financing plan', 'textarea'),
+          f('permitPlan', 'Ordinary permits and legal prerequisites', 'textarea'),
+          f(
+            'voluntary',
+            'No compulsory work, training, relocation, capital contribution or personal debt',
+            'boolean',
+          ),
+          f(
+            'shareWithMembers',
+            'Share this plan and its attachments with current founding members and assigned reviewers',
+            'boolean',
+          ),
+        ],
+        'Share a fixed planning proposal, not a license, match, financing commitment or restoration finding.',
+      ),
+      action(
+        'adopt_plan',
+        'Record the approved member plan',
+        ['proposed'],
+        'adopted',
+        ['member'],
+        null,
+        [f('memberResolutionId', 'Approved member resolution ID')],
+        'Requires a tallied majority of all frozen founding units bound to this exact proposal. Individual participation remains voluntary.',
+      ),
+      action(
+        'withdraw_plan',
+        'Withdraw this proposed plan',
+        ['proposed'],
+        'withdrawn',
+        ['member'],
+        null,
+        [reasons],
+        'Only the current member who proposed the plan may withdraw it. Existing member inspection and receipts remain available.',
       ),
     ],
     false,
@@ -1737,6 +1790,18 @@ export function validateAction(
   const yes = (key: string, message: string) =>
     requireCondition(d[key] === true, 'REQUIRED_FINDING', message);
   if (key === 'submit') yes('attested', 'Confirm the submission.');
+  if (record.kind === 'opportunity' && key === 'mark_ready')
+    yes('attested', 'Confirm the preparation.');
+  if (record.kind === 'opportunity' && key === 'propose') {
+    yes(
+      'voluntary',
+      'Individual participation must remain voluntary and free from personal debt or compulsory contributions.',
+    );
+    yes(
+      'shareWithMembers',
+      'Explicitly authorize member and assigned-reviewer inspection of this plan and its attachments.',
+    );
+  }
   if (record.kind === 'event_petition' && key === 'close_record')
     requireCondition(
       today >= addCalendarDays(String(d['noticeDate']), 60),

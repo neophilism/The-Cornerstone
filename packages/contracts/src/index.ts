@@ -557,3 +557,37 @@ export function publicRecord(record: CaseRecord, approvedSummary: string) {
     updatedAt: record.updatedAt,
   };
 }
+
+/** A member planning mandate is not statutory authority or permission to operate. */
+export const OpportunityPlanSchema = z
+  .object({
+    kind: z.literal('opportunity'),
+    recordId: IdSchema,
+    associationId: IdSchema,
+    policyVersion: z.string().min(1).max(100),
+    title: z.string().min(1).max(12000),
+    trade: z.string().min(1).max(12000),
+    district: z.string().min(1).max(12000),
+    feasibility: z.string().min(1).max(12000),
+    trainingPlan: z.string().min(1).max(12000),
+    capitalPlan: z.string().min(1).max(12000),
+    permitPlan: z.string().min(1).max(12000),
+    voluntary: z.literal(true),
+    shareWithMembers: z.literal(true),
+  })
+  .strict();
+export type OpportunityPlan = z.infer<typeof OpportunityPlanSchema>;
+export const OpportunityBindingSchema = z
+  .object({
+    recordId: IdSchema,
+    associationId: IdSchema,
+    version: z.number().int().positive(),
+    digest: z.string().regex(/^[a-f0-9]{64}$/),
+    plan: OpportunityPlanSchema,
+  })
+  .strict()
+  .refine(
+    (b) => b.recordId === b.plan.recordId && b.associationId === b.plan.associationId,
+    'A planning mandate must identify the same opportunity and association as its frozen plan',
+  );
+export type OpportunityBinding = z.infer<typeof OpportunityBindingSchema>;
