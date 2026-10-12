@@ -27,6 +27,7 @@ import { CompactSummary } from './compacts.js';
 import { WorkflowFields, formInput } from './workflow-fields.js';
 import { DraftEditor } from './draft-editor.js';
 import { RecordExporter } from './record-exporter.js';
+import { RecordCreator } from './record-creator.js';
 import { WorkspaceRequestError } from './draft-review.js';
 export { WorkflowFields } from './workflow-fields.js';
 
@@ -281,34 +282,6 @@ export function Workspace({
       await refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Sign-in unavailable.');
-    } finally {
-      setPending(false);
-    }
-  }
-  async function create(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (!creating || pending) return;
-    const form = e.currentTarget;
-    setPending(true);
-    setError('');
-    try {
-      const wf = workflow(creating);
-      const input = {
-        kind: creating,
-        title: String(new FormData(form).get('title')),
-        input: formInput(form, wf.createFields),
-      };
-      const result = await api('records', {
-        ...input,
-        idempotencyKey: requestKey('create', input),
-      });
-      retries.current.delete('create');
-      setReceipt(result.receipt);
-      setSelected(result.record);
-      setCreating(null);
-      await refresh();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Record could not be saved.');
     } finally {
       setPending(false);
     }
@@ -665,29 +638,23 @@ export function Workspace({
                 </button>
               </div>
               <PreparationGuide kind={creating} />
-              <form className="form-stack action-panel" onSubmit={create}>
-                <div className="field">
-                  <label htmlFor="record-title">Record title</label>
-                  <input
-                    id="record-title"
-                    name="title"
-                    required
-                    minLength={3}
-                    maxLength={160}
-                    defaultValue={String(creationDefaults['title'] ?? '')}
-                  />
-                </div>
-                <WorkflowFields
-                  fields={workflow(creating).createFields}
-                  prefix="create"
-                  values={creationDefaults}
-                  records={records}
-                  api={api}
-                />
-                <button className="button" disabled={pending}>
-                  Save synthetic draft
-                </button>
-              </form>
+              <RecordCreator
+                key={session.actor.id + ':' + session.actor.realm + ':' + creating}
+                kind={creating}
+                actor={session.actor}
+                defaults={creationDefaults}
+                records={records}
+                api={api}
+                disabled={pending}
+                onBusyChange={setPending}
+                onSaved={(result) => {
+                  setReceipt(result.receipt);
+                  setSelected(result.record);
+                  setCreating(null);
+                  setError('');
+                  void refresh();
+                }}
+              />
             </>
           ) : selected ? (
             <div className="record-view" key={selected.id}>

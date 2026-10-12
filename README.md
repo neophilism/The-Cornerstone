@@ -41,3 +41,5 @@ Private portal/staff transport preserves uncertain write outcomes and enforces b
 The canonical [security/e2eesa-status.json](security/e2eesa-status.json) records standard implementation, complete testing and independent expert review separately. Engine Room reads it automatically from GitHub. All initial stages are pending; existing profile locks and approved decisions remain authoritative. Read [adoption and independent-account instructions](docs/E2EESA_ADOPTION.md), and run `python3 scripts/validate_e2eesa_status.py`. Record validation does not establish product security or certification.
 
 Synthetic record exports require an explicit review, disclosure consent and fresh access/version checks. See `docs/RECORD_EXPORT.md`; downloaded copies are unencrypted and cannot be recalled.
+
+New-record creation freezes uncertain requests and recovers their original receipt without sending an edited duplicate. See `docs/CREATION_RECOVERY.md` for the in-memory boundary, denied retries and current-access checks.
