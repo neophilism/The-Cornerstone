@@ -22,10 +22,12 @@ The seven approved source originals are preserved in `policy/` with verified has
 
 The private API and enabled worker require the exact compiled migration inventory before startup. Run `pnpm check:schema` after changing migrations and read `docs/RUNTIME_READINESS.md` for checked generation, upgrade and rollback rules. This does not activate protected production.
 
-Read `AGENTS.md`, `docs/DEVELOPMENT.md` and `docs/PROGRESS.md` to continue the implementation. The earlier internal planning package remains private pending separate publication approval. Synthetic fixtures cannot certify events or people.
+Read `AGENTS.md`, `docs/DEVELOPMENT.md`, `docs/CONTINUATION.md` and `docs/PROGRESS.md` to continue the implementation. The earlier internal planning package remains private pending separate publication approval. Synthetic fixtures cannot certify events or people.
 
 ## Roadmap verification
 
 The owner's approved public-implementation tracking baseline is [registry/roadmap.json](registry/roadmap.json) with exact, verified PR mappings in [registry/prs.json](registry/prs.json). It contains 25 publicly documented tracking units, including 11 mapped merged PRs as of its observation timestamp; see [Engine Room tracking notes](docs/ENGINE_ROOM_TRACKING.md). This is **not** a reconstruction or release of the earlier private planning package, nor an assertion that the whole program is 44% operationally complete. Detailed implementation evidence is in [docs/PROGRESS.md](docs/PROGRESS.md).
 
 Synthetic founding-unit succession, unchanged frozen votes and predecessor-ballot privacy are described in `docs/SUCCESSION.md`. Continuing an existing un-enrolled claim is described in `docs/CLAIM_SURVIVAL.md`. Apply all checked migrations before running the matching API revision; the public site has no database dependency. Neither route activates real probate, identity, legal-notice or private-intake services.
+
+The synthetic inbox supports scoped continuation pages and a full unread count; see `docs/ACTIVITY_PAGES.md`. Marking an update read is not legal service.
