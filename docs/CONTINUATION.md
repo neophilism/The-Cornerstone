@@ -1,23 +1,20 @@
-# Public engineering continuation - October 12, 2026
+# Public engineering continuation
 
-This queue is supplementary work under the public development guide, not publication or reconstruction of the earlier private planning package. The full program remains unfinished. The approved 25-unit reporting denominator is unchanged; a supporting PR is not whole-workstream acceptance. Exact refs and verification distinctions are in [RELEASE_HANDOFF.md](RELEASE_HANDOFF.md) and `PROGRESS.json`.
+Checkpoint: October 12, 2026, 22:34 UTC. This queue supplements the public development guide; it neither publishes the earlier private planning package nor changes the approved 25-unit reporting denominator.
 
 ## Accepted foundation
 
-PR17 exact compact approval is merged at `fdf142a4093d905a326edbe27a74e0a6124c19f5`, after exact-head CI, source verification and inspection of six compact views. PR19 complete activity history is merged at `71151085bbed3529d49327fbbd7782fa509270b5`; microsecond pages, full unread totals, current-access denial, repeat reads and desktop/mobile journeys passed. These are source acceptance checkpoints, not deployment or protected-program activation.
+PR17 compact approval, PR19 activity history, PR20 consent-based calendar exports, PR23 private transport, PR24 worker drain and PR21 concurrent-draft recovery are merged with integrated verification. PR18 supplies security-assessment metadata only; implementation, complete assessment testing and independent review remain pending.
 
-## Pending implementation sequence
+## Dependency-ordered continuation
 
-PR23 bounded private transport can precede PR21 draft recovery. PR23 preserves uncertain write outcomes and consistent authentication-expiry responses. PR21 must then be rehearsed against that transport: preserve unsaved input, review competing changes explicitly, and retry only the exact frozen request after an uncertain save. Both PRs remain open; prior PR21 evidence is not a new test run.
+1. **PR25 release evidence:** reconcile accepted source and CI separately from historical provider state. Its own current-head checks remain required before merge.
+2. **Recoverable new-record creation:** reuse create idempotency and scoped replay; freeze uncertain requests, correlate receipts, prevent duplicate creation, suppress late replies and test desktop/mobile failures.
+3. **Remaining writes and exports:** inspect non-draft commands and private exports; preserve explicit intent, current access, truthful outcomes and no silent duplicate mutation.
+4. **Full program journeys:** continue the public development guide after the required foundations, preserving separate provider and authority gates.
 
-PR20 privacy-minimal reminders and PR24 worker draining are independent of each other and of PR21. PR20 now rejects malformed access-check responses before export. PR24 stops new work while allowing the current delivery to settle and preserves unfinished leases for recovery. Current-head CI, applicable browser execution, accessibility and screenshot review remain outstanding gates. Local test counts are recorded per branch, not added as unique tests.
+PR22's native CircleCI port is separate owner work and remains unverified. Preserve existing GitHub workflows and reconcile every newer integration before any connected-provider acceptance.
 
-PR18 is the separate owner-requested security implementation/testing/review status work. PR22 is a prepared native CircleCI port, not a verified connected replacement. Preserve both. Reconcile all newer acceptance commands into the final CI configuration only when their source files are present; keep every existing browser, database, migration and source-integrity check.
+Implement each usable slice across UI/API/persistence/permissions as applicable. Run unit tests, real isolated PostgreSQL acceptance for changed data behavior, production builds, browser/accessibility journeys and visual inspection. Preserve immutable source/migration bytes, all CI additions, README guidance and separate security metadata. Record exact final heads/trees, then merge only when GitHub confirms safe mergeability and all actual required checks/reviews pass.
 
-## Verification and integration
-
-For each feature, implement observable forms/API/persistence/permission behavior together where applicable, test failures and negative access, inspect affected captures, update scope/progress and merge only the exact GitHub-verified safe head after all actual required checks/reviews pass. Reconcile shared README and CI edits without dropping another branch's work. Use a fresh isolated synthetic database for full-suite rehearsal; do not weaken assertions because old fixtures accumulated.
-
-The latest remote verification/database attempts report failure before executing steps; the cause is unverified. Local browser navigation was separately blocked by administrator policy, which was left unchanged. Continue independent implementation without treating those gates as passed. No production migration, real-data provider or statutory authority is activated by this queue.
-
-After acceptance, reconcile `PROGRESS.md`, `PROGRESS.json`, `STATUS.md` and `RELEASE_HANDOFF.md` with the exact merged/deployed state. Review any registry mapping under the existing workstream approval rules; do not infer a whole-program percentage from the number of supporting PRs.
+Do not create real-data providers or migrate production to avoid a gate. Fresh synthetic databases keep fixture-heavy acceptance independent; never delete hosted data to repair a test. Keep source acceptance distinct from actual hosted deployment and schema compatibility. See [RELEASE_HANDOFF.md](RELEASE_HANDOFF.md) for exact evidence and remaining operational prerequisites.

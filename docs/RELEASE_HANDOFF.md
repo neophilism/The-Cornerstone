@@ -1,49 +1,35 @@
-# Release and continuation handoff - October 12, 2026
+# Release and continuation handoff
 
-Observation checkpoint: October 12 at 20:38 UTC. The latest observed default-branch commit is `71151085bbed3529d49327fbbd7782fa509270b5` (PR19). This records source and verification state, not a deployed release, security approval, enacted program or publication of the earlier private planning package. Machine-readable exact refs are in `PROGRESS.json`.
+Observation checkpoint: October 12, 2026, 22:34 UTC. Current observed main is `afbdffdca03d4fd6856fc755541190ed43c99263`, tree `97962feb8c315a34680a0c990513dbe19a13d33b`. This supersedes the earlier 20:38 UTC handoff about open PR20/21/23/24. Source acceptance is not deployment, independent security approval or enacted authority.
 
-## Accepted baseline
+## Exact accepted baseline
 
-PR19 is merged. Its head `01aa1568f0f782a0f2c98d6be178fc6a772929ce` and the merge have tested tree `d7e845438fbf39c77ac9eae2db08ebc62bc6c8e8`. [Application checks 38260510160](https://github.com/neophilism/The-Cornerstone/actions/runs/38260510160) and [source evidence 38260510281](https://github.com/neophilism/The-Cornerstone/actions/runs/38260510281) passed; both new activity screenshots were inspected. A later failed main-push workflow does not erase that exact PR evidence, but PR evidence does not establish a current hosted release.
+The integrated PR18 head `f3ee2d76b3a83b4c7fda70347715de95c5611c3a` and current main have the same tree. [Application 38313896033](https://github.com/neophilism/The-Cornerstone/actions/runs/38313896033), [source 38313895710](https://github.com/neophilism/The-Cornerstone/actions/runs/38313895710) and the PR18 metadata validator passed. The application job includes online frozen installation, 236 unit tests, full builds, compiled private-route and worker-process acceptance, 17 PostgreSQL18 integration suites, public browser checks and private desktop/mobile journeys.
 
-## Open implementation PRs
+Downloaded source artifact SHA256 `d2f657a7493f0c2a2db6ae75de2eb9e9862543731e9dae82dc230d6bfdc6c29a` and internal checksums were verified. Reconstructing the tracked tree produced the exact accepted tree above. This continuation also reran 236 local unit tests from that source using Node24.19.0/pnpm11.25.0 and the checksum-verified offline dependencies. Local DNS does not permit a fresh online install; remote acceptance supplies that separate evidence.
 
-**PR20 - Personal reminders:** head `6c69b47f9591f3a4af607a7dc5f6f71b3abc1c00`, tree `4eb18d8ea0000648668a959c55f05fa1335d1ffd`. The new strict access check rejects ID-only, ambiguous and malformed responses. This continuation ran 156 unit tests and four private application builds successfully, including 18 new access-response cases. Browser navigation was blocked before feature assertions. [PR20](https://github.com/neophilism/The-Cornerstone/pull/20).
+PR19 activity acceptance is run 38260510160. PR20 reminders accepted integrated head `3323b70968752bfeec49e25305fe39405e54b099` in run 38311880721. PR23 transport accepted head `d3a0a805e3e43e0821b0162c644272cdccc86088` in run 38313173287. PR21 draft recovery accepted head `04223be33000d13f918a43a67b2c126d92e82833` in run 38313471415. These integrated runs preserve merged worker PR24. Their PR records include inspected desktop/mobile captures. This handoff does not claim those screenshots were newly inspected again. Counts share a baseline and must not be summed.
 
-**PR21 - Draft recovery:** head `efef3b37683072696b1f5a690e68d5f8ad89bf77`. Its prior local evidence remains in the PR; it was not rerun in this continuation. Current-head remote/browser acceptance remains unresolved. [PR21](https://github.com/neophilism/The-Cornerstone/pull/21).
+## Preserved owner work and current gates
 
-**PR23 - Private proxy:** head `572fe29dc1cbd89278e5fd4ea04e57b9b3979bda`, tree `815e6c062648cbd1b79c1c282bef136097ce3b2e`. Bounded transport preserves uncertain write outcomes rather than asserting a lost response proves failure. Locally, 155 unit tests, 15 PostgreSQL integration suites, both compiled private-route HTTP journeys and four private application builds passed. [PR23](https://github.com/neophilism/The-Cornerstone/pull/23).
+PR18 is merged and supplies assessment metadata, not completed E2EESA implementation or independent expert review. `security/e2eesa-status.json` and its pinned standard remain unchanged; all three assessment stages remain pending.
 
-**PR24 - Worker lifecycle:** head `ea9476125be8d9e025bff01a7b27a8a4330af50d`, tree `b6a766e54d92ebffcbf5faa16936b429ca3d4e3b`. One shutdown owner drains current work and preserves unfinished leases. Locally, 124 unit tests, 16 PostgreSQL integration suites, five compiled-process scenarios and four private application builds passed. [PR24](https://github.com/neophilism/The-Cornerstone/pull/24).
+PR22 remains open at `1c8539ae70bc5433d902455859d731ea775e0bbe`. A prepared CircleCI configuration is not a connected, green replacement for GitHub Actions. Preserve it and reconcile newer tests before its separate acceptance. Do not remove the working GitHub verification path.
 
-All four PRs are open, not merged. Counts are per branch and include a shared baseline; they must not be added as distinct tests. Local verification used pinned Node 24.19.0 / pnpm 11.25.0 and isolated PostgreSQL 16.15 / PostGIS 3.4.2 with invented data and separate owner/runtime/worker credentials. Dependencies came from a previously verified offline artifact. A fresh online frozen install, GitHub PostgreSQL 18 execution and browser acceptance are separate outstanding checks. PR20's correction, PR23 and PR24 required no new dependency or lockfile change.
+Earlier pre-step GitHub failures and the older local Chromium administrator-policy denial remain historical evidence. Newer remote workflows execute successfully. Never change browser administrator controls or bypass a required check to reproduce a test.
 
-## Separate owner work
+## Continuing integration
 
-[PR18](https://github.com/neophilism/The-Cornerstone/pull/18) tracks E2EESA implementation, testing and independent review. It is open and intentionally keeps those status fields pending. Metadata validation is not product conformance. Preserve this work and its independent-review boundary.
+Use the current merged tree as the baseline. The next documented slice is recoverable new-record creation, followed by remaining write/export boundaries and complete program journeys. The existing draft editor protects save requests, not every mutation in the workspace. Preserve the server's access checks and exact idempotency contract.
 
-[PR22](https://github.com/neophilism/The-Cornerstone/pull/22), at `1c8539ae70bc5433d902455859d731ea775e0bbe`, prepares native CircleCI application, PostGIS, browser and source-evidence jobs. It is open; connection of the project and green execution are not verified. Existing GitHub workflows remain. Preserve and reconcile the native port rather than treating it as a live CI replacement.
+Keep every existing CI command: draft recovery, activity and pagination, worker drain/process, private proxy HTTP, identity/access, evidence, membership, succession, claim survival, governance, compact, association scale, record pages, financial journeys, migration inventory, public/private browsers and source/security metadata checks. Do not resolve shared-file conflicts by dropping tests or approved instructions. Re-run the final integrated candidate and inspect affected views before merging.
 
-## Execution blockers
-
-The PR21 retry in run 38269270968 again failed with no executed verification/database steps. The newer [PR23 application run 38303937049](https://github.com/neophilism/The-Cornerstone/actions/runs/38303937049) and [PR24 application run 38305395966](https://github.com/neophilism/The-Cornerstone/actions/runs/38305395966) show the same pre-step failures; their source-evidence runs also failed. The connector has not established the account/platform cause. Do not label this a code assertion failure, guess a billing diagnosis, repeatedly rerun without new information or bypass the gate.
-
-Locally installed Chromium 144 rejected application navigation with `ERR_BLOCKED_BY_ADMINISTRATOR`. No feature assertions or accepted new screenshots resulted. The administrator policy was not changed. Compiled-route HTTP tests and operating-system process tests exercise real behavior but do not substitute for browser or accessibility acceptance.
-
-## Integration order and preservation
-
-Resolve CI execution while continuing independent work on branches. PR23 can precede PR21 because it provides honest transport outcomes and consistent session-expiry responses. PR20 and PR24 do not depend on each other or PR21. All are based on the accepted main baseline; none is represented as a merge of an unverified prerequisite. Rebase or merge an updated base into each feature and rerun its exact final candidate before merging.
-
-When combining branches, preserve all CI additions. PR21 adds `tests/draft-recovery.integration.ts`. PR23 adds `pnpm test:proxy` after private application builds. PR24 adds `tests/worker-drain.integration.ts` after the existing activity suite and `tests/worker-process.integration.ts` after the compiled worker is available. Keep existing public/private browser journeys, source integrity, migration readiness, role isolation and all older integrations. Reconcile PR22's native port with those commands after their source files land; copying its older test list is insufficient.
-
-README and CI files are shared touchpoints. Preserve PR18's security tracking, PR22's native configuration and each feature's scope documentation. Do not resolve a conflict by dropping tests or replacing those branches wholesale. Test the final integrated tree, including PR21 save recovery through PR23 transport, and inspect changed desktop/mobile views. A mergeable flag alone is insufficient; current required checks/reviews must pass.
-
-Use a fresh isolated synthetic database for complete suite rehearsal. Tests create fixtures; repeatedly running the whole suite on one populated database can interfere with the older activity test's bounded drain. This continuation resolved that by creating another isolated local database, not deleting hosted data or weakening assertions. Applied migration bytes remain immutable.
+Fresh isolated synthetic databases prevent fixture-heavy suites interfering with each other. Separate owner/runtime/worker credentials and immutable applied migration bytes remain mandatory. No test repair may delete or weaken hosted records, RLS, production guards or independent-review requirements.
 
 ## Infrastructure and activation
 
-No Neon or Render resources were changed. The historical October 12 inspection found development through migration 010, the isolated claim-survival child through 013 and production with no application tables. Those provider observations were not refreshed here. Repository SQL is through 015 and local verification applied all 15. Source availability and local migration success do not establish hosted runtime compatibility or a production migration.
+No Neon/Render resource was changed or newly inspected by this handoff. Earlier October12 inspection recorded main development through010, claim-survival child through013 and production without application tables. Repository SQL is015. Compatible schema verification must precede any private runtime deployment; the public site is database-independent. A successful local or CI migration is not promotion to a hosted branch.
 
-The repository lists a public Render preview URL, but this continuation did not verify availability, deployed commit, project/environment assignment or credentials. Real intake, identity/recovery activation, independent ranking custody, notices, signatures, institutional handoffs and payment execution remain gated. None of these PRs claims E2EE conformance, independent security review or government authority.
+The repository's Render URL alone does not establish availability, deployed commit, project assignment or protected configuration. Complete protected identity/device and recovery architecture, recipient encryption, real evidence custody/scanning/retention, independent ranking custody, valid notices, signatures, institution/Treasury acceptance, independent review and measured provider recovery before activation. Prepared/queued commands are not external acceptance.
 
-The approved 25-unit denominator and its original 11 mappings remain unchanged in `registry/roadmap.json` and `registry/prs.json`. This handoff does not redefine those workstreams or translate supporting PR counts into completion percentages. Refresh mappings only with verified workstream acceptance and existing approval rules. Keep the progress and status documents aligned with the next exact verified checkpoint.
+Keep `registry/roadmap.json` and `registry/prs.json` unchanged unless their established acceptance/approval rules are satisfied. Their 25 units and11 mappings are scoped tracking, not a percentage of operational completion. Source originals and the private-planning publication boundary remain unchanged.

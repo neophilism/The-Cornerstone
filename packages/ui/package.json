@@ -14,6 +14,10 @@
     "./workspace": {
       "types": "./dist/workspace.d.ts",
       "default": "./dist/workspace.js"
+    },
+    "./private-proxy": {
+      "types": "./dist/proxy.d.ts",
+      "default": "./dist/proxy.js"
     }
   },
   "scripts": {

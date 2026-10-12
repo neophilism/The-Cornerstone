@@ -122,6 +122,43 @@ try {
     }),
     /not found/,
   );
+  // Known prerequisite failures must remain definite rejections through the private proxy.
+  const commerce: Actor = { ...a, roles: ['commerce'] };
+  const round = await service.create(commerce, {
+    kind: 'round',
+    title: 'Invented prerequisite rejection',
+    input: {
+      offerIds: [randomUUID()],
+      associationIds: [randomUUID()],
+      opens: '2030-01-01',
+      closes: '2030-02-01',
+      algorithm: 'synthetic-v1',
+      custodyProtocol: 'Invented preparation only; no custody provider',
+    },
+    idempotencyKey: randomUUID(),
+  });
+  const blocked = {
+    recordId: round.record!.id,
+    action: 'publish',
+    expectedVersion: 1,
+    idempotencyKey: randomUUID(),
+    input: {},
+  };
+  for (let attempt = 0; attempt < 2; attempt++)
+    await assert.rejects(service.command(commerce, blocked), (error: unknown) => {
+      const rejection = error as { code?: string; status?: number };
+      assert.equal(rejection.code, 'CUSTODY_REVIEW_REQUIRED');
+      assert.equal(rejection.status, 409);
+      return true;
+    });
+  const unchanged = (await store.list(commerce)).find((entry) => entry.id === round.record!.id);
+  assert.equal(unchanged?.version, 1);
+  assert.equal(unchanged?.state, 'draft');
+  const roundEffects = await owner.query(
+    'SELECT (SELECT count(*)::int FROM receipts WHERE record_id=$1) AS receipts, (SELECT count(*)::int FROM outbox WHERE record_id=$1) AS events',
+    [round.record!.id],
+  );
+  assert.deepEqual(roundEffects.rows[0], { receipts: 1, events: 1 });
   const count = await owner.query('SELECT count(*)::int n FROM receipts WHERE record_id=$1', [
     record.id,
   ]);

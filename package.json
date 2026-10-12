@@ -22,7 +22,8 @@
     "format:check": "prettier --check apps packages infra scripts tests docs .github *.json *.yaml *.md *.ts",
     "db:migrate": "node --env-file-if-exists=.env --import tsx scripts/migrate.ts",
     "db:seed:simulation": "node --env-file-if-exists=.env --import tsx scripts/seed-simulation.ts",
-    "db:check": "node --env-file-if-exists=.env --import tsx scripts/migrate.ts --check"
+    "db:check": "node --env-file-if-exists=.env --import tsx scripts/migrate.ts --check",
+    "test:proxy": "node --import tsx tests/private-proxy.integration.ts"
   },
   "devDependencies": {
     "@playwright/test": "1.62.1",
