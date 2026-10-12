@@ -3,7 +3,7 @@ run-name: Apply exact feature edits at ${{ github.sha }}
 on:
   push:
     branches: [cornerstone/engineering-kit]
-    paths: [engineering/edits.json, .github/workflows/engineering-edits.yml]
+    paths: [engineering/edits.json]
 permissions:
   contents: write
 concurrency:
@@ -52,7 +52,14 @@ jobs:
               with urllib.request.urlopen(req, timeout=30) as response:
                   return json.load(response)
           assert api('/git/ref/heads/' + target)['object']['sha'] == base, 'Feature base changed'
-          subprocess.run(['git', 'fetch', '--no-tags', '--depth=1', 'origin', base], check=True)
+          # The repository may be private. Never persist or log the job credential.
+          git_env = dict(os.environ)
+          git_env.update(GIT_TERMINAL_PROMPT='0', GIT_CONFIG_COUNT='1',
+              GIT_CONFIG_KEY_0='http.https://github.com/.extraheader',
+              GIT_CONFIG_VALUE_0='AUTHORIZATION: basic ' + base64.b64encode(
+                  ('x-access-token:' + os.environ['TRANSPORT_TOKEN']).encode()).decode())
+          subprocess.run(['git', 'fetch', '--no-tags', '--depth=1', 'origin', base], check=True, env=git_env)
+          del git_env
           subprocess.run(['git', 'checkout', '--detach', base], check=True)
           elements, names, deferred, total = [], set(), [], 0
           for change in request['changes']:
