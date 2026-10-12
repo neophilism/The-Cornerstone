@@ -116,11 +116,13 @@ export function RecordChoice({
   prefix,
   value,
   records,
+  onChange,
 }: {
   field: Field;
   prefix: string;
   value: unknown;
   records: CaseRecord[];
+  onChange?: ((id: string) => void) | undefined;
 }) {
   const options = records.filter(
     (r) =>
@@ -142,7 +144,10 @@ export function RecordChoice({
           name={field.key}
           required={field.required}
           value={id}
-          onChange={(e) => setId(e.target.value)}
+          onChange={(e) => {
+            setId(e.target.value);
+            onChange?.(e.target.value);
+          }}
         />
       ) : (
         <select
@@ -150,7 +155,10 @@ export function RecordChoice({
           name={field.key}
           required={field.required}
           value={id}
-          onChange={(e) => setId(e.target.value)}
+          onChange={(e) => {
+            setId(e.target.value);
+            onChange?.(e.target.value);
+          }}
         >
           <option value="">Choose an accessible record</option>
           {options.map((r) => (

@@ -90,6 +90,7 @@ jobs:
       - run: node --import tsx tests/succession.integration.ts
       - run: node --import tsx tests/claim-survival.integration.ts
       - run: node --import tsx tests/governance.integration.ts
+      - run: node --import tsx tests/compact.integration.ts
       - run: node --import tsx tests/association-scale.integration.ts
       - run: node --import tsx tests/record-pages.integration.ts
       - run: node --import tsx tests/financial-journey.integration.ts
