@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { readFileSync, statSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import {allowedDisposableCiDatabase} from './allowed-ci-db.mjs';
+import { allowedDisposableCiDatabase } from './allowed-ci-db.mjs';
 const manifest = JSON.parse(readFileSync('policy/SOURCE_MANIFEST.json', 'utf8'));
 const allowedPaths = new Set([
   'policy/Speech.srt',
@@ -55,7 +55,9 @@ for (const name of names) {
   if (statSync(name).size > 2000000) continue;
   const text = readFileSync(name, 'utf8');
   const matchedPattern = patterns.some(p => p.test(text));
-  const matchedDatabase = [...text.matchAll(databaseUris)].some(m => !allowedDisposableCiDatabase(name, m[0]));
+  const matchedDatabase = [...text.matchAll(databaseUris)].some(
+    (m) => !allowedDisposableCiDatabase(name, m[0]),
+  );
   if (matchedPattern || matchedDatabase) {
     console.error('Potential secret in ' + name + '; value omitted.');
     failed = true;
