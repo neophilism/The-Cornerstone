@@ -34,9 +34,9 @@ jobs:
     resource_class: large
     environment:
       CI: "true"
-      MIGRATION_DATABASE_URL: postgresql://cornerstone_migration:synthetic_ci_only@localhost:5432/cornerstone_test
-      DATABASE_URL: postgresql://cornerstone_runtime:synthetic_ci_runtime_only@localhost:5432/cornerstone_test
-      WORKER_DATABASE_URL: postgresql://cornerstone_worker:synthetic_ci_worker_only@localhost:5432/cornerstone_test
+      MIGRATION_DATABASE_URL: postgresql://cornerstone_migration:synthetic_ci_only@127.0.0.1:5432/cornerstone_test
+      DATABASE_URL: postgresql://cornerstone_runtime:synthetic_ci_runtime_only@127.0.0.1:5432/cornerstone_test
+      WORKER_DATABASE_URL: postgresql://cornerstone_worker:synthetic_ci_worker_only@127.0.0.1:5432/cornerstone_test
       DATA_REALM: simulation
       CORNERSTONE_MODE: simulation
       NODE_ENV: development
