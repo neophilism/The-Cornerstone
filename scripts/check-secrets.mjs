@@ -41,7 +41,9 @@ const patterns = [
 ];
 // Database passwords even on loopback are sensitive, except three exact
 // documented synthetic CircleCI fixture URLs.
-const databaseUris = /postgres(?:ql)?:\/\/[^\s"'<>]+/g;
+// Require a user:password@host shape; host-only URLs in negative tests are
+// not credentials. This still catches passwords even on localhost.
+const databaseUris = /postgres(?:ql)?:\/\/[a-zA-Z0-9_.-]+:[^\s:@/"'<>]+@[^\s"'<>]+/g;
 for (const name of names) {
   if (!statSync(name).isFile()) continue;
   if (allowedPaths.has(name)) continue;
