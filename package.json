@@ -17,7 +17,7 @@
     "test:private": "playwright test --config playwright.private.config.ts",
     "check:schema": "node scripts/schema-inventory.mjs --check",
     "check:boundaries": "node scripts/check-boundaries.mjs",
-    "check:secrets": "node scripts/check-secrets.mjs",
+    "check:secrets": "node --test tests/allowed-ci-db.test.mjs && node scripts/check-secrets.mjs",
     "format": "prettier --write apps packages infra scripts tests docs .github *.json *.yaml *.md *.ts",
     "format:check": "prettier --check apps packages infra scripts tests docs .github *.json *.yaml *.md *.ts",
     "db:migrate": "node --env-file-if-exists=.env --import tsx scripts/migrate.ts",
