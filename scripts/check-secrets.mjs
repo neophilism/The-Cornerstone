@@ -36,7 +36,7 @@ const names = execFileSync(
 let failed = false;
 const patterns = [
   /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/,
-  /postgres(?:ql)?:\/\/[^\s:@]+:[^\s@]+@(?!localhost[:/])[^\s]+/,
+  /postgres(?:ql)?:\/\/[^\s:@]+:[^\s@]+@(?!(?:localhost|127\.0\.0\.1|\[::1\])[:/])[^\s]+/,
   /(?:ghp|github_pat|sk_live|AKIA)[A-Za-z0-9_]{15,}/,
 ];
 for (const name of names) {
