@@ -1,0 +1,103 @@
+version: 2.1
+
+# Mirrors complete application, PostGIS and source-evidence acceptance flows.
+jobs:
+  application-verification:
+    docker:
+      - image: cimg/node:24.19.0-browsers
+    resource_class: large
+    environment:
+      CI: "true"
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - checkout
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check:boundaries
+      - run: pnpm check:secrets
+      - run: pnpm format:check
+      - run: pnpm test
+      - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
+      - store_artifacts:
+          path: test-results
+
+  postgis-integration:
+    docker:
+      - image: cimg/node:24.19.0-browsers
+      - image: postgis/postgis:18-3.6
+        environment:
+          POSTGRES_DB: cornerstone_test
+          POSTGRES_USER: cornerstone_migration
+          POSTGRES_PASSWORD: synthetic_ci_only
+    resource_class: large
+    environment:
+      CI: "true"
+      MIGRATION_DATABASE_URL: postgresql://cornerstone_migration:synthetic_ci_only@127.0.0.1:5432/cornerstone_test
+      DATABASE_URL: postgresql://cornerstone_runtime:synthetic_ci_runtime_only@127.0.0.1:5432/cornerstone_test
+      WORKER_DATABASE_URL: postgresql://cornerstone_worker:synthetic_ci_worker_only@127.0.0.1:5432/cornerstone_test
+      DATA_REALM: simulation
+      CORNERSTONE_MODE: simulation
+      NODE_ENV: development
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - checkout
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build:packages
+      - run: node --import tsx scripts/create-runtime-role.ts
+      - run: pnpm db:migrate
+      - run: node --import tsx tests/migrations.integration.ts
+      - run: node --import tsx tests/runtime-schema.integration.ts
+      - run: pnpm db:seed:simulation
+      - run: node scripts/test-field-key.mjs
+      - run: pnpm test:db
+      - run: node --import tsx tests/activity.integration.ts
+      - run: node --import tsx tests/activity-pages.integration.ts
+      - run: node --import tsx tests/identity-access.integration.ts
+      - run: node --import tsx tests/evidence.integration.ts
+      - run: node --import tsx tests/membership.integration.ts
+      - run: node --import tsx tests/succession.integration.ts
+      - run: node --import tsx tests/claim-survival.integration.ts
+      - run: node --import tsx tests/governance.integration.ts
+      - run: node --import tsx tests/compact.integration.ts
+      - run: node --import tsx tests/association-scale.integration.ts
+      - run: node --import tsx tests/record-pages.integration.ts
+      - run: node --import tsx tests/financial-journey.integration.ts
+      - run:
+          name: Build real API, portal, staff and worker production code
+          command: NODE_ENV=production pnpm -r --filter @cornerstone/api --filter @cornerstone/portal --filter @cornerstone/staff --filter @cornerstone/worker build
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:private --project=desktop --output=test-results/desktop
+      - run: pnpm test:private --project=mobile --output=test-results/mobile
+      - store_artifacts:
+          path: test-results
+
+  source-evidence:
+    docker:
+      - image: cimg/node:24.19.0
+    resource_class: small
+    steps:
+      - checkout:
+          method: full
+      - run: node scripts/check-secrets.mjs
+      - run:
+          name: Source, tree and archive provenance
+          command: |
+            mkdir -p ci-evidence/source
+            git rev-parse HEAD > ci-evidence/source/COMMIT
+            git rev-parse 'HEAD^{tree}' > ci-evidence/source/TREE
+            git archive --format=tar HEAD | gzip -n > ci-evidence/source/source.tar.gz
+            printf '%s\n' 'Source snapshot only; not security certification.' > ci-evidence/source/SCOPE
+            cd ci-evidence/source
+            sha256sum COMMIT TREE SCOPE source.tar.gz > SHA256SUMS
+      - store_artifacts:
+          path: ci-evidence/source
+
+workflows:
+  full-ci:
+    jobs:
+      - application-verification
+      - postgis-integration
+      - source-evidence
