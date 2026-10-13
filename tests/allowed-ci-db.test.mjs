@@ -16,7 +16,10 @@ test('accept only exact, documented synthetic CircleCI accounts on loopback', ()
     assert.equal(permitted('.circleci/config.yml', uri(user, password, 'localhost')), true);
     assert.equal(permitted('README.md', uri(user, password)), false);
     assert.equal(permitted('.circleci/config.yml', uri(user, password, 'db.internal')), false);
-    assert.equal(permitted('.circleci/config.yml', uri(user, password, '127.0.0.1', '5433')), false);
+    assert.equal(
+      permitted('.circleci/config.yml', uri(user, password, '127.0.0.1', '5433')),
+      false,
+    );
     assert.equal(
       permitted('.circleci/config.yml', uri(user, password, '127.0.0.1', '5432', 'production')),
       false,
@@ -26,22 +29,37 @@ test('accept only exact, documented synthetic CircleCI accounts on loopback', ()
 });
 
 test('never exempt real/local or mistaken role credentials', () => {
-  assert.equal(permitted('.circleci/config.yml', uri('prod_admin', 'real_password', 'localhost')), false);
-  assert.equal(permitted('.circleci/config.yml', uri('cornerstone_worker', 'synthetic_ci_only')), false);
+  assert.equal(
+    permitted('.circleci/config.yml', uri('prod_admin', 'real_password', 'localhost')),
+    false,
+  );
+  assert.equal(
+    permitted('.circleci/config.yml', uri('cornerstone_worker', 'synthetic_ci_only')),
+    false,
+  );
   assert.equal(permitted('.circleci/config.yml', 'not a database URL'), false);
 });
 
 test('allow exactly documented GitHub Actions CI and .env example accounts', () => {
   assert.equal(
-    permitted('.github/workflows/ci.yml', uri('cornerstone_migration', 'synthetic_ci_only', 'localhost')),
+    permitted(
+      '.github/workflows/ci.yml',
+      uri('cornerstone_migration', 'synthetic_ci_only', 'localhost'),
+    ),
     true,
   );
   assert.equal(
-    permitted('.github/workflows/ci.yml', uri('cornerstone_worker', 'synthetic_ci_worker_only', 'localhost')),
+    permitted(
+      '.github/workflows/ci.yml',
+      uri('cornerstone_worker', 'synthetic_ci_worker_only', 'localhost'),
+    ),
     true,
   );
   assert.equal(
-    permitted('.env.example', uri('cornerstone_runtime', 'local_test_only', 'localhost', '5432', 'cornerstone')),
+    permitted(
+      '.env.example',
+      uri('cornerstone_runtime', 'local_test_only', 'localhost', '5432', 'cornerstone'),
+    ),
     true,
   );
   assert.equal(
@@ -52,7 +70,10 @@ test('allow exactly documented GitHub Actions CI and .env example accounts', () 
     true,
   );
   assert.equal(
-    permitted('.env.example', uri('cornerstone_worker', 'real_password', 'localhost', '5432', 'cornerstone')),
+    permitted(
+      '.env.example',
+      uri('cornerstone_worker', 'real_password', 'localhost', '5432', 'cornerstone'),
+    ),
     false,
   );
   assert.equal(
@@ -63,7 +84,10 @@ test('allow exactly documented GitHub Actions CI and .env example accounts', () 
     false,
   );
   assert.equal(
-    permitted('README.md', uri('cornerstone_runtime', 'local_test_only', 'localhost', '5432', 'cornerstone')),
+    permitted(
+      'README.md',
+      uri('cornerstone_runtime', 'local_test_only', 'localhost', '5432', 'cornerstone'),
+    ),
     false,
   );
 });
