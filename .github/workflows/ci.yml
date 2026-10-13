@@ -35,6 +35,13 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm check:boundaries
       - run: pnpm check:secrets
+      - name: Show canonical formatting for three newly added security files
+        run: |
+          for file in scripts/allowed-ci-db.mjs scripts/check-secrets.mjs tests/allowed-ci-db.test.mjs; do
+            printf 'FORMATTING_BEGIN:%s\n' "$file"
+            pnpm exec prettier "$file"
+            printf '\nFORMATTING_END:%s\n' "$file"
+          done
       - run: pnpm format:check
       - run: pnpm test
       - run: pnpm build
