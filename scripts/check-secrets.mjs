@@ -1,6 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { readFileSync, statSync } from 'node:fs';
 import { createHash } from 'node:crypto';
+import {allowedDisposableCiDatabase} from './allowed-ci-db.mjs';
 const manifest = JSON.parse(readFileSync('policy/SOURCE_MANIFEST.json', 'utf8'));
 const allowedPaths = new Set([
   'policy/Speech.srt',
@@ -36,9 +37,11 @@ const names = execFileSync(
 let failed = false;
 const patterns = [
   /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/,
-  /postgres(?:ql)?:\/\/[^\s:@]+:[^\s@]+@(?!localhost[:/])[^\s]+/,
   /(?:ghp|github_pat|sk_live|AKIA)[A-Za-z0-9_]{15,}/,
 ];
+// Database passwords even on loopback are sensitive, except three exact
+// documented synthetic CircleCI fixture URLs.
+const databaseUris = /postgres(?:ql)?:\/\/[^\s"'<>]+/g;
 for (const name of names) {
   if (!statSync(name).isFile()) continue;
   if (allowedPaths.has(name)) continue;
@@ -49,11 +52,12 @@ for (const name of names) {
   }
   if (statSync(name).size > 2000000) continue;
   const text = readFileSync(name, 'utf8');
-  for (const p of patterns)
-    if (p.test(text)) {
-      console.error(`Potential secret in ${name}; value omitted.`);
-      failed = true;
-    }
+  const matchedPattern = patterns.some(p => p.test(text));
+  const matchedDatabase = [...text.matchAll(databaseUris)].some(m => !allowedDisposableCiDatabase(name, m[0]));
+  if (matchedPattern || matchedDatabase) {
+    console.error('Potential secret in ' + name + '; value omitted.');
+    failed = true;
+  }
 }
 if (failed) process.exitCode = 1;
 else console.log('No credential patterns found; 7 explicitly approved source originals verified.');
