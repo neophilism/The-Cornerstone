@@ -54,7 +54,7 @@ for (const name of names) {
   }
   if (statSync(name).size > 2000000) continue;
   const text = readFileSync(name, 'utf8');
-  const matchedPattern = patterns.some(p => p.test(text));
+  const matchedPattern = patterns.some((p) => p.test(text));
   const matchedDatabase = [...text.matchAll(databaseUris)].some(
     (m) => !allowedDisposableCiDatabase(name, m[0]),
   );
