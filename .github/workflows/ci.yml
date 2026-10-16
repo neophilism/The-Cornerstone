@@ -100,6 +100,7 @@ jobs:
       - run: node --import tsx tests/activity-pages.integration.ts
       - run: node --import tsx tests/identity-access.integration.ts
       - run: node --import tsx tests/evidence.integration.ts
+      - run: node --import tsx tests/evidence-recovery.integration.ts
       - run: node --import tsx tests/membership.integration.ts
       - run: node --import tsx tests/succession.integration.ts
       - run: node --import tsx tests/claim-survival.integration.ts
