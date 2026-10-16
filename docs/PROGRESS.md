@@ -67,3 +67,7 @@ Added `pnpm setup:local` to generate private, separate local credentials and run
 ## 2026-10-16 — personal membership action recovery
 
 Personal founding consent, scale choices and ballots now freeze exact uncertain requests, preserve them through denied retries and validate their historical receipt before refreshing current state. Association receipt replay requires current authorization. Added unit correlation cases, PostgreSQL replay/revocation assertions and desktop/mobile lost-response and substituted-receipt journeys. See [MEMBERSHIP_RECOVERY.md](MEMBERSHIP_RECOVERY.md); required CI results establish acceptance separately from this implementation entry.
+
+## 2026-10-16 — database recovery rehearsal
+
+Added actual `pg_dump`/`pg_restore` verification to the isolated PostgreSQL CI job, including ciphertext/history/receipt/audit/outbox byte comparisons, authorized decryption, wrong-key and outsider denial, schema readiness and restored access controls. Durations are measured in the job log; acceptance requires that actual job to pass. This is synthetic same-cluster logical recovery, not a production/provider recovery claim. See [DATABASE_RECOVERY_REHEARSAL.md](DATABASE_RECOVERY_REHEARSAL.md).
