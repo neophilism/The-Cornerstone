@@ -391,7 +391,24 @@ export function Workspace({
     ? visible.filter((w) => (group.kinds as readonly string[]).includes(w.kind))
     : visible;
   return (
-    <main id="main">
+    <main
+      id="main"
+      onClickCapture={(event) => {
+        if (
+          evidenceBusyRef.current &&
+          !(event.target as HTMLElement).closest('.action-recovery, .evidence-recovery')
+        ) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      }}
+      onSubmitCapture={(event) => {
+        if (evidenceBusyRef.current) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      }}
+    >
       <div className="realm-banner">
         SYNTHETIC DEVELOPMENT · No real eligibility, license, ranking, payment or legal filing
       </div>

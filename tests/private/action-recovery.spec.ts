@@ -64,6 +64,11 @@ test('a committed lost workflow response and denied retry preserve one exact act
   ).toBeVisible();
   await expect(page.getByRole('button', { name: 'Retry exact action', exact: true })).toBeEnabled();
   await expect(submit).toBeDisabled();
+  await page.getByRole('link', { name: 'Overview', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Retry exact action', exact: true })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Your next step, made clear.', exact: true }),
+  ).toHaveCount(0);
   const axe = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
   expect(axe.violations.map((v) => v.id)).toEqual([]);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
