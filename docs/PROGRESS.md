@@ -39,3 +39,7 @@ Complete the remaining program journeys, including new deceased-worker filings, 
 Protected identity/device authority, recipient encryption and recovery, real evidence custody, legal notices, signatures, Treasury/institutional handoffs, independent reviews, release provenance and measured provider recovery remain activation prerequisites. Real private intake, official action, payments and real rankings remain disabled. Branch protection and required independent review are not supplied by passing tests.
 
 The approved `registry/roadmap.json` denominator remains 25 public tracking units with its original 11 verified mappings. Supporting PR counts do not change it or establish a whole-program completion percentage. Machine-readable refs are in `PROGRESS.json`.
+
+## 16 October 2026 — workflow action recovery implementation
+
+Adds immutable recovery intent to ordinary workflow command forms in both private workspaces. Lost or malformed responses and denied retries preserve the original request; confirmation reloads current permission/state rather than displaying a historical replay as current. Local baseline: 292 unit tests; updated source: 306 passing unit tests and successful package builds. New PostgreSQL and desktop/mobile scenarios are registered in required CI; their final PR results must be observed before acceptance. See ACTION_RECOVERY.md. No provider deployment or official/private production activation is claimed.
