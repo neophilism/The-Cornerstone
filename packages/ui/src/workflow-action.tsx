@@ -116,7 +116,11 @@ export function WorkflowAction({
     <form className="action-panel form-stack" onSubmit={submit} aria-busy={busy}>
       <h2>{action.label}</h2>
       <p className="muted">{action.help}</p>
-      {error && <p role="alert">{error}</p>}
+      {error && (
+        <p className="error-panel" role="alert">
+          {error}
+        </p>
+      )}
       <fieldset
         disabled={disabled || busy || !!attempt}
         style={{ border: 0, padding: 0, minWidth: 0 }}
