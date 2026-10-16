@@ -344,8 +344,9 @@ export function Workspace({
           ) : (
             <>
               <p>
-                Official sign-in requires an approved identity provider, independent security review
-                and legal activation.
+                Official sign-in requires an approved identity provider, verified security and
+                recovery controls, and legal activation. External expert review is optional
+                follow-up.
               </p>
               <a className="button button-secondary" href={publicOrigin}>
                 Return to the public site
