@@ -43,3 +43,5 @@ The canonical [security/e2eesa-status.json](security/e2eesa-status.json) records
 Synthetic record exports require an explicit review, disclosure consent and fresh access/version checks. See `docs/RECORD_EXPORT.md`; downloaded copies are unencrypted and cannot be recalled.
 
 New-record creation freezes uncertain requests and recovers their original receipt without sending an edited duplicate. See `docs/CREATION_RECOVERY.md` for the in-memory boundary, denied retries and current-access checks.
+
+Ordinary workflow actions preserve one exact request after an uncertain response, validate the recovered receipt and reload current permissions/state before the next action. See [workflow action recovery](docs/ACTION_RECOVERY.md).

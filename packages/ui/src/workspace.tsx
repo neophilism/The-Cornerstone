@@ -1,10 +1,11 @@
 'use client';
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityPageSchema,
   ActivityReadResultSchema,
   draftAccessKinds,
   RecordCapabilitiesSchema,
+  RecordSchema,
   type RecordCapabilities,
   type ActivityNotification,
   type Actor,
@@ -24,7 +25,7 @@ import { SuccessionSummary } from './succession.js';
 import { ClaimSurvivalSummary } from './claim-survival.js';
 import { GovernanceSummary } from './governance.js';
 import { CompactSummary } from './compacts.js';
-import { WorkflowFields, formInput } from './workflow-fields.js';
+import { WorkflowAction } from './workflow-action.js';
 import { DraftEditor } from './draft-editor.js';
 import { RecordExporter } from './record-exporter.js';
 import { RecordCreator } from './record-creator.js';
@@ -77,20 +78,11 @@ export function Workspace({
   const [pagePending, setPagePending] = useState(false);
   const [recordReference, setRecordReference] = useState('');
   const recordGeneration = useRef(0);
-  const retries = useRef(new Map<string, { input: string; key: string }>());
   const [capabilities, setCapabilities] = useState<RecordCapabilities[]>([]);
   const permitted = selected
     ? (capabilities.find((c) => c.recordId === selected.id && c.version === selected.version)
         ?.actions ?? [])
     : [];
-  function requestKey(slot: string, input: unknown) {
-    const encoded = JSON.stringify(input),
-      previous = retries.current.get(slot);
-    if (previous?.input === encoded) return previous.key;
-    const key = crypto.randomUUID();
-    retries.current.set(slot, { input: encoded, key });
-    return key;
-  }
   async function api(path: string, body?: unknown) {
     const response = await fetch(`/api/private/${path}`, {
       method: body === undefined ? 'GET' : 'POST',
@@ -250,6 +242,40 @@ export function Workspace({
       setPagePending(false);
     }
   }
+  async function confirmedAction(result: { record: CaseRecord; receipt: Receipt }) {
+    // A recovered receipt describes the accepted historical version. Re-read
+    // current permissions/state before presenting another workflow action.
+    setReceipt(result.receipt);
+    setSelected(null);
+    setEditing(false);
+    setPending(true);
+    const generation = ++recordGeneration.current;
+    try {
+      const current = await api('records?recordId=' + encodeURIComponent(result.record.id));
+      if (generation !== recordGeneration.current) return;
+      const record = RecordSchema.parse(current.records?.[0]);
+      const actions = RecordCapabilitiesSchema.array().parse(current.capabilities);
+      if (
+        record.id !== result.record.id ||
+        record.realm !== result.record.realm ||
+        record.version < result.record.version
+      )
+        throw Error('The current action record could not be verified.');
+      setSelected(record);
+      setRecords((previous) => [...previous.filter((item) => item.id !== record.id), record]);
+      setCapabilities((previous) => [
+        ...previous.filter((item) => item.recordId !== record.id),
+        ...actions,
+      ]);
+    } catch {
+      if (generation === recordGeneration.current)
+        setError(
+          'The action receipt was confirmed, but current record access could not be refreshed. Reopen the record before taking another action.',
+        );
+    } finally {
+      setPending(false);
+    }
+  }
   useEffect(() => {
     fetch('/api/private/status', { cache: 'no-store' })
       .then((r) => r.json())
@@ -278,40 +304,9 @@ export function Workspace({
       setUnreadCount(0);
       activityGeneration.current++;
       setCapabilities([]);
-      retries.current.clear();
       await refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Sign-in unavailable.');
-    } finally {
-      setPending(false);
-    }
-  }
-  async function command(e: FormEvent<HTMLFormElement>, key: string) {
-    e.preventDefault();
-    if (!selected || pending || evidenceBusyRef.current) return;
-    const form = e.currentTarget;
-    setPending(true);
-    setError('');
-    try {
-      const wf = workflow(selected.kind);
-      const fields =
-        key === 'save_draft' ? wf.createFields : wf.actions.find((a) => a.key === key)!.fields;
-      const input = {
-        recordId: selected.id,
-        action: key,
-        expectedVersion: selected.version,
-        input: formInput(form, fields),
-      };
-      const slot = `${selected.id}:${key}`;
-      const result = await api('commands', { ...input, idempotencyKey: requestKey(slot, input) });
-      retries.current.delete(slot);
-      setReceipt(result.receipt);
-      setSelected(result.record);
-      setEditing(false);
-      await refresh();
-      form.reset();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'The action could not be completed.');
     } finally {
       setPending(false);
     }
@@ -396,7 +391,24 @@ export function Workspace({
     ? visible.filter((w) => (group.kinds as readonly string[]).includes(w.kind))
     : visible;
   return (
-    <main id="main">
+    <main
+      id="main"
+      onClickCapture={(event) => {
+        if (
+          evidenceBusyRef.current &&
+          !(event.target as HTMLElement).closest('.action-recovery, .evidence-recovery')
+        ) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      }}
+      onSubmitCapture={(event) => {
+        if (evidenceBusyRef.current) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      }}
+    >
       <div className="realm-banner">
         SYNTHETIC DEVELOPMENT · No real eligibility, license, ranking, payment or legal filing
       </div>
@@ -501,7 +513,6 @@ export function Workspace({
                   setNextCursor(null);
                   setRecordReference('');
                   setRecordSearch('');
-                  retries.current.clear();
                 } catch (e) {
                   setError(String(e));
                 }
@@ -900,9 +911,8 @@ export function Workspace({
                     />
                   )}
                 </div>
-                <fieldset
+                <div
                   className="workflow-actions"
-                  disabled={pending || evidenceBusy}
                   aria-busy={pending || evidenceBusy}
                   style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}
                 >
@@ -934,30 +944,18 @@ export function Workspace({
                           </section>
                         );
                       const form = (
-                        <form
+                        <WorkflowAction
                           key={`${a.key}:${selected.version}`}
-                          className="action-panel form-stack"
-                          onSubmit={(e) => void command(e, a.key)}
-                        >
-                          <h2>{a.label}</h2>
-                          <p className="muted">{a.help}</p>
-                          <WorkflowFields
-                            fields={a.fields}
-                            prefix={a.key}
-                            records={records}
-                            record={selected}
-                            api={api}
-                            values={{
-                              evidenceIds: selected.data['evidenceIds'],
-                              ...(a.key === 'correct'
-                                ? { schedule: selected.data['schedule'] }
-                                : {}),
-                            }}
-                          />
-                          <button className="button" disabled={pending}>
-                            {pending ? 'Submitting…' : a.label}
-                          </button>
-                        </form>
+                          action={a}
+                          record={selected}
+                          records={records}
+                          api={api}
+                          disabled={pending || evidenceBusy}
+                          onBusyChange={evidenceBusyChanged}
+                          onConfirmed={(result) => {
+                            void confirmedAction(result);
+                          }}
+                        />
                       );
                       return selected.kind === 'financial_schedule' && a.key === 'correct' ? (
                         <details className="saved-details" key={`${a.key}:${selected.version}`}>
@@ -968,7 +966,7 @@ export function Workspace({
                         form
                       );
                     })}
-                </fieldset>
+                </div>
                 {selected.kind === 'resolution' && !!selected.data['rollDigest'] && (
                   <details className="action-panel" style={{ marginTop: 25 }}>
                     <summary>Vote verification details</summary>
