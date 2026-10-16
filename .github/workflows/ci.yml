@@ -37,7 +37,7 @@ jobs:
       - run: pnpm check:secrets
       - name: Show canonical formatting for three newly added security files
         run: |
-          for file in scripts/allowed-ci-db.mjs scripts/check-secrets.mjs tests/allowed-ci-db.test.mjs apps/web/app/policy/page.tsx apps/web/app/privacy/page.tsx packages/ui/src/workspace.tsx; do
+          for file in scripts/allowed-ci-db.mjs scripts/check-secrets.mjs tests/allowed-ci-db.test.mjs; do
             printf 'FORMATTING_BEGIN:%s\n' "$file"
             pnpm exec prettier "$file"
             printf '\nFORMATTING_END:%s\n' "$file"
