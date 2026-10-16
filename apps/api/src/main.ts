@@ -408,8 +408,8 @@ function oidcConfig() {
 route('get', '/auth/start', async (req, res) => {
   if (production)
     throw new DomainError(
-      'IDENTITY_REVIEW_REQUIRED',
-      'Protected identity and device recovery are awaiting independent review.',
+      'PROGRAM_ACTIVATION_NOT_AUTHORIZED',
+      'Protected identity is unavailable until lawful program activation and verified identity/recovery controls; external security auditing is not a prerequisite.',
       503,
     );
   const config = await oidcConfig(),
@@ -444,8 +444,8 @@ route('get', '/auth/start', async (req, res) => {
 route('get', '/auth/callback', async (req, res) => {
   if (production)
     throw new DomainError(
-      'IDENTITY_REVIEW_REQUIRED',
-      'Protected identity is awaiting independent review.',
+      'PROGRAM_ACTIVATION_NOT_AUTHORIZED',
+      'Protected identity remains inactive until lawful activation and verified identity/recovery controls; an independent human audit is not required.',
       503,
     );
   const encoded = cookies(req)['cornerstone-oidc-flow'];
