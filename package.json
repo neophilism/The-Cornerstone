@@ -23,7 +23,9 @@
     "db:migrate": "node --env-file-if-exists=.env --import tsx scripts/migrate.ts",
     "db:seed:simulation": "node --env-file-if-exists=.env --import tsx scripts/seed-simulation.ts",
     "db:check": "node --env-file-if-exists=.env --import tsx scripts/migrate.ts --check",
-    "test:proxy": "node --import tsx tests/private-proxy.integration.ts"
+    "test:proxy": "node --import tsx tests/private-proxy.integration.ts",
+    "setup:local": "node scripts/setup-local.mjs",
+    "test:local-setup": "node scripts/local-setup-smoke.mjs"
   },
   "devDependencies": {
     "@playwright/test": "1.62.1",

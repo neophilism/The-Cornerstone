@@ -59,3 +59,7 @@ Extended exact-request recovery to synthetic evidence uploads and validation. By
 ## 2026-10-16 — current-access record reference copying
 
 The record-ID clipboard control now discloses retention, checks current authorization, copies only the UUID and suppresses late responses after context changes. Browser denial offers a freshly authorized manual reference. Added seven unit cases plus desktop/mobile copy, denial and cancellation checks. The growing full database/browser job retains every check and now has a 20-minute budget.
+
+## 2026-10-16 — repeatable local synthetic bootstrap
+
+Added `pnpm setup:local` to generate private, separate local credentials and run pinned loopback PostGIS, restricted-role creation, migrations and synthetic persona seeding. Existing configuration and data are preserved; incompatible or unsafe settings are refused. Unit checks cover file permissions, repeat runs, remote/production configuration denial and environment isolation. A dedicated CI job exercises Docker setup twice and actual authenticated API access. This removes external provider keys from the local synthetic startup path; hosted protected-production integrations remain unfinished.
