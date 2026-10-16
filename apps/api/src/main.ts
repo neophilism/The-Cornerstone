@@ -35,6 +35,7 @@ import { DraftAccessService } from './access.js';
 import { EvidenceService } from './evidence.js';
 import { MembershipService } from './membership.js';
 import { RecordReader } from './records.js';
+import { ReceiptReader } from './receipts.js';
 
 class ApplicationModule {}
 Module({})(ApplicationModule);
@@ -262,6 +263,9 @@ route('post', '/auth/sessions/revoke-others', async (req, res) => {
 });
 route('get', '/records', async (req, res) => {
   res.json(await new RecordReader(requireStore()).read(await actor(req), req.query));
+});
+route('get', '/receipts', async (req, res) => {
+  res.json(await new ReceiptReader(requireStore()).read(await actor(req), req.query));
 });
 const accessService = () => new DraftAccessService(requireStore(), mode, realm);
 route('get', '/access', async (req, res) => {

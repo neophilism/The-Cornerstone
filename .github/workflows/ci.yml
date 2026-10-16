@@ -57,7 +57,7 @@ jobs:
           retention-days: 7
   database:
     runs-on: ubuntu-24.04
-    timeout-minutes: 12
+    timeout-minutes: 20
     services:
       postgres:
         image: postgis/postgis:18-3.6@sha256:60f6ad1d21ea86a67d47780b9a0d1e1d200500f62b19293fa834d0dea80b8677
@@ -108,6 +108,7 @@ jobs:
       - run: node --import tsx tests/association-scale.integration.ts
       - run: node --import tsx tests/record-pages.integration.ts
       - run: node --import tsx tests/record-export.integration.ts
+      - run: node --import tsx tests/receipt-export.integration.ts
       - run: node --import tsx tests/financial-journey.integration.ts
       - run: pnpm -r --filter @cornerstone/api --filter @cornerstone/portal --filter @cornerstone/staff --filter @cornerstone/worker build
         env:
