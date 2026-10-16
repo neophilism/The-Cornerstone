@@ -22,58 +22,64 @@ async function capture(page: Page, name: string) {
 test('lost consent and a denied retry preserve the exact acknowledged response', async ({
   page,
 }, info) => {
-  await login(page, info.project.name === 'desktop' ? 'participant' : 'member');
-  await page.getByRole('link', { name: 'Membership & votes', exact: true }).click();
-  await page
-    .locator('.invitation-card')
-    .filter({
-      has: page.getByRole('heading', { name: 'Invented voluntary invitation', exact: true }),
-    })
-    .getByRole('button', { name: 'Review association', exact: true })
-    .click();
-  const panel = page.locator('.founding-consent');
-  await expect(panel.getByText(/^Your response:/)).toBeVisible();
-  if (await panel.getByRole('button', { name: 'Withdraw founding consent', exact: true }).count()) {
-    await panel.getByRole('button', { name: 'Withdraw founding consent', exact: true }).click();
-    await expect(panel.getByText('Your response: declined', { exact: true })).toBeVisible();
+  test.setTimeout(90000);
+  const world = await new Simulation().connect();
+  try {
+    const persona = info.project.name === 'desktop' ? 'participant' : 'member';
+    const person = await world.persona(persona),
+      other = await world.person(),
+      labor = await world.persona('labor');
+    const title = 'Invented recoverable consent ' + randomUUID();
+    await world.association(person, other, labor, title, false);
+    await login(page, persona);
+    await page.getByRole('link', { name: 'Membership & votes', exact: true }).click();
+    await page
+      .locator('.invitation-card')
+      .filter({ has: page.getByRole('heading', { name: title, exact: true }) })
+      .getByRole('button', { name: 'Review association', exact: true })
+      .click();
+    const panel = page.locator('.founding-consent');
+    await expect(panel.getByText('Your response: pending', { exact: true })).toBeVisible();
+    const wires: string[] = [];
+    let accepted: any;
+    await page.route('**/api/private/memberships/respond', async (route) => {
+      wires.push(route.request().postData()!);
+      if (wires.length === 2)
+        return route.fulfill({ status: 403, json: { message: 'Synthetic denied retry' } });
+      const response = await route.fetch();
+      expect(response.ok()).toBe(true);
+      if (wires.length === 1) {
+        accepted = await response.json();
+        return route.abort('failed');
+      }
+      return route.fulfill({ response });
+    });
+    await panel.getByLabel(/^I voluntarily accept these unchanged terms/).check();
+    await panel.getByRole('button', { name: 'Accept founding invitation', exact: true }).click();
+    await expect(panel.getByRole('alert')).toContainText('membership outcome is unknown');
+    await expect(panel.getByLabel(/^I voluntarily accept these unchanged terms/)).toBeDisabled();
+    await panel.getByRole('button', { name: 'Retry exact membership action', exact: true }).click();
+    await expect(panel.getByRole('alert')).toContainText('membership outcome is unknown');
+    await expect(
+      panel.getByRole('button', { name: 'Decline founding invitation', exact: true }),
+    ).toBeDisabled();
+    await page.getByRole('link', { name: 'Overview', exact: true }).click();
+    await expect(
+      panel.getByRole('button', { name: 'Retry exact membership action', exact: true }),
+    ).toBeVisible();
+    await capture(page, 'private-consent-recovery-' + info.project.name);
+    await panel.getByRole('button', { name: 'Retry exact membership action', exact: true }).click();
+    await expect(panel.getByText('Your response: accepted', { exact: true })).toBeVisible();
+    expect(wires).toHaveLength(3);
+    expect(new Set(wires).size).toBe(1);
+    const current = await (
+      await page.request.get('/api/private/records?recordId=' + accepted.record.id)
+    ).json();
+    expect(current.records[0].version).toBe(accepted.record.version);
+    expect(await page.evaluate(() => localStorage.length + sessionStorage.length)).toBe(0);
+  } finally {
+    await world.close();
   }
-  const wires: string[] = [];
-  let accepted: any;
-  await page.route('**/api/private/memberships/respond', async (route) => {
-    wires.push(route.request().postData()!);
-    if (wires.length === 2)
-      return route.fulfill({ status: 403, json: { message: 'Synthetic denied retry' } });
-    const response = await route.fetch();
-    expect(response.ok()).toBe(true);
-    if (wires.length === 1) {
-      accepted = await response.json();
-      return route.abort('failed');
-    }
-    return route.fulfill({ response });
-  });
-  await panel.getByLabel(/^I voluntarily accept these unchanged terms/).check();
-  await panel.getByRole('button', { name: 'Accept founding invitation', exact: true }).click();
-  await expect(panel.getByRole('alert')).toContainText('membership outcome is unknown');
-  await expect(panel.getByLabel(/^I voluntarily accept these unchanged terms/)).toBeDisabled();
-  await panel.getByRole('button', { name: 'Retry exact membership action', exact: true }).click();
-  await expect(panel.getByRole('alert')).toContainText('membership outcome is unknown');
-  await expect(
-    panel.getByRole('button', { name: 'Decline founding invitation', exact: true }),
-  ).toBeDisabled();
-  await page.getByRole('link', { name: 'Overview', exact: true }).click();
-  await expect(
-    panel.getByRole('button', { name: 'Retry exact membership action', exact: true }),
-  ).toBeVisible();
-  await capture(page, 'private-consent-recovery-' + info.project.name);
-  await panel.getByRole('button', { name: 'Retry exact membership action', exact: true }).click();
-  await expect(panel.getByText('Your response: accepted', { exact: true })).toBeVisible();
-  expect(wires).toHaveLength(3);
-  expect(new Set(wires).size).toBe(1);
-  const current = await (
-    await page.request.get('/api/private/records?recordId=' + accepted.record.id)
-  ).json();
-  expect(current.records[0].version).toBe(accepted.record.version);
-  expect(await page.evaluate(() => localStorage.length + sessionStorage.length)).toBe(0);
 });
 test('a substituted ballot receipt freezes the original choice until exact recovery', async ({
   page,

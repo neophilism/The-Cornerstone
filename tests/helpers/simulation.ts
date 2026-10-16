@@ -154,6 +154,7 @@ export class Simulation {
     second: Actor,
     labor: Actor,
     title = 'Invented succession association',
+    closeRoll = true,
   ) {
     const event = await this.create(
       first,
@@ -215,29 +216,31 @@ export class Simulation {
         'One vote and equal base rights; inspection and first opportunities; no compulsory work, relocation, capital, training or personal debt.',
     });
     await this.command(first, association, 'submit', { attested: true });
-    for (const person of [first, second]) {
-      const a = await this.actor(person.id),
-        invitation = (await this.members.list(a)).invitations.find(
-          (i) => i.associationId === association.id,
-        )!;
-      await this.members.respond(a, {
-        recordId: association.id,
-        invitationId: invitation.id,
-        expectedVersion: (await this.get(a, association.id))!.version,
-        idempotencyKey: randomUUID(),
-        response: 'accepted',
-        rightsAcknowledged: true,
+    if (closeRoll) {
+      for (const person of [first, second]) {
+        const a = await this.actor(person.id),
+          invitation = (await this.members.list(a)).invitations.find(
+            (i) => i.associationId === association.id,
+          )!;
+        await this.members.respond(a, {
+          recordId: association.id,
+          invitationId: invitation.id,
+          expectedVersion: (await this.get(a, association.id))!.version,
+          idempotencyKey: randomUUID(),
+          response: 'accepted',
+          rightsAcknowledged: true,
+        });
+      }
+      await this.command(labor, association, 'begin_review');
+      this.day = addCalendarDays(this.today, 181);
+      await this.command(labor, association, 'close_roll', {
+        pendingClaims: 0,
+        equalRights: true,
+        voluntary: true,
+        reasons: findings,
       });
+      this.day = this.today;
     }
-    await this.command(labor, association, 'begin_review');
-    this.day = addCalendarDays(this.today, 181);
-    await this.command(labor, association, 'close_roll', {
-      pendingClaims: 0,
-      equalRights: true,
-      voluntary: true,
-      reasons: findings,
-    });
-    this.day = this.today;
     const rows = (
       await this.owner.query(
         'SELECT * FROM founding_units WHERE association_id=$1 ORDER BY person_id',
