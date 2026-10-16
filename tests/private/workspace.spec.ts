@@ -329,7 +329,7 @@ test('a synthetic attachment stays quarantined until text validation and downloa
     .filter({ has: page.getByRole('heading', { name: 'invented-source.txt', exact: true }) });
   await expect(card.getByText('Quarantined · download unavailable', { exact: true })).toBeVisible();
   await expect(
-    card.getByRole('link', { name: 'Download synthetic text', exact: true }),
+    card.getByRole('button', { name: 'Download synthetic text', exact: true }),
   ).toHaveCount(0);
   const me = await (await page.request.get('/api/private/me')).json();
   const snapshot = await (await page.request.get('/api/private/records')).json();
@@ -351,8 +351,14 @@ test('a synthetic attachment stays quarantined until text validation and downloa
   await card.getByRole('button', { name: 'Validate synthetic text', exact: true }).click();
   await expect(page.getByText('Simulation receipt · version 3', { exact: true })).toBeVisible();
   await expect(card.getByText('Synthetic text checked', { exact: true })).toBeVisible();
+  await card.getByRole('button', { name: 'Download synthetic text', exact: true }).click();
+  await card
+    .getByLabel('I agree to save this unencrypted synthetic text file on this device.', {
+      exact: true,
+    })
+    .check();
   const wait = page.waitForEvent('download');
-  await card.getByRole('link', { name: 'Download synthetic text', exact: true }).click();
+  await card.getByRole('button', { name: 'Download reviewed text', exact: true }).click();
   const download = await wait;
   expect(download.suggestedFilename()).toBe('invented-source.txt');
   expect(await readFile((await download.path())!)).toEqual(body);

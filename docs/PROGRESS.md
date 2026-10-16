@@ -71,3 +71,7 @@ Personal founding consent, scale choices and ballots now freeze exact uncertain 
 ## 2026-10-16 — database recovery rehearsal
 
 Added actual `pg_dump`/`pg_restore` verification to the isolated PostgreSQL CI job, including ciphertext/history/receipt/audit/outbox byte comparisons, authorized decryption, wrong-key and outsider denial, schema readiness and restored access controls. Durations are measured in the job log; acceptance requires that actual job to pass. This is synthetic same-cluster logical recovery, not a production/provider recovery claim. See [DATABASE_RECOVERY_REHEARSAL.md](DATABASE_RECOVERY_REHEARSAL.md).
+
+## 2026-10-16 — reviewed synthetic attachment download
+
+Attachment downloads now require explicit disclosure consent, fresh metadata/access verification and bounded byte/digest validation. Cancelled and late responses cannot release a file. Added unit and desktop/mobile denial, substitution and cancellation cases; the existing original-byte download journey now exercises review and consent. See [EVIDENCE_DOWNLOAD.md](EVIDENCE_DOWNLOAD.md). No real evidence provider or legal acceptance is introduced.

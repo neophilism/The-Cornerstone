@@ -889,6 +889,7 @@ export function Workspace({
                       record={selected}
                       actorId={session.actor.id}
                       canAttach={permitted.includes('attach_evidence')}
+                      disabled={pending || editing || evidenceBusy}
                       onBusyChange={evidenceBusyChanged}
                       api={api}
                       onChanged={confirmedAction}

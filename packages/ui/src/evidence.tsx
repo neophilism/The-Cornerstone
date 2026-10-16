@@ -13,6 +13,7 @@ import {
   evidenceResult,
   type EvidenceAttempt,
 } from './evidence-recovery.js';
+import { EvidenceDownloader } from './evidence-downloader.js';
 import { actionFailure } from './action-recovery.js';
 type Result = { record: CaseRecord; receipt: Receipt };
 export function EvidencePanel({
@@ -22,6 +23,7 @@ export function EvidencePanel({
   api,
   onChanged,
   onBusyChange,
+  disabled,
 }: {
   record: CaseRecord;
   actorId: string;
@@ -29,6 +31,7 @@ export function EvidencePanel({
   api: (path: string, body?: unknown) => Promise<any>;
   onChanged: (result: Result) => Promise<void>;
   onBusyChange: (busy: boolean) => void;
+  disabled: boolean;
 }) {
   const [items, setItems] = useState<EvidenceView[]>([]),
     [enabled, setEnabled] = useState(false),
@@ -307,13 +310,11 @@ export function EvidencePanel({
                     </button>
                   )}
                 {item.state === 'clean' && (
-                  <a
-                    className="button button-secondary"
-                    href={'/api/private/evidence/download?id=' + item.id}
-                    download={item.filename}
-                  >
-                    Download synthetic text
-                  </a>
+                  <EvidenceDownloader
+                    item={item}
+                    api={api}
+                    disabled={disabled || pending || !!attempt}
+                  />
                 )}
                 {item.rejectionCode && (
                   <p className="hint">
