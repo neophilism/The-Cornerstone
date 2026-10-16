@@ -31,3 +31,9 @@ founding consent and private ballot controls have distinct adapters and remain
 separate continuation work. Draft editing and record creation retain their
 existing specialized recovery behavior. No real-data, official-action or payment
 capability is activated by this change.
+
+## Evidence upload and text validation
+
+Evidence writes now retain an immutable request, including the supplied synthetic bytes, metadata, record version and retry key. A lost or mismatched response keeps all other workspace actions frozen and exposes an exact retry. A denied retry cannot prove that the earlier write failed. Response correlation checks the action, record, version and synthetic realm; a confirmed historical receipt is followed by a current authorized read before further work.
+
+File reads and late HTTP responses are fenced against component unmount. Recovery intent is memory-only and a page-close warning explains that losing it does not undo any committed attachment. Server-side evidence replays also check current record visibility before returning historical data. Unit, real PostgreSQL and desktop/mobile browser cases cover repeated upload/validation, one-attachment persistence, changed receipts, revoked-author denial and frozen form/navigation behavior.

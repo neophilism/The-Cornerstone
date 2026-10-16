@@ -898,12 +898,7 @@ export function Workspace({
                       canAttach={permitted.includes('attach_evidence')}
                       onBusyChange={evidenceBusyChanged}
                       api={api}
-                      onChanged={async (result) => {
-                        setReceipt(result.receipt);
-                        setSelected(result.record);
-                        setEditing(false);
-                        await refresh();
-                      }}
+                      onChanged={confirmedAction}
                     />
                   )}
                 </div>

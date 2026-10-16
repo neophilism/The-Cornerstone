@@ -51,3 +51,7 @@ Implemented a restricted, read-only receipt lookup and explicit unencrypted-down
 ## 2026-10-16 — reviewed record printing
 
 Replaced live-workspace printing with an exact reviewed synthetic record surface, separate consent and fresh access/version checks. Print media excludes surrounding private records and unsaved forms; cancellation and late responses cannot invoke printing. Unit coverage is inherited from the checked export boundary; desktop/mobile print-media and negative-path tests run in CI. Physical printing and PDF completion remain browser/user outcomes.
+
+## 2026-10-16 — evidence action recovery
+
+Extended exact-request recovery to synthetic evidence uploads and validation. Bytes and metadata remain frozen after uncertain outcomes; current record access is required for server replay, and the workspace refreshes current state before another mutation. Local validation passed 322 unit tests and package/API builds. Added real PostgreSQL and desktop/mobile browser cases to CI; these checks remain required before merge.

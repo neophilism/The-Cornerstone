@@ -136,6 +136,17 @@ export class EvidenceService {
     const receipt = await this.store.save(tx, actor, next, action, input.idempotencyKey, request);
     return { record: next, receipt };
   }
+  private async replay(
+    tx: Transaction,
+    actor: Actor,
+    receipt: import('@cornerstone/contracts').Receipt,
+  ) {
+    await this.record(tx, actor, receipt.recordId);
+    const record = await this.store.getVersion(tx, receipt.recordId, receipt.version);
+    if (!record)
+      throw new DomainError('NOT_FOUND', 'Record not found or no longer accessible.', 404);
+    return { receipt, record };
+  }
   async upload(actor: Actor, raw: unknown) {
     this.writable(actor);
     const input = UploadSyntheticEvidenceSchema.parse(raw);
@@ -150,11 +161,7 @@ export class EvidenceService {
     const request = digest({ action: 'upload_synthetic_evidence', ...input });
     return this.store.transaction(actor, async (tx) => {
       const previous = await this.store.existingReceipt(tx, actor, input.idempotencyKey, request);
-      if (previous)
-        return {
-          receipt: previous,
-          record: await this.store.getVersion(tx, previous.recordId, previous.version),
-        };
+      if (previous) return this.replay(tx, actor, previous);
       const record = await this.record(tx, actor, input.recordId, true);
       requireCondition(
         record.version === input.expectedVersion,
@@ -262,11 +269,7 @@ export class EvidenceService {
       request = digest({ action: 'validate_synthetic_evidence', ...input });
     return this.store.transaction(actor, async (tx) => {
       const previous = await this.store.existingReceipt(tx, actor, input.idempotencyKey, request);
-      if (previous)
-        return {
-          receipt: previous,
-          record: await this.store.getVersion(tx, previous.recordId, previous.version),
-        };
+      if (previous) return this.replay(tx, actor, previous);
       const record = await this.record(tx, actor, input.recordId, true);
       requireCondition(
         record.version === input.expectedVersion,
