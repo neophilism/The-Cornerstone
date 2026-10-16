@@ -47,3 +47,7 @@ Adds immutable recovery intent to ordinary workflow command forms in both privat
 ## 2026-10-16 — reviewed receipt export
 
 Implemented a restricted, read-only receipt lookup and explicit unencrypted-download review. Cached receipts no longer download after denied current access, mismatched responses, cancellation or session expiry. Historical action versions remain distinct from the current record. Local validation passed 318 unit tests and package/API builds; real PostgreSQL and desktop/mobile browser verification are included in CI. Hosted private intake remains disabled. This is partial disclosure-path work, not whole-program completion.
+
+## 2026-10-16 — reviewed record printing
+
+Replaced live-workspace printing with an exact reviewed synthetic record surface, separate consent and fresh access/version checks. Print media excludes surrounding private records and unsaved forms; cancellation and late responses cannot invoke printing. Unit coverage is inherited from the checked export boundary; desktop/mobile print-media and negative-path tests run in CI. Physical printing and PDF completion remain browser/user outcomes.

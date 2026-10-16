@@ -47,3 +47,5 @@ New-record creation freezes uncertain requests and recovers their original recei
 Ordinary workflow actions preserve one exact request after an uncertain response, validate the recovered receipt and reload current permissions/state before the next action. See [workflow action recovery](docs/ACTION_RECOVERY.md).
 
 Receipt downloads now require explicit review and consent plus a fresh authenticated lookup of the requesting actor’s own receipt and current record access. Historical receipts are labeled as synthetic and cannot be mistaken for external acceptance. See [receipt export](docs/RECEIPT_EXPORT.md).
+
+Private record printing uses a separate reviewed copy with fresh access and version checks. The live workspace is excluded from print media. See [record printing](docs/RECORD_PRINTING.md).
