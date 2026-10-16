@@ -28,8 +28,8 @@ export default function Page() {
         </p>
         <Notice title="Do not submit sensitive documents">
           Verified security controls, approved identity and recovery arrangements, retention rules,
-          and legal authority must be in place before protected program services open.
-          External expert review can follow when funded; it is not an activation prerequisite.
+          and legal authority must be in place before protected program services open. External
+          expert review can follow when funded; it is not an activation prerequisite.
         </Notice>
         <h2>Accounts and rights</h2>
         <p>
