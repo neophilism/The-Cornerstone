@@ -72,7 +72,8 @@ export default function Page() {
         <p>
           Sector authority, constitutional restrictions, agency appointments, appropriations, local
           and tribal rights, and the prospective state rate require state-specific decisions.
-          Enactment and independent review must precede official operation.
+          Enactment, jurisdiction-specific legal assessment and verified technical safeguards
+          must precede official operation. External security auditing is not a prerequisite.
         </p>
         <ButtonLink href="/how-it-works">Understand the proposed process</ButtonLink>
       </div>
