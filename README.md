@@ -49,3 +49,5 @@ Ordinary workflow actions preserve one exact request after an uncertain response
 Receipt downloads now require explicit review and consent plus a fresh authenticated lookup of the requesting actor’s own receipt and current record access. Historical receipts are labeled as synthetic and cannot be mistaken for external acceptance. See [receipt export](docs/RECEIPT_EXPORT.md).
 
 Private record printing uses a separate reviewed copy with fresh access and version checks. The live workspace is excluded from print media. See [record printing](docs/RECORD_PRINTING.md).
+
+Personal founding consent and member ballots retain their exact request after an uncertain outcome, including denied retries. See [membership recovery](docs/MEMBERSHIP_RECOVERY.md) for current-access replay and the in-memory recovery boundary.

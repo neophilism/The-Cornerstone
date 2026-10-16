@@ -63,3 +63,7 @@ The record-ID clipboard control now discloses retention, checks current authoriz
 ## 2026-10-16 — repeatable local synthetic bootstrap
 
 Added `pnpm setup:local` to generate private, separate local credentials and run pinned loopback PostGIS, restricted-role creation, migrations and synthetic persona seeding. Existing configuration and data are preserved; incompatible or unsafe settings are refused. Unit checks cover file permissions, repeat runs, remote/production configuration denial and environment isolation. A dedicated CI job exercises Docker setup twice and actual authenticated API access. This removes external provider keys from the local synthetic startup path; hosted protected-production integrations remain unfinished.
+
+## 2026-10-16 — personal membership action recovery
+
+Personal founding consent, scale choices and ballots now freeze exact uncertain requests, preserve them through denied retries and validate their historical receipt before refreshing current state. Association receipt replay requires current authorization. Added unit correlation cases, PostgreSQL replay/revocation assertions and desktop/mobile lost-response and substituted-receipt journeys. See [MEMBERSHIP_RECOVERY.md](MEMBERSHIP_RECOVERY.md); required CI results establish acceptance separately from this implementation entry.
