@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import {
   MembershipSnapshotSchema,
+  RecordSchema,
   FoundingRollViewSchema,
   MemberBallotViewSchema,
   type MembershipSnapshot,
@@ -52,24 +53,66 @@ export function MembershipPanel({
   const [snapshot, setSnapshot] = useState<MembershipSnapshot | null>(null),
     [error, setError] = useState(''),
     [pending, setPending] = useState(false);
+  const [associations, setAssociations] = useState<CaseRecord[]>([]);
+  const generation = useRef(0);
   async function refresh() {
+    const current = ++generation.current;
     setPending(true);
     setError('');
+    setAssociations([]);
     try {
       await onRefresh();
-      setSnapshot(MembershipSnapshotSchema.parse(await api('memberships')));
+      if (current !== generation.current) return;
+      const next = MembershipSnapshotSchema.parse(await api('memberships'));
+      // Membership references outlive the first record page. Resolve a bounded
+      // set with current authorization rather than depending on that page's cache.
+      const ids = [
+        ...new Set([
+          ...next.invitations.map((i) => i.associationId),
+          ...next.units.map((u) => u.associationId),
+        ]),
+      ].slice(0, 50);
+      const loaded: CaseRecord[] = [];
+      for (let i = 0; i < ids.length; i += 5) {
+        const batch = await Promise.all(
+          ids.slice(i, i + 5).map(async (id) => {
+            try {
+              const response = await api('records?recordId=' + encodeURIComponent(id));
+              if (!Array.isArray(response.records) || response.records.length !== 1) return null;
+              const record = RecordSchema.parse(response.records[0]);
+              return record.id === id &&
+                record.kind === 'association' &&
+                record.realm === 'simulation'
+                ? record
+                : null;
+            } catch {
+              return null;
+            }
+          }),
+        );
+        if (current !== generation.current) return;
+        loaded.push(...batch.filter((record): record is CaseRecord => record !== null));
+      }
+      setAssociations(loaded);
+      setSnapshot(next);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Memberships are unavailable.');
+      if (current === generation.current) {
+        setSnapshot(null);
+        setError(e instanceof Error ? e.message : 'Memberships are unavailable.');
+      }
     } finally {
-      setPending(false);
+      if (current === generation.current) setPending(false);
     }
   }
   useEffect(() => {
     void refresh();
+    return () => {
+      generation.current++;
+    };
   }, []);
   const invitations =
     snapshot?.invitations.filter((i) => {
-      const association = records.find((r) => r.id === i.associationId);
+      const association = associations.find((r) => r.id === i.associationId);
       return !association || ['submitted', 'review'].includes(association.state);
     }) ?? [];
   return (
@@ -92,7 +135,7 @@ export function MembershipPanel({
       {invitations.length ? (
         <ol className="activity-list">
           {invitations.map((i) => {
-            const r = records.find((r) => r.id === i.associationId);
+            const r = associations.find((r) => r.id === i.associationId);
             return (
               <li className="activity-card invitation-card" key={i.id}>
                 <p className="eyebrow">{i.response} · simulation</p>
@@ -119,7 +162,7 @@ export function MembershipPanel({
       {snapshot?.units.length ? (
         <ol className="activity-list">
           {snapshot.units.map((u) => {
-            const r = records.find((r) => r.id === u.associationId);
+            const r = associations.find((r) => r.id === u.associationId);
             return (
               <li className="activity-card membership-card" key={u.unitId}>
                 <p className="eyebrow">Active unit · simulation</p>
