@@ -1,19 +1,19 @@
 # Public engineering continuation
 
-Checkpoint: 2026-10-12T23:32:00Z. This queue supplements the public development guide; it neither publishes the earlier private planning package nor changes the approved 25-unit reporting denominator.
+Checkpoint: 16 October 2026. This queue supplements the public development guide; it does not publish the earlier private planning package or change the 25-unit reporting denominator.
 
 ## Accepted foundation
 
-PR 17 compact approval, PR 19 activity history, PR 20 consent-based calendar exports, PR 23 private transport, PR 24 worker drain and PR 21 concurrent-draft recovery are merged with integrated verification. PR 18 supplies security-assessment metadata only; implementation, complete assessment testing and independent review remain pending.
-
-PR 25 synchronized the prior handoff. PR 26 creation recovery, PR 27 reviewed JSON export and PR 28 denied-draft-retry preservation are now merged with integrated verification. Keep all three negative-path suites and the full source/security checks.
+PRs 1–21 and 23–39 are merged. Current source/testing/public deployment evidence is in [PROGRESS.md](PROGRESS.md). Creation, draft, ordinary-action and evidence recovery plus reviewed record/receipt export, printing and record-reference copying are accepted. Local synthetic setup needs no external provider keys and has actual repeat-run Docker/API verification.
 
 ## Dependency-ordered continuation
 
-1. **Remaining workflow mutations:** inspect non-draft commands, membership/evidence actions and their exact-request/receipt behavior. Preserve intent after uncertain outcomes and late replies; do not infer external success from a queue entry.
-2. **Remaining disclosure paths:** inspect receipt, print and copy actions separately from reviewed JSON export. Preserve explicit intent, truthful scope and current authorization; do not claim downloaded data can be revoked.
-3. **Full program journeys:** continue new deceased-worker filing, independent exchange custody and replay, delivery, settlement and financial reconciliation under the public development guide and separate provider/authority gates.
-4. **Operational release:** reconcile hosted schema compatibility, actual deployed revision and measured recovery only through the approved review/activation process. Source acceptance is not hosted activation.
+1. Finish final-head CI, capture review and checked integration of personal membership recovery (40), the logical restore rehearsal (41) and reviewed attachment downloads (42). Fix concrete failures and preserve all existing checks.
+2. Inspect remaining delegation/session mutations and membership/evidence reference-copy controls. Preserve exact intent, current authorization and truthful outcomes; do not infer external success from a queued entry.
+3. Continue new deceased-worker filing, independent exchange custody/replay, delivery, settlement and financial reconciliation using complete synthetic adapters where providers are unavailable.
+4. Advance the existing public deployment branch to verified source and confirm its exact deployed commit. Complete private-provider compatibility, capacity and measured recovery work without exposing infrastructure metadata or touching unrelated services.
+
+Independent human security review is deferred final follow-up under AGENTS.md. Never stop implementation or test deployment solely because that review is pending. Preserve actual cryptographic, authorization, privacy, data-integrity, transaction and required CI controls. No audit/certification is inferred from these checks.
 
 PR 22's native CircleCI port is separate owner work and remains unverified. Preserve existing GitHub workflows and reconcile every newer integration before any connected-provider acceptance.
 

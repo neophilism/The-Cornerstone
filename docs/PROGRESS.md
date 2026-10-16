@@ -1,8 +1,20 @@
 # Implementation progress
 
-Checkpoint: 2026-10-12T23:32:00Z. The full program is unfinished. This reports source and engineering verification, not deployment, independent security review or government authority. The earlier private planning package remains excluded.
+## Current acceptance — 16 October 2026
 
-## Accepted source
+PRs 1–21 and 23–39 are merged. The latest fully verified feature baseline is PR 39 head `6784147d1a9a15b5357774d77108ae61632eacd3`, tree `4a4cd16e5a34bef5a1f6890342219d81858456e0`: [application run 38928453821](https://github.com/neophilism/The-Cornerstone/actions/runs/38928453821), [source run 38928453590](https://github.com/neophilism/The-Cornerstone/actions/runs/38928453590), and metadata validation all passed. This source passed 342 unit tests and 104 private browser cases (52 desktop, 52 mobile), all database integrations, public-browser/build/proxy/worker checks, and the new actual Docker/bootstrap/API job. Counts share a baseline and must not be added across PRs.
+
+Accepted additions cover ordinary action recovery (32), reviewed historical receipt exports and membership pagination (33), owner-policy activation messages (34), reviewed printing (35), evidence action recovery (36), deployed-public HTTP verification (37), current-access record copying (38), and repeatable local setup without external provider keys (39). Desktop/mobile receipt, print, evidence and copy captures were inspected. The merged source is ahead of the separately observed public deployment; the next release still needs its exact-commit deployment check.
+
+The public service passed an exact-commit HTTP check at `b6891ef2d1f0fe1a63dd1c4beedcfdd99fb0ea5c` on October 16. That observation verifies the public proposal surface, closed intake and homepage CSP/content; it does not activate private hosted workflows. See [PUBLIC_RELEASE_2026-10-16.md](PUBLIC_RELEASE_2026-10-16.md). Current private-provider observations are kept separately from public source acceptance.
+
+Membership recovery (40), a measured logical database restore rehearsal (41), and reviewed attachment download (42) have implementations and new acceptance tests. Their final CI/merge status must be checked before describing them as accepted. The restore step itself has passed in the initial candidate; that does not substitute for the complete final-head suite.
+
+Independent human security review remains final follow-up under the owner policy. Continue developing, running substantive checks and deploying tested synthetic/public releases. Actual missing encryption, identity, custody, authority or provider controls remain engineering work; they are not supplied by an audit waiver. The whole program remains unfinished.
+
+Historical baseline: 2026-10-12T23:32:00Z. The full program is unfinished. This reports source and engineering verification, not deployment, independent security review or government authority. The earlier private planning package remains excluded.
+
+## October 12 accepted baseline
 
 Observed main is `dc94adfb7085ec989c2a86aebce44ce1d0ab025a`, tree `6b51dcba56acee94a2ff879eb04122a5ae3b6cb0`. PRs **1-21 and 23-28** are merged. The separate CircleCI PR 22 remains unverified. This checkpoint records the accepted source before its release-reproducibility follow-up, not that follow-up's own test result.
 
@@ -28,15 +40,13 @@ Per-branch test counts share a baseline and are not additive. Detailed feature b
 
 ## Provider state is separate
 
-No provider resources were changed or rechecked by this handoff. The earlier October 12 observation found original Neon development through migration 010, the isolated claim-survival child through 013, and no application tables on production. Repository SQL is through 015. A current private API/worker must not start against either earlier provider schema without a reviewed compatible upgrade. The public site is database-independent.
-
-The listed Render preview URL is not evidence of its current revision, health, project assignment or protected configuration. No new deployment or production migration is claimed.
+Repository schema is through 015, and the checked local bootstrap applies the exact inventory. Historical hosted migration counts are not current compatibility evidence. Verify the intended private database and restricted roles before starting its matching runtime; never infer that from a public-site deployment. Provider capacity currently limits additional test services. Production/private activation is not claimed.
 
 ## Remaining work
 
-Complete the remaining program journeys, including new deceased-worker filings, independently held exchange choices and replay, delivery, settlement and reviewed financial reconciliation. Continue reliability work for remaining non-draft workflow commands and separate receipt/print/copy paths. Creation and draft-save recovery do not cover every mutation; reviewed JSON export is not comprehensive data-loss prevention.
+Complete the remaining program journeys, including new deceased-worker filings, independently held exchange choices and replay, delivery, settlement and reviewed financial reconciliation. Finish acceptance of personal membership recovery and reviewed attachment downloads, then inspect remaining delegation/session and reference-copy controls. Ordinary workflow/evidence recovery and receipt/print/record-copy paths are accepted; durable offline recovery and comprehensive data-loss prevention are not claimed.
 
-Protected identity/device authority, recipient encryption and recovery, real evidence custody, legal notices, signatures, Treasury/institutional handoffs, independent reviews, release provenance and measured provider recovery remain activation prerequisites. Real private intake, official action, payments and real rankings remain disabled. Branch protection and required independent review are not supplied by passing tests.
+Protected identity/device authority, recipient encryption and recovery, real evidence custody, legal notices, signatures, Treasury/institutional handoffs, release provenance and measured provider recovery remain concrete activation work. Independent human security review is deferred final follow-up, not an activation prerequisite. Real private intake, official action, payments and real rankings remain disabled. Branch protections and actual required checks must be respected; passing tests do not establish independent review or certification.
 
 The approved `registry/roadmap.json` denominator remains 25 public tracking units with its original 11 verified mappings. Supporting PR counts do not change it or establish a whole-program completion percentage. Machine-readable refs are in `PROGRESS.json`.
 
