@@ -27,8 +27,9 @@ export default function Page() {
           uploads, sealed rankings, payments, or private claims.
         </p>
         <Notice title="Do not submit sensitive documents">
-          Independent security review, approved identity and recovery arrangements, retention rules,
+          Verified security controls, approved identity and recovery arrangements, retention rules,
           and legal authority must be in place before protected program services open.
+          External expert review can follow when funded; it is not an activation prerequisite.
         </Notice>
         <h2>Accounts and rights</h2>
         <p>
