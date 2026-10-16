@@ -28,21 +28,12 @@ import { CompactSummary } from './compacts.js';
 import { WorkflowAction } from './workflow-action.js';
 import { DraftEditor } from './draft-editor.js';
 import { RecordExporter } from './record-exporter.js';
+import { ReceiptExporter } from './receipt-exporter.js';
 import { RecordCreator } from './record-creator.js';
 import { WorkspaceRequestError } from './draft-review.js';
 export { WorkflowFields } from './workflow-fields.js';
 
 type Session = { actor: Actor; csrf: string; mode: string; local: boolean };
-function download(value: unknown, name: string) {
-  const url = URL.createObjectURL(
-    new Blob([JSON.stringify(value, null, 2)], { type: 'application/json' }),
-  );
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = name;
-  a.click();
-  URL.revokeObjectURL(url);
-}
 export function Workspace({
   staff = false,
   publicOrigin = '/',
@@ -601,19 +592,19 @@ export function Workspace({
             />
           )}
           {receipt ? (
-            <div className="receipt" role="status">
+            <div className="receipt">
               <strong>Simulation receipt · version {receipt.version}</strong>
               <p>
                 {receiptLabel || receipt.action.replaceAll('_', ' ')} ·{' '}
                 {new Date(receipt.acceptedAt).toLocaleString()}
               </p>
               <p>{receipt.id}</p>
-              <button
-                className="quiet-button"
-                onClick={() => download(receipt, 'cornerstone-simulation-receipt.json')}
-              >
-                Download receipt
-              </button>
+              <ReceiptExporter
+                key={receipt.id}
+                receipt={receipt}
+                api={api}
+                disabled={pending || editing || !!creating}
+              />
               <button className="quiet-button" onClick={() => setReceipt(null)}>
                 Dismiss
               </button>

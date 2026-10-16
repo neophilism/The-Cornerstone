@@ -45,3 +45,5 @@ Synthetic record exports require an explicit review, disclosure consent and fres
 New-record creation freezes uncertain requests and recovers their original receipt without sending an edited duplicate. See `docs/CREATION_RECOVERY.md` for the in-memory boundary, denied retries and current-access checks.
 
 Ordinary workflow actions preserve one exact request after an uncertain response, validate the recovered receipt and reload current permissions/state before the next action. See [workflow action recovery](docs/ACTION_RECOVERY.md).
+
+Receipt downloads now require explicit review and consent plus a fresh authenticated lookup of the requesting actor’s own receipt and current record access. Historical receipts are labeled as synthetic and cannot be mistaken for external acceptance. See [receipt export](docs/RECEIPT_EXPORT.md).

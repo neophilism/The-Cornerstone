@@ -69,8 +69,15 @@ test('a private draft survives editing and reloading, with versioned receipts', 
     path: `test-results/private-dossier-${info.project.name}.png`,
     fullPage: true,
   });
-  const download = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Download receipt', exact: true }).click();
+  await page
+    .getByRole('checkbox', {
+      name: 'I agree to save this unencrypted synthetic receipt file on this device.',
+      exact: true,
+    })
+    .check();
+  const download = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Download reviewed receipt', exact: true }).click();
   expect((await download).suggestedFilename()).toBe('cornerstone-simulation-receipt.json');
   await page.getByRole('link', { name: /^Activity/ }).click();
   await expect(page.getByRole('heading', { name: 'Activity updates.' })).toBeVisible();

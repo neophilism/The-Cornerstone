@@ -229,6 +229,13 @@ export class Store {
       );
     return this.receipt(r.rows[0]);
   }
+  async ownReceipt(tx: Transaction, actor: Actor, id: string): Promise<Receipt | null> {
+    const result = await tx.query(
+      'SELECT * FROM receipts WHERE id=$1 AND actor_id=$2 AND realm=$3',
+      [id, actor.id, actor.realm],
+    );
+    return result.rows[0] ? this.receipt(result.rows[0]) : null;
+  }
   private receipt(row: pg.QueryResultRow): Receipt {
     return {
       id: row.id,
