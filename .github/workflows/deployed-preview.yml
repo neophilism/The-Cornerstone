@@ -1,0 +1,32 @@
+name: deployed-public-preview
+on:
+  push:
+    branches: [cornerstone/application]
+  pull_request:
+    paths:
+      - .github/workflows/deployed-preview.yml
+      - scripts/preview-smoke.mjs
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: deployed-public-preview
+  cancel-in-progress: true
+jobs:
+  deployed-http:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+      - name: Resolve the authorized deployment branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          commit=$(gh api repos/neophilism/The-Cornerstone/git/ref/heads/cornerstone/application --jq '.object.sha')
+          [[ "$commit" =~ ^[a-f0-9]{40}$ ]]
+          echo "EXPECTED_PREVIEW_COMMIT=$commit" >> "$GITHUB_ENV"
+      - name: Verify exact deployed revision and public-only HTTP behavior
+        run: node scripts/preview-smoke.mjs
