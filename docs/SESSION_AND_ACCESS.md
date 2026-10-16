@@ -9,3 +9,9 @@ Access expires within ninety days. Each record permits at most twenty active gra
 Revocation or expiry removes future record/version access through RLS and application authorization. Existing downloaded copies cannot be recalled. Conflicts deny both owner and delegate access. The API supplies actions for the exact record version, so a read-only reader sees read/export tools without editing or decision controls. Client controls are a convenience; the server independently enforces every permission.
 
 The isolated PostgreSQL tests cover session isolation, current/other revocation, immutable audit and realm denial; delegation concurrency/idempotency, read-only and editing scope, owner-only grant management, revocation, expiry, recent authentication, conflicts and cross-realm rejection. Browser journeys exercise account controls and grant/read/revoke behavior on desktop and mobile. See PROGRESS.md for verification that has actually completed. Protected production identity and encrypted-recipient workflows remain gated.
+
+## Recovering a completed access change
+
+Receipt replay for a grant or revocation requires current ownership and record visibility. A conflict or transferred record cannot expose its historical access response. Recovering an already committed receipt is read-only and does not require a new recent-authentication window; the current authenticated session and ownership are still required. New grants and revocations continue to require a sign-in within ten minutes.
+
+The PostgreSQL acceptance suite replays a grant after its revocation using an older authentication time, verifies the original historical receipt and unchanged current revoked state, rejects a new change with the same older authentication, and denies both replays after current ownership access is conflicted. Existing receipt-count checks ensure replay did not create another change. This server boundary does not by itself complete browser recovery for the access forms.

@@ -25,6 +25,8 @@ export class DraftAccessService {
       'PROTECTED_INTAKE_DISABLED',
       'Draft access is available only in isolated synthetic development.',
     );
+  }
+  private recentSignIn(actor: Actor) {
     const age = Date.now() - new Date(actor.authenticationTime).getTime();
     requireCondition(
       Number.isFinite(age) && age >= -60000 && age <= 600000,
@@ -92,11 +94,14 @@ export class DraftAccessService {
       request = digest({ action: 'grant_draft_access', ...input });
     return this.store.transaction(actor, async (tx) => {
       const previous = await this.store.existingReceipt(tx, actor, input.idempotencyKey, request);
-      if (previous)
-        return {
-          receipt: previous,
-          record: await this.store.getVersion(tx, previous.recordId, previous.version),
-        };
+      if (previous) {
+        await this.owned(tx, actor, previous.recordId);
+        const record = await this.store.getVersion(tx, previous.recordId, previous.version);
+        if (!record)
+          throw new DomainError('NOT_FOUND', 'The historical access record is unavailable.', 404);
+        return { receipt: previous, record };
+      }
+      this.recentSignIn(actor);
       const r = await this.owned(tx, actor, input.recordId, true);
       requireCondition(
         r.version === input.expectedVersion,
@@ -157,11 +162,14 @@ export class DraftAccessService {
       request = digest({ action: 'revoke_draft_access', ...input });
     return this.store.transaction(actor, async (tx) => {
       const previous = await this.store.existingReceipt(tx, actor, input.idempotencyKey, request);
-      if (previous)
-        return {
-          receipt: previous,
-          record: await this.store.getVersion(tx, previous.recordId, previous.version),
-        };
+      if (previous) {
+        await this.owned(tx, actor, previous.recordId);
+        const record = await this.store.getVersion(tx, previous.recordId, previous.version);
+        if (!record)
+          throw new DomainError('NOT_FOUND', 'The historical access record is unavailable.', 404);
+        return { receipt: previous, record };
+      }
+      this.recentSignIn(actor);
       const r = await this.owned(tx, actor, input.recordId, true);
       requireCondition(
         r.version === input.expectedVersion,
