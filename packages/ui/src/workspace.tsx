@@ -28,6 +28,7 @@ import { CompactSummary } from './compacts.js';
 import { WorkflowAction } from './workflow-action.js';
 import { DraftEditor } from './draft-editor.js';
 import { RecordExporter } from './record-exporter.js';
+import { RecordReferenceCopy } from './record-reference-copy.js';
 import { ReceiptExporter } from './receipt-exporter.js';
 import { RecordCreator } from './record-creator.js';
 import { WorkspaceRequestError } from './draft-review.js';
@@ -728,18 +729,12 @@ export function Workspace({
                     {editing ? 'Cancel editing' : 'Edit draft'}
                   </button>
                 ) : null}
-                <button
-                  className="quiet-button"
-                  onClick={async () => {
-                    try {
-                      await navigator.clipboard.writeText(selected.id);
-                    } catch {
-                      setError('Record ID: ' + selected.id);
-                    }
-                  }}
-                >
-                  Copy record ID
-                </button>
+                <RecordReferenceCopy
+                  key={session.actor.id + ':' + selected.id + ':' + selected.version}
+                  record={selected}
+                  api={api}
+                  disabled={pending || editing || evidenceBusy}
+                />
               </div>
               <RecordExporter
                 key={'print:' + session.actor.id + ':' + selected.id + ':' + selected.version}

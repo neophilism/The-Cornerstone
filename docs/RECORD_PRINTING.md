@@ -7,3 +7,7 @@ Only the exact reviewed synthetic record envelope is inserted into a temporary p
 The temporary surface is removed after the print dialog closes, when the review is cancelled or when its owning component unmounts. The UI reports only that the browser dialog was requested, not that a paper copy or PDF was produced. Copies and printer queues cannot be recalled and are not encrypted by the app.
 
 The existing export unit and PostgreSQL suites verify permission and exact-version binding. Desktop/mobile browser tests additionally inspect the rendered print media, exact printed payload, fresh consent after a concurrent update, denial and late-response cancellation. Browser tests intercept the system print call to inspect its input; they do not claim physical printer delivery.
+
+## Record references
+
+The separate `Copy record ID` control now explains clipboard retention and rechecks current record access before copying only the UUID. It never treats a reference as authorization. Denied or malformed reads cannot fall back to the cached identifier. Beginning an edit or leaving the component suppresses a late read. If browser clipboard permission is unavailable, the UI offers only the freshly authorized identifier for manual selection. Tests intercept the clipboard API; they do not change operating-system clipboard permissions.
