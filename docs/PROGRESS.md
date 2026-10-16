@@ -55,3 +55,7 @@ Replaced live-workspace printing with an exact reviewed synthetic record surface
 ## 2026-10-16 — evidence action recovery
 
 Extended exact-request recovery to synthetic evidence uploads and validation. Bytes and metadata remain frozen after uncertain outcomes; current record access is required for server replay, and the workspace refreshes current state before another mutation. Local validation passed 322 unit tests and package/API builds. Added real PostgreSQL and desktop/mobile browser cases to CI; these checks remain required before merge.
+
+## 2026-10-16 — current-access record reference copying
+
+The record-ID clipboard control now discloses retention, checks current authorization, copies only the UUID and suppresses late responses after context changes. Browser denial offers a freshly authorized manual reference. Added seven unit cases plus desktop/mobile copy, denial and cancellation checks. The growing full database/browser job retains every check and now has a 20-minute budget.
