@@ -310,7 +310,7 @@ export function Workspace({
     );
   if (!session)
     return (
-      <main id="main">
+      <main id="main" className="private-workspace">
         <div className="login-card">
           <p className="eyebrow">{staff ? 'Assigned staff' : 'My Cornerstone'}</p>
           <h1>Your private workspace.</h1>
@@ -382,7 +382,7 @@ export function Workspace({
     ? visible.filter((w) => (group.kinds as readonly string[]).includes(w.kind))
     : visible;
   return (
-    <main id="main">
+    <main id="main" className="private-workspace">
       <div className="realm-banner">
         SYNTHETIC DEVELOPMENT · No real eligibility, license, ranking, payment or legal filing
       </div>
@@ -710,9 +710,6 @@ export function Workspace({
                     {editing ? 'Cancel editing' : 'Edit draft'}
                   </button>
                 ) : null}
-                <button className="quiet-button" onClick={() => window.print()}>
-                  Print record
-                </button>
                 <button
                   className="quiet-button"
                   onClick={async () => {
@@ -726,6 +723,13 @@ export function Workspace({
                   Copy record ID
                 </button>
               </div>
+              <RecordExporter
+                key={'print:' + session.actor.id + ':' + selected.id + ':' + selected.version}
+                record={selected}
+                api={api}
+                disabled={pending || editing || !!creating}
+                format="print"
+              />
               <RecordExporter
                 key={
                   session.actor.id +

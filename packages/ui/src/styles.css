@@ -1542,3 +1542,24 @@ td {
   font-size: 14px;
   color: var(--muted);
 }
+
+.reviewed-record-print {
+  display: none;
+}
+@media print {
+  /* Browser-menu printing cannot disclose the live private workspace. */
+  .private-workspace,
+  body.cornerstone-printing > :not(.reviewed-record-print) {
+    display: none !important;
+  }
+  body.cornerstone-printing > .reviewed-record-print {
+    display: block !important;
+    color: black;
+    background: white;
+  }
+  .reviewed-record-print pre {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font-size: 10pt;
+  }
+}

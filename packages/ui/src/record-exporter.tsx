@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useId, useRef, useState } from 'react';
+import { printReviewedRecord } from './record-print.js';
 import type { CaseRecord } from '@cornerstone/contracts';
 import { reviewRecordExport, confirmRecordExport, type ExportReview } from './record-export.js';
 
@@ -7,12 +8,16 @@ export function RecordExporter({
   record,
   api,
   disabled,
+  format = 'file',
 }: {
   record: CaseRecord;
   api: (path: string, body?: unknown) => Promise<any>;
   disabled: boolean;
+  format?: 'file' | 'print';
 }) {
   const id = useId();
+  const printing = format === 'print';
+  const releasePrint = useRef<(() => void) | null>(null);
   const [opened, setOpened] = useState(false);
   const [review, setReview] = useState<ExportReview | null>(null);
   const [consent, setConsent] = useState(false);
@@ -26,6 +31,7 @@ export function RecordExporter({
   useEffect(
     () => () => {
       generation.current++;
+      releasePrint.current?.();
     },
     [],
   );
@@ -33,6 +39,8 @@ export function RecordExporter({
     if (disabled) close();
   }, [disabled]);
   function close() {
+    releasePrint.current?.();
+    releasePrint.current = null;
     generation.current++;
     active.current = false;
     setOpened(false);
@@ -68,22 +76,30 @@ export function RecordExporter({
           );
           return;
         }
-        const url = URL.createObjectURL(
-          new Blob([result.content], { type: 'application/json;charset=utf-8' }),
-        );
-        const link = document.createElement('a');
-        try {
-          link.href = url;
-          link.download = 'cornerstone-synthetic-record.json';
-          document.body.append(link);
-          link.click();
-        } finally {
-          link.remove();
-          setTimeout(() => URL.revokeObjectURL(url), 1000);
+        if (printing) {
+          releasePrint.current?.();
+          releasePrint.current = printReviewedRecord(result.content);
+          setMessage(
+            'The reviewed record was sent to the browser print dialog. This does not confirm that printing or saving a PDF completed.',
+          );
+        } else {
+          const url = URL.createObjectURL(
+            new Blob([result.content], { type: 'application/json;charset=utf-8' }),
+          );
+          const link = document.createElement('a');
+          try {
+            link.href = url;
+            link.download = 'cornerstone-synthetic-record.json';
+            document.body.append(link);
+            link.click();
+          } finally {
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+          }
+          setMessage(
+            'Record file prepared. Check your browser downloads. This is not a legal filing or a verified external delivery.',
+          );
         }
-        setMessage(
-          'Record file prepared. Check your browser downloads. This is not a legal filing or a verified external delivery.',
-        );
       }
     } catch {
       if (generation.current === current) {
@@ -109,22 +125,25 @@ export function RecordExporter({
           disabled={disabled}
           onClick={() => void load(false)}
         >
-          Export record
+          {printing ? 'Print record' : 'Export record'}
         </button>
       </div>
     );
   return (
     <section className="panel form-stack" aria-labelledby={id + '-title'} aria-busy={busy}>
-      <h3 id={id + '-title'}>Review record export</h3>
+      <h3 id={id + '-title'}>{printing ? 'Review record printing' : 'Review record export'}</h3>
       <p>
         The file contains the saved title, record and owner identifiers, saved details, status,
         version, policy reference and timestamps. Evidence references may be included; attachment
         bytes and private ballots are not retrieved by this export.
       </p>
       <p className="hint">
-        The file is not encrypted. Device backups, shared folders or other people with device access
-        may retain copies. This app cannot recall a downloaded copy. Unsaved edits are not included.
-        Access is checked immediately before preparation, not guaranteed after download.
+        {printing
+          ? 'Printed pages, PDF files and printer queues are not encrypted by this app.'
+          : 'The file is not encrypted.'}{' '}
+        Device backups, shared folders or other people with device access may retain copies. This
+        app cannot recall a downloaded copy. Unsaved edits are not included. Access is checked
+        immediately before preparation, not guaranteed after download.
       </p>
       {review && (
         <>
@@ -157,7 +176,9 @@ export function RecordExporter({
               }}
             />
             <label htmlFor={id + '-consent'}>
-              I agree to save this unencrypted synthetic record file on this device.
+              {printing
+                ? 'I agree to send this reviewed synthetic record to my browser print dialog.'
+                : 'I agree to save this unencrypted synthetic record file on this device.'}
             </label>
           </div>
           <button
@@ -165,7 +186,11 @@ export function RecordExporter({
             disabled={busy || disabled || !consent}
             onClick={() => void load(true)}
           >
-            {busy ? 'Checking current access...' : 'Download reviewed record'}
+            {busy
+              ? 'Checking current access...'
+              : printing
+                ? 'Print reviewed record'
+                : 'Download reviewed record'}
           </button>
         </>
       )}
@@ -190,7 +215,7 @@ export function RecordExporter({
         </p>
       )}
       <button className="quiet-button" onClick={close}>
-        Cancel export
+        {printing ? 'Cancel printing' : 'Cancel export'}
       </button>
     </section>
   );
