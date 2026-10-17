@@ -154,6 +154,31 @@ try {
       assert.equal((await response.json()).code, 'REQUEST_OUTCOME_UNKNOWN');
       assert.equal(forwarded, beforeDrop + 1);
       assert.equal(seenBody, body);
+      const selectedBody = JSON.stringify({
+        currentSessionId: '11111111-1111-4111-8111-111111111111',
+        sessionIds: ['22222222-2222-4222-8222-222222222222'],
+      });
+      for (const dropped of [false, true]) {
+        const beforeSelected = forwarded;
+        response = await fetch(
+          base + '/api/private/auth/sessions/revoke-selected' + (dropped ? '?scenario=drop' : ''),
+          {
+            method: 'POST',
+            body: selectedBody,
+            headers: { Origin: base, 'Content-Type': 'application/json' },
+          },
+        );
+        assert.equal(response.status, dropped ? 503 : 200);
+        privateResponse(response);
+        const received = await response.json();
+        if (dropped) assert.equal(received.code, 'REQUEST_OUTCOME_UNKNOWN');
+        else {
+          assert.equal(received.path, '/auth/sessions/revoke-selected');
+          assert.equal(received.received, selectedBody);
+        }
+        assert.equal(forwarded, beforeSelected + 1);
+        assert.equal(seenBody, selectedBody);
+      }
       console.log(
         `${app}: compiled private-route HTTP acceptance passed (synthetic upstream; no browser or provider approval).`,
       );

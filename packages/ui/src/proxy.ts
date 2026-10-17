@@ -34,6 +34,7 @@ const routes = new Set([
   'auth/sessions',
   'auth/sessions/revoke',
   'auth/sessions/revoke-others',
+  'auth/sessions/revoke-selected',
   'auth/start',
   'auth/callback',
 ]);

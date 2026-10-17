@@ -6,6 +6,7 @@ import { Store } from '@cornerstone/store';
 import { digest } from '@cornerstone/security';
 import { ProgramService } from '../apps/api/src/service.js';
 import { DraftAccessService } from '../apps/api/src/access.js';
+import { SessionService } from '../apps/api/src/sessions.js';
 import type { Actor } from '@cornerstone/contracts';
 
 if (
@@ -95,6 +96,131 @@ try {
     owner.query('DELETE FROM session_events WHERE session_id=$1', [current.id]),
     /Append-only/,
   );
+
+  {
+    const sessions = new SessionService(store);
+    async function createSession(person: Actor) {
+      const token = digest(randomUUID());
+      await store.pool.query('SELECT auth_session($1,$2,$3)', [
+        person.id,
+        token,
+        digest(randomUUID()),
+      ]);
+      const page = await sessions.list(person, token);
+      return { token, id: page.context.currentSessionId };
+    }
+    const caller = await createSession(a),
+      one = await createSession(a),
+      two = await createSession(a),
+      three = await createSession(a),
+      foreignActor = await createSession(b),
+      foreignRealm = await createSession(foreign);
+    const page = await sessions.list(a, caller.token);
+    assert.deepEqual(page.context, {
+      actorId: a.id,
+      realm: a.realm,
+      currentSessionId: caller.id,
+    });
+    assert.equal(page.sessions.filter((session) => session.current).length, 1);
+    assert.equal(JSON.stringify(page).includes('token_hash'), false);
+    assert.equal(JSON.stringify(page).includes('csrf_hash'), false);
+    const first = { currentSessionId: caller.id, sessionIds: [one.id, two.id] };
+    const overlapping = { currentSessionId: caller.id, sessionIds: [three.id, two.id] };
+    const [firstResult, secondResult] = await Promise.all([
+      sessions.revoke(a, caller.token, first),
+      sessions.revoke(a, caller.token, overlapping),
+    ]);
+    assert.deepEqual(
+      firstResult.events.find((event) => event.sessionId === two.id),
+      secondResult.events.find((event) => event.sessionId === two.id),
+    );
+    for (const target of [one, two, three])
+      assert.equal(
+        (await store.pool.query('SELECT * FROM auth_lookup($1)', [target.token])).rowCount,
+        0,
+      );
+    const events = await store.transaction(a, (tx) =>
+      tx.query('SELECT * FROM session_events WHERE session_id=ANY($1::uuid[])', [
+        [one.id, two.id, three.id],
+      ]),
+    );
+    assert.equal(events.rowCount, 3);
+    const later = await createSession(a);
+    assert.deepEqual(await sessions.revoke(a, caller.token, first), firstResult);
+    assert.equal(
+      (await store.pool.query('SELECT * FROM auth_lookup($1)', [later.token])).rowCount,
+      1,
+    );
+    assert.equal(
+      (await store.pool.query('SELECT * FROM auth_lookup($1)', [caller.token])).rowCount,
+      1,
+    );
+    assert.equal(
+      (
+        await store.transaction(a, (tx) =>
+          tx.query('SELECT * FROM session_events WHERE session_id=ANY($1::uuid[])', [
+            [one.id, two.id, three.id],
+          ]),
+        )
+      ).rowCount,
+      3,
+    );
+    const untouched = await createSession(a);
+    for (const forbidden of [foreignActor.id, foreignRealm.id, randomUUID()]) {
+      await assert.rejects(
+        sessions.revoke(a, caller.token, {
+          currentSessionId: caller.id,
+          sessionIds: [untouched.id, forbidden],
+        }),
+        (error: any) => error.code === 'SESSION_NOT_FOUND' && error.status === 404,
+      );
+      assert.equal(
+        (await store.pool.query('SELECT * FROM auth_lookup($1)', [untouched.token])).rowCount,
+        1,
+      );
+      assert.equal(
+        (
+          await store.transaction(a, (tx) =>
+            tx.query('SELECT * FROM session_events WHERE session_id=$1', [untouched.id]),
+          )
+        ).rowCount,
+        0,
+      );
+    }
+    await assert.rejects(
+      sessions.revoke(a, caller.token, {
+        currentSessionId: later.id,
+        sessionIds: [untouched.id],
+      }),
+      (error: any) => error.code === 'SESSION_CONTEXT_CHANGED' && error.status === 409,
+    );
+    for (const invalidActor of [b, { ...a, realm: 'proposal' as const }]) {
+      await assert.rejects(
+        sessions.list(invalidActor, caller.token),
+        (error: any) => error.code === 'SESSION_SCOPE' && error.status === 403,
+      );
+      await assert.rejects(
+        sessions.revoke(invalidActor, caller.token, first),
+        (error: any) => error.code === 'SESSION_SCOPE' && error.status === 403,
+      );
+    }
+    await store.pool.query('SELECT auth_logout($1)', [caller.token]);
+    await assert.rejects(
+      sessions.revoke(a, caller.token, first),
+      (error: any) => error.code === 'SESSION_EXPIRED' && error.status === 401,
+    );
+    await assert.rejects(
+      sessions.list(a, caller.token),
+      (error: any) => error.code === 'SESSION_EXPIRED' && error.status === 401,
+    );
+    assert.equal(
+      (await store.pool.query('SELECT * FROM auth_lookup($1)', [untouched.token])).rowCount,
+      1,
+    );
+    console.log(
+      'Scoped session revocation, exact event replay, concurrent batches and rollback passed.',
+    );
+  }
 
   const input = {
     actionDescription: 'Invented action',
