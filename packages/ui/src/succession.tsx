@@ -11,8 +11,9 @@ export function SuccessionSummary({ record }: { record: CaseRecord }) {
         private account, add personal debt or reveal a previous holder's ballot.
       </p>
       <p className="hint">
-        An un-enrolled claim needs a separate succession route, which this adapter does not yet
-        implement. These are invented development records, not identity proof or a probate decision.
+        A claim whose worker has not enrolled follows the separate claim-continuation workflow.
+        Opening a new claim for a deceased worker uses its own standing packet. These are invented
+        development records, not identity proof or a probate decision.
       </p>
       {record.state === 'approved' && (
         <p className="badge">

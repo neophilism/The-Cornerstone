@@ -895,6 +895,14 @@ export function Workspace({
                           'compactApproval',
                           'financialBasis',
                           'financialReview',
+                          'reviewedFiling',
+                          'approvedStanding',
+                          'openedStanding',
+                          'openedClaimId',
+                          'deceasedFilingId',
+                          'claimControl',
+                          'reviewedClaim',
+                          'reviewedUnit',
                         ].includes(k),
                     )
                     .map(([k, v]) => (
@@ -938,6 +946,14 @@ export function Workspace({
                             `${v.length} supporting attachment${v.length === 1 ? '' : 's'} · inspect below`
                           ) : k === 'earnedIncomeShare' && typeof v === 'number' ? (
                             `${Math.round(v * 10000) / 100}% of earned income before the action`
+                          ) : k === 'capacity' && typeof v === 'string' ? (
+                            v === 'estate_representative' ? (
+                              'Estate representative'
+                            ) : v === 'designated_successor' ? (
+                              'Designated successor'
+                            ) : (
+                              v.replaceAll('_', ' ')
+                            )
                           ) : typeof v === 'boolean' ? (
                             v ? (
                               'Yes'
