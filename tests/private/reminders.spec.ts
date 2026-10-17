@@ -95,10 +95,12 @@ test('personal reminders require consent, omit case data and do not escape a clo
   const requested = new Promise<void>((resolve) => (observed = resolve));
   const done = new Promise<void>((resolve) => (settled = resolve));
   await page.route(endpoint, async (route) => {
+    const response = await route.fetch();
+    expect(response.status()).toBe(200);
     observed();
     await held;
     try {
-      await route.fulfill({ status: 200, json: { records: [record] } });
+      await route.fulfill({ response });
     } catch {
       /* A navigation abort is expected. */
     } finally {

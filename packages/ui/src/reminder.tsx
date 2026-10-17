@@ -1,19 +1,37 @@
 'use client';
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
 import { personalCalendarReminder } from '@cornerstone/domain/reminders';
-import { verifyReminderAccess } from './reminder-access.js';
+import { verifyReminderAccess, type ReminderRecord } from './reminder-access.js';
+import {
+  disclosePrivate,
+  preparePrivateDisclosure,
+  type SessionBoundRead,
+} from './private-disclosure.js';
 
 /** Independent from case fields: only access is checked, never copied into the file. */
-export function ReminderPanel({ recordId }: { recordId: string }) {
+export function ReminderPanel({
+  record,
+  actorId,
+  readPrivate,
+  disabled,
+}: {
+  record: ReminderRecord;
+  actorId: string;
+  readPrivate: SessionBoundRead;
+  disabled: boolean;
+}) {
   const inputId = useId();
   const [date, setDate] = useState('');
   const [consent, setConsent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const panel = useRef<HTMLDetailsElement | null>(null);
   const generation = useRef(0);
   const active = useRef<AbortController | null>(null);
   const prepared = useRef<{ date: string; content: string } | null>(null);
+  const blocked = useRef(disabled);
+  blocked.current = disabled;
   useEffect(() => {
     generation.current++;
     return () => {
@@ -22,11 +40,26 @@ export function ReminderPanel({ recordId }: { recordId: string }) {
       active.current = null;
       prepared.current = null;
     };
-  }, [recordId]);
+  }, [record.id, record.realm, record.version, actorId]);
+  useEffect(() => {
+    if (disabled) close();
+  }, [disabled]);
+
+  function close() {
+    generation.current++;
+    active.current?.abort();
+    active.current = null;
+    prepared.current = null;
+    setDate('');
+    setConsent(false);
+    setBusy(false);
+    setError('');
+    setMessage('');
+  }
 
   async function prepare(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (active.current || !consent) return;
+    if (active.current || blocked.current || !panel.current?.open || !consent) return;
     const request = new AbortController();
     active.current = request;
     const current = generation.current;
@@ -38,37 +71,49 @@ export function ReminderPanel({ recordId }: { recordId: string }) {
         prepared.current?.date === date
           ? prepared.current.content
           : personalCalendarReminder({ date, consent });
-      const response = await fetch(
-        '/api/private/records?recordId=' + encodeURIComponent(recordId),
-        {
-          credentials: 'same-origin',
-          cache: 'no-store',
-          signal: request.signal,
+      const response = await preparePrivateDisclosure(
+        (path) => readPrivate(path, request.signal),
+        'records?recordId=' + encodeURIComponent(record.id),
+        (raw) => {
+          verifyReminderAccess(raw, record, actorId);
+          return content;
         },
       );
-      if (!response.ok)
-        throw Error('Current record access could not be verified. No reminder was exported.');
-      const result: unknown = await response.json();
-      if (generation.current !== current || request.signal.aborted) return;
-      verifyReminderAccess(result, recordId);
-      prepared.current = { date, content };
-      const url = URL.createObjectURL(new Blob([content], { type: 'text/calendar;charset=utf-8' }));
-      const link = document.createElement('a');
-      try {
-        link.href = url;
-        link.download = 'preparation-reminder.ics';
-        document.body.append(link);
-        link.click();
-      } finally {
-        link.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
-      }
+      if (
+        generation.current !== current ||
+        blocked.current ||
+        !panel.current?.open ||
+        request.signal.aborted
+      )
+        return;
+      disclosePrivate(response, () => {
+        prepared.current = { date, content };
+        const url = URL.createObjectURL(
+          new Blob([content], { type: 'text/calendar;charset=utf-8' }),
+        );
+        const link = document.createElement('a');
+        try {
+          link.href = url;
+          link.download = 'preparation-reminder.ics';
+          document.body.append(link);
+          link.click();
+        } finally {
+          link.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+      });
       setMessage(
         'Calendar file prepared. Import it into a private calendar and choose notifications there. No calendar delivery or legal deadline has been confirmed.',
       );
     } catch (e) {
-      if (generation.current === current && !request.signal.aborted)
-        setError(e instanceof Error ? e.message : 'The reminder could not be exported.');
+      if (generation.current === current && !blocked.current && !request.signal.aborted) {
+        const reason = e instanceof Error ? e.message : 'The reminder could not be exported.';
+        setError(
+          reason.includes('No reminder was exported.')
+            ? reason
+            : reason + ' No reminder was exported.',
+        );
+      }
     } finally {
       if (active.current === request) active.current = null;
       if (generation.current === current) setBusy(false);
@@ -76,8 +121,22 @@ export function ReminderPanel({ recordId }: { recordId: string }) {
   }
 
   return (
-    <details className="saved-details">
-      <summary>Personal calendar reminder</summary>
+    <details
+      ref={panel}
+      className="saved-details"
+      onToggle={(event) => {
+        if (!event.currentTarget.open) close();
+      }}
+    >
+      <summary
+        onClick={() => {
+          // Native toggle events are queued and may be coalesced by a rapid
+          // close/reopen. Cancel at the user action before that default toggle.
+          if (panel.current?.open) close();
+        }}
+      >
+        Personal calendar reminder
+      </summary>
       <form className="form-stack" onSubmit={(event) => void prepare(event)} aria-busy={busy}>
         <p className="muted">
           Choose a date to review your preparation. This is not legal service or an official
@@ -92,7 +151,7 @@ export function ReminderPanel({ recordId }: { recordId: string }) {
             min="1000-01-01"
             max="9999-12-30"
             value={date}
-            disabled={busy}
+            disabled={busy || disabled}
             onChange={(event) => {
               setDate(event.target.value);
               setMessage('');
@@ -105,7 +164,7 @@ export function ReminderPanel({ recordId }: { recordId: string }) {
             id={inputId + '-consent'}
             type="checkbox"
             checked={consent}
-            disabled={busy}
+            disabled={busy || disabled}
             onChange={(event) => {
               setConsent(event.target.checked);
               setMessage('');
@@ -123,7 +182,10 @@ export function ReminderPanel({ recordId }: { recordId: string }) {
           classification. Repeated downloads here reuse the event identifier, but import behavior
           varies.
         </p>
-        <button className="button button-secondary" disabled={busy || !date || !consent}>
+        <button
+          className="button button-secondary"
+          disabled={busy || disabled || !date || !consent}
+        >
           {busy ? 'Preparing reminder...' : 'Download calendar reminder'}
         </button>
         {error && (
