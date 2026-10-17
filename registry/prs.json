@@ -1,9 +1,26 @@
 {
-  "schemaVersion": 1,
   "repository": "neophilism/The-Cornerstone",
-  "roadmapVersion": 2,
+  "title": "The Cornerstone - public application implementation tracking",
   "planVerified": true,
   "plannedPrCount": 25,
+  "trackingScope": "Approved implementation-tracking baseline for publicly documented software workstreams; the earlier internal planning package is not republished and its original exact planned PR total is not asserted.",
+  "approvedBasis": "Owner approved progress tracking on 2026-10-11; work packages are scoped from the repository's public documentation and observed merged PRs.",
+  "sourceFiles": [
+    "docs/DEVELOPMENT.md",
+    "docs/PROGRESS.md",
+    "docs/STATUS.md",
+    "docs/SUCCESSION.md",
+    "docs/ENGINE_ROOM_TRACKING.md"
+  ],
+  "implementation": {
+    "status": "working initial release; full program unfinished",
+    "progressFile": "docs/PROGRESS.md",
+    "verifiedFunctionalCommit": "a0da54a50908333bb601d7557b1262f16d484faf",
+    "verificationRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/38125509319",
+    "publicWebsite": "https://cornerstone-policy-preview.onrender.com/"
+  },
+  "schemaVersion": 1,
+  "roadmapVersion": 2,
   "observedAt": "2026-10-11T20:20:45.125Z",
   "units": [
     {
@@ -12,7 +29,10 @@
       "origin": "original",
       "prs": [
         1
-      ]
+      ],
+      "dependsOn": [],
+      "externalDependencies": [],
+      "externalPrerequisites": []
     },
     {
       "id": "CS-02",
@@ -20,7 +40,10 @@
       "origin": "original",
       "prs": [
         2
-      ]
+      ],
+      "dependsOn": [],
+      "externalDependencies": [],
+      "externalPrerequisites": []
     },
     {
       "id": "CS-03",
@@ -28,7 +51,10 @@
       "origin": "original",
       "prs": [
         3
-      ]
+      ],
+      "dependsOn": [],
+      "externalDependencies": [],
+      "externalPrerequisites": []
     },
     {
       "id": "CS-04",
@@ -36,7 +62,10 @@
       "origin": "original",
       "prs": [
         4
-      ]
+      ],
+      "dependsOn": [],
+      "externalDependencies": [],
+      "externalPrerequisites": []
     },
     {
       "id": "CS-05",
@@ -44,7 +73,10 @@
       "origin": "original",
       "prs": [
         5
-      ]
+      ],
+      "dependsOn": [],
+      "externalDependencies": [],
+      "externalPrerequisites": []
     },
     {
       "id": "CS-06",
@@ -52,7 +84,10 @@
       "origin": "original",
       "prs": [
         6
-      ]
+      ],
+      "dependsOn": [],
+      "externalDependencies": [],
+      "externalPrerequisites": []
     },
     {
       "id": "CS-07",
@@ -60,7 +95,10 @@
       "origin": "original",
       "prs": [
         7
-      ]
+      ],
+      "dependsOn": [],
+      "externalDependencies": [],
+      "externalPrerequisites": []
     },
     {
       "id": "CS-08",
@@ -68,7 +106,10 @@
       "origin": "original",
       "prs": [
         8
-      ]
+      ],
+      "dependsOn": [],
+      "externalDependencies": [],
+      "externalPrerequisites": []
     },
     {
       "id": "CS-09",
@@ -76,7 +117,10 @@
       "origin": "original",
       "prs": [
         9
-      ]
+      ],
+      "dependsOn": [],
+      "externalDependencies": [],
+      "externalPrerequisites": []
     },
     {
       "id": "CS-10",
@@ -84,7 +128,10 @@
       "origin": "original",
       "prs": [
         10
-      ]
+      ],
+      "dependsOn": [],
+      "externalDependencies": [],
+      "externalPrerequisites": []
     },
     {
       "id": "CS-11",
@@ -92,91 +139,136 @@
       "origin": "original",
       "prs": [
         11
-      ]
+      ],
+      "dependsOn": [],
+      "externalDependencies": [],
+      "externalPrerequisites": []
     },
     {
       "id": "CS-12",
       "title": "Verified succession CI, migrations and browser acceptance",
       "origin": "original",
-      "prs": []
+      "prs": [],
+      "dependsOn": [],
+      "externalDependencies": [],
+      "externalPrerequisites": []
     },
     {
       "id": "CS-13",
       "title": "Pre-enrollment surviving claims and estate workflows",
       "origin": "original",
-      "prs": []
+      "prs": [],
+      "dependsOn": [],
+      "externalDependencies": [],
+      "externalPrerequisites": []
     },
     {
       "id": "CS-14",
       "title": "Complete governed opportunity and member journeys",
       "origin": "original",
-      "prs": []
+      "prs": [],
+      "dependsOn": [],
+      "externalDependencies": [],
+      "externalPrerequisites": []
     },
     {
       "id": "CS-15",
       "title": "Protected identity, recovery and delegated authorization",
       "origin": "original",
-      "prs": []
+      "prs": [],
+      "dependsOn": [],
+      "externalDependencies": [],
+      "externalPrerequisites": []
     },
     {
       "id": "CS-16",
       "title": "Bounded persistent evidence custody and processing",
       "origin": "original",
-      "prs": []
+      "prs": [],
+      "dependsOn": [],
+      "externalDependencies": [],
+      "externalPrerequisites": []
     },
     {
       "id": "CS-17",
       "title": "Client-authorized encryption and independent security review",
       "origin": "original",
-      "prs": []
+      "prs": [],
+      "dependsOn": [],
+      "externalDependencies": [],
+      "externalPrerequisites": []
     },
     {
       "id": "CS-18",
       "title": "Official legal notices, filings and institution authority gates",
       "origin": "original",
-      "prs": []
+      "prs": [],
+      "dependsOn": [],
+      "externalDependencies": [],
+      "externalPrerequisites": []
     },
     {
       "id": "CS-19",
       "title": "Published voluntary state offers and supervision workflows",
       "origin": "original",
-      "prs": []
+      "prs": [],
+      "dependsOn": [],
+      "externalDependencies": [],
+      "externalPrerequisites": []
     },
     {
       "id": "CS-20",
       "title": "Independent sealed matching, custody and replay",
       "origin": "original",
-      "prs": []
+      "prs": [],
+      "dependsOn": [],
+      "externalDependencies": [],
+      "externalPrerequisites": []
     },
     {
       "id": "CS-21",
       "title": "Within-offer compacts, delivery, renewal and final settlement",
       "origin": "original",
-      "prs": []
+      "prs": [],
+      "dependsOn": [],
+      "externalDependencies": [],
+      "externalPrerequisites": []
     },
     {
       "id": "CS-22",
       "title": "Independent finance review and settlement/Treasury integrations",
       "origin": "original",
-      "prs": []
+      "prs": [],
+      "dependsOn": [],
+      "externalDependencies": [],
+      "externalPrerequisites": []
     },
     {
       "id": "CS-23",
       "title": "Accessibility, reviewed translations and performance assurance",
       "origin": "original",
-      "prs": []
+      "prs": [],
+      "dependsOn": [],
+      "externalDependencies": [],
+      "externalPrerequisites": []
     },
     {
       "id": "CS-24",
       "title": "Production migration, operational recovery and release provenance",
       "origin": "original",
-      "prs": []
+      "prs": [],
+      "dependsOn": [],
+      "externalDependencies": [],
+      "externalPrerequisites": []
     },
     {
       "id": "CS-25",
       "title": "Whole-program end-to-end acceptance and authorized release",
       "origin": "original",
-      "prs": []
+      "prs": [],
+      "dependsOn": [],
+      "externalDependencies": [],
+      "externalPrerequisites": []
     }
   ],
   "pullRequests": [
