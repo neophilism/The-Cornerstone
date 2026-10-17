@@ -58,6 +58,26 @@ describe('frozen evidence intent', () => {
         prepareEvidence('evidence/upload', upload, { ...record, ...changes } as CaseRecord),
       ).toThrow();
   });
+  it('freezes financial appeal evidence only while its hearing record is open', () => {
+    const { record, upload } = fixture();
+    for (const state of ['review_requested', 'calculation_review']) {
+      const attempt = prepareEvidence('evidence/upload', upload, {
+        ...record,
+        kind: 'financial_schedule',
+        state,
+      });
+      expect(attempt.state).toBe(state);
+      expect(evidenceRequest(attempt)).toEqual(upload);
+    }
+    for (const state of ['calculated', 'calculation_heard', 'review_decided'])
+      expect(() =>
+        prepareEvidence('evidence/upload', upload, {
+          ...record,
+          kind: 'financial_schedule',
+          state,
+        }),
+      ).toThrow();
+  });
   it.each(['evidence/upload', 'evidence/validate'] as const)(
     'correlates the exact %s receipt and historical record',
     (path) => {

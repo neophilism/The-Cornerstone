@@ -171,7 +171,11 @@ try {
   );
   await command('member', record.id, 'submit', { attested: true });
   await assert.rejects(command('member', record.id, 'calculate'), /assigned|scoped member/i);
-  const calculated = (await command('fiscal', record.id, 'calculate')).record!;
+  const notice = {
+    noticeDate: new Date().toISOString().slice(0, 10),
+    noticeReference: 'Invented calculation notice; no legal service',
+  };
+  const calculated = (await command('fiscal', record.id, 'calculate', notice)).record!;
   const result = calculated.data['calculation'] as Record<string, unknown>;
   assert.equal(result['shareableSurplus'], '550.00');
   assert.equal(result['statePayment'], '27.50');
@@ -185,6 +189,7 @@ try {
   };
   await assert.rejects(
     command('fiscal', record.id, 'correct', {
+      ...notice,
       schedule: duplicate,
       reasons: 'Invented rejected repeated source',
     }),
@@ -193,12 +198,14 @@ try {
   assert.equal((await get('fiscal', record.id))!.version, calculated.version);
   const zero = (
     await command('fiscal', record.id, 'correct', {
+      ...notice,
       schedule: { ...schedule, grossReceipts: '0.00' },
       reasons: 'Invented transparent receipt correction',
     })
   ).record!;
   assert.equal((zero.data['calculation'] as Record<string, unknown>)['statePayment'], '0.00');
   await command('member', record.id, 'request_review', {
+    disputedAmount: '0.00',
     reasons: 'Invented appeal of the input classification under the unchanged published method',
   });
   assert.equal((await get('member', record.id))!.state, 'review_requested');

@@ -5,6 +5,7 @@ import {
   ReceiptSchema,
   type CaseRecord,
 } from '@cornerstone/contracts';
+import { evidencePreparationRoles } from '@cornerstone/domain';
 export type EvidenceAttempt = Readonly<{
   path: 'evidence/upload' | 'evidence/validate';
   wire: string;
@@ -21,11 +22,11 @@ export function prepareEvidence(
   ).parse(raw);
   if (
     baseline.realm !== 'simulation' ||
-    baseline.state !== 'draft' ||
+    evidencePreparationRoles(baseline).length === 0 ||
     request.recordId !== baseline.id ||
     request.expectedVersion !== baseline.version
   )
-    throw Error('The evidence request does not match the selected synthetic draft.');
+    throw Error('The evidence request does not match the selected synthetic preparation stage.');
   return Object.freeze({
     path,
     wire: JSON.stringify(request),

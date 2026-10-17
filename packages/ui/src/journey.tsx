@@ -84,7 +84,21 @@ export function RecordNextStep({ record }: { record: CaseRecord }) {
     ],
     review_requested: [
       'Review requested',
-      'The request and receipt are saved. Use Hearing and review to prepare a related review record. Scheduling and a written decision are separate steps.',
+      record.kind === 'financial_schedule'
+        ? 'Your calculation appeal is assigned for independent review. Its original method and amounts are preserved below. The adjudicator will schedule the synthetic hearing and record a reasoned decision here.'
+        : 'The request and receipt are saved. Use Hearing and review to prepare a related review record. Scheduling and a written decision are separate steps.',
+    ],
+    calculation_review: [
+      'Independent calculation review is scheduled',
+      'Prepare and validate synthetic supporting evidence. On or after the hearing date, the assigned adjudicator records the hearing and closes the evidence set for decision.',
+    ],
+    calculation_heard: [
+      'The hearing record is ready for decision',
+      'The selected evidence and its validation revision are frozen. The assigned independent adjudicator can affirm or correct the calculation under the original published rate and method.',
+    ],
+    review_decided: [
+      'Read your calculation review decision',
+      'Compare the original and reviewed amounts, written reasons and recorded route for further review. This synthetic decision does not execute a payment or refund.',
     ],
   };
   const message = blocked

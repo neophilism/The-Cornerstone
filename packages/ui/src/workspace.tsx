@@ -21,6 +21,7 @@ import { MembershipPanel, FoundingConsentPanel, MemberBallotPanel } from './memb
 import { isRecordReference } from './record-fields.js';
 import { PreparationGuide, RecordNextStep } from './journey.js';
 import { CalculationSummary } from './financial-fields.js';
+import { FinancialReviewSummary } from './financial-review.js';
 import { SuccessionSummary } from './succession.js';
 import { ClaimSurvivalSummary } from './claim-survival.js';
 import { DeceasedFilingSummary } from './deceased-filing.js';
@@ -796,7 +797,10 @@ export function Workspace({
                 />
               ) : null}
               {selected.kind === 'financial_schedule' && (
-                <CalculationSummary value={selected.data['calculation']} />
+                <>
+                  <CalculationSummary value={selected.data['calculation']} />
+                  <FinancialReviewSummary record={selected} />
+                </>
               )}
               <details className="saved-details" open>
                 <summary>Saved details</summary>
@@ -812,6 +816,8 @@ export function Workspace({
                           'opportunityBinding',
                           'compactBinding',
                           'compactApproval',
+                          'financialBasis',
+                          'financialReview',
                         ].includes(k),
                     )
                     .map(([k, v]) => (
@@ -961,9 +967,14 @@ export function Workspace({
                           }}
                         />
                       );
-                      return selected.kind === 'financial_schedule' && a.key === 'correct' ? (
+                      return selected.kind === 'financial_schedule' &&
+                        ['correct', 'decide_calculation_review'].includes(a.key) ? (
                         <details className="saved-details" key={`${a.key}:${selected.version}`}>
-                          <summary>Prepare a calculation correction</summary>
+                          <summary>
+                            {a.key === 'correct'
+                              ? 'Prepare a calculation correction'
+                              : 'Prepare the calculation review decision'}
+                          </summary>
                           {form}
                         </details>
                       ) : (

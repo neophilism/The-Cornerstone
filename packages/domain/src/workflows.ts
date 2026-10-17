@@ -70,6 +70,16 @@ const individualClaimFields = [
 ];
 const reference = f('referenceId', 'Related record ID');
 const consent = f('attested', 'I confirm this submission is complete and accurate', 'boolean');
+const financialNotice = [
+  f(
+    'noticeDate',
+    'Synthetic calculation notice date',
+    'date',
+    true,
+    'This date starts only the synthetic 60-day appeal window; it does not establish real service.',
+  ),
+  f('noticeReference', 'Synthetic calculation notice reference'),
+];
 const action = (
   key: string,
   label: string,
@@ -1512,7 +1522,7 @@ export const workflows: WorkflowDefinition[] = [
         'calculated',
         ['fiscal'],
         'finance',
-        [],
+        financialNotice,
         'No positive shareable surplus means no payment. No private percentage negotiation.',
       ),
       action(
@@ -1522,7 +1532,7 @@ export const workflows: WorkflowDefinition[] = [
         'calculated',
         ['fiscal'],
         'finance',
-        [f('schedule', 'Corrected schedule', 'json'), reasons],
+        [f('schedule', 'Corrected schedule', 'json'), ...financialNotice, reasons],
         'Correct inputs and errors under the same published method.',
       ),
       action(
@@ -1532,8 +1542,58 @@ export const workflows: WorkflowDefinition[] = [
         'review_requested',
         ['member'],
         null,
-        [reasons],
+        [
+          f(
+            'disputedAmount',
+            'Amount disputed in this calculation',
+            'money',
+            true,
+            'Use zero for a classification-only appeal of a zero calculation. Undisputed amounts are not stayed by requesting review.',
+          ),
+          reasons,
+        ],
         'Undisputed payments remain due; disputed amounts follow published review rules.',
+      ),
+      action(
+        'begin_calculation_review',
+        'Schedule independent calculation review',
+        ['review_requested'],
+        'calculation_review',
+        ['adjudicator'],
+        'review',
+        [
+          f('hearingDate', 'Synthetic hearing date', 'date'),
+          f('noticeReference', 'Synthetic hearing notice reference'),
+        ],
+        'An assigned adjudicator from a different institution reviews the appeal. Synthetic notice does not establish legal service.',
+      ),
+      action(
+        'record_calculation_hearing',
+        'Record hearing and close evidence',
+        ['calculation_review'],
+        'calculation_heard',
+        ['adjudicator'],
+        'review',
+        [f('hearingRecord', 'Synthetic hearing record', 'textarea'), evidence],
+        'Record the hearing on or after its scheduled date and freeze the selected validated attachments. This closes evidence preparation for the decision.',
+      ),
+      action(
+        'decide_calculation_review',
+        'Record reasoned calculation decision',
+        ['calculation_heard'],
+        'review_decided',
+        ['adjudicator'],
+        'review',
+        [
+          f('disposition', 'Calculation decision', 'select', true, undefined, [
+            'affirm',
+            'correct',
+          ]),
+          f('schedule', 'Reviewed schedule', 'json'),
+          reasons,
+          f('judicialReviewRoute', 'Available judicial review route', 'textarea'),
+        ],
+        'Review can correct inputs and classification under the original rate and method. No payment, refund, legal filing or collection stay is executed.',
       ),
       action(
         'confirm_transfer',

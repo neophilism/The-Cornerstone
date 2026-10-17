@@ -1,11 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { Actor, CaseRecord, Command, Mode, Realm, Receipt } from '@cornerstone/contracts';
-import {
-  CreateRecordSchema,
-  CommandSchema,
-  IdSchema,
-  SurplusScheduleSchema,
-} from '@cornerstone/contracts';
+import { CreateRecordSchema, CommandSchema, IdSchema } from '@cornerstone/contracts';
 import {
   workflow,
   actionUnavailable,
@@ -26,16 +21,11 @@ import { ClaimSurvivalService } from './claim-survival.js';
 import { DeceasedFilingService } from './deceased-filings.js';
 import { GovernanceService } from './governance.js';
 import { CompactService } from './compacts.js';
+import { FinancialReviewService, freezeFinancialBasis } from './financial-review.js';
+import { calculateWireSchedule } from './financial-calculation.js';
+export { calculateWireSchedule } from './financial-calculation.js';
 import { Store, type Transaction } from '@cornerstone/store';
-import {
-  cents,
-  money,
-  rate,
-  fundRemittance,
-  stateSurplus,
-  type SurplusInput,
-  type FundAccount,
-} from '@cornerstone/finance';
+import { cents, money, rate, fundRemittance, type FundAccount } from '@cornerstone/finance';
 
 export class ProgramService {
   constructor(
@@ -201,6 +191,19 @@ export class ProgramService {
         (record.kind === 'claim' && record.data['deceasedFilingId'])
       )
         data = await new DeceasedFilingService(this.store).prepare(tx, actor, record, a.key, data);
+
+      const financialReview =
+        record.kind === 'financial_schedule'
+          ? await new FinancialReviewService(this.store).prepare(
+              tx,
+              actor,
+              record,
+              a.key,
+              data,
+              now,
+            )
+          : { data };
+      data = financialReview.data;
       const ballot =
         record.kind === 'resolution' && a.key === 'record_vote'
           ? await members.prepareBallot(tx, actor, record, data, now.slice(0, 10))
@@ -210,7 +213,7 @@ export class ProgramService {
         ...history,
         { version: record.version + 1, action: a.key, at: now, actorId: actor.id },
       ];
-      let institution = record.institutionId;
+      let institution = financialReview.institutionId ?? record.institutionId;
       if (
         a.key === 'submit' ||
         (record.kind === 'resolution' && a.key === 'open_vote') ||
@@ -510,63 +513,8 @@ export class ProgramService {
         year: d['fiscalYear'],
       };
       d['calculation'] = calculateWireSchedule(wire);
+      d['financialBasis'] = freezeFinancialBasis(r, d, actor, compact, offer, now);
     }
     return d;
   }
-}
-const amountKeys = new Set([
-  'grossReceipts',
-  'financingProceeds',
-  'refunds',
-  'collectedTaxes',
-  'recoveriesAndReleasedAllowances',
-  'ordinaryAnnualOperatingCosts',
-  'cashCycleShortfall',
-  'paid',
-  'reserved',
-  'eligibleAmount',
-  'original',
-  'remaining',
-  'addition',
-  'target',
-  'existingDedicated',
-  'insuranceGrantsOtherFinance',
-  'legalRequiredAmount',
-]);
-export function calculateWireSchedule(raw: unknown) {
-  const convert = (v: unknown, key = ''): unknown => {
-    if (amountKeys.has(key)) {
-      requireCondition(
-        typeof v === 'string',
-        'INVALID_MONEY',
-        'Money must use decimal strings, never floating point.',
-      );
-      return cents(v);
-    }
-    if (key === 'numerator' || key === 'denominator') {
-      requireCondition(
-        typeof v === 'string' && /^\d+$/.test(v),
-        'INVALID_RATE',
-        'Rate fractions must use whole-number strings.',
-      );
-      return BigInt(v);
-    }
-    if (Array.isArray(v)) return v.map((x) => convert(x));
-    if (v && typeof v === 'object')
-      return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, convert(x, k)]));
-    return v;
-  };
-  const input = convert(SurplusScheduleSchema.parse(raw)) as SurplusInput;
-  requireCondition(
-    input &&
-      input.terms &&
-      Array.isArray(input.costs) &&
-      Array.isArray(input.losses) &&
-      Array.isArray(input.allowances) &&
-      Array.isArray(input.priorDeductionSourceIds),
-    'INVALID_SCHEDULE',
-    'The complete published-method schedule is required.',
-  );
-  const result = stateSurplus(input);
-  return JSON.parse(JSON.stringify(result, (_, v) => (typeof v === 'bigint' ? money(v) : v)));
 }
