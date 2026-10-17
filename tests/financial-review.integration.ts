@@ -171,7 +171,10 @@ try {
   await unchanged(member, ready);
 
   const cachedReviewer = await w.actor(reviewer.id);
-  await w.owner.query("UPDATE actors SET roles=ARRAY['member'] WHERE id=$1", [reviewer.id]);
+  // Retain assigned staff read access while revoking the role needed to adjudicate.
+  // A member-only actor would be stopped by record-read RLS before this fresh-role guard.
+  await w.owner.query("UPDATE actors SET roles=ARRAY['support'] WHERE id=$1", [reviewer.id]);
+  assert.deepEqual(await w.get(await w.actor(reviewer.id), ready.id), ready);
   await expectCode(
     w.program.command(cachedReviewer, {
       recordId: ready.id,
