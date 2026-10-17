@@ -55,6 +55,8 @@ export function Workspace({
     [pending, setPending] = useState(false),
     [local, setLocal] = useState(false);
   const [creationDefaults, setCreationDefaults] = useState<Record<string, unknown>>({});
+  // Preserve disclosure state across the current-access refresh, never grant data.
+  const [expandedAccess, setExpandedAccess] = useState<string | null>(null);
   const [evidenceBusy, setEvidenceBusy] = useState(false);
   const evidenceBusyRef = useRef(false);
   function evidenceBusyChanged(busy: boolean) {
@@ -98,6 +100,7 @@ export function Workspace({
       activityGeneration.current++;
       setCapabilities([]);
       setSelected(null);
+      setExpandedAccess(null);
       setReceipt(null);
       setNextCursor(null);
     }
@@ -288,6 +291,7 @@ export function Workspace({
       const r = await response.json();
       if (!response.ok) throw Error(r.message);
       setSelected(null);
+      setExpandedAccess(null);
       setCreating(null);
       setReceipt(null);
       setEditing(false);
@@ -383,6 +387,9 @@ export function Workspace({
   const items = group
     ? visible.filter((w) => (group.kinds as readonly string[]).includes(w.kind))
     : visible;
+  const accessPanelKey = selected
+    ? `${session.actor.realm}:${session.actor.id}:${selected.id}`
+    : null;
   return (
     <main
       id="main"
@@ -504,6 +511,7 @@ export function Workspace({
                   setCapabilities([]);
                   setView('home');
                   setSelected(null);
+                  setExpandedAccess(null);
                   setCreating(null);
                   setReceipt(null);
                   setNextCursor(null);
@@ -728,7 +736,11 @@ export function Workspace({
               <ClaimSurvivalSummary record={selected} onOpen={(id) => void openRecord(id)} />
               <div className="record-links">
                 {selected.state === 'draft' && permitted.includes('save_draft') ? (
-                  <button className="button button-secondary" onClick={() => setEditing(!editing)}>
+                  <button
+                    className="button button-secondary"
+                    disabled={pending || evidenceBusy}
+                    onClick={() => setEditing(!editing)}
+                  >
                     {editing ? 'Cancel editing' : 'Edit draft'}
                   </button>
                 ) : null}
@@ -983,6 +995,12 @@ export function Workspace({
                     <DraftAccessPanel
                       key={selected.id}
                       record={selected}
+                      expanded={expandedAccess === accessPanelKey}
+                      onExpandedChange={(expanded) =>
+                        setExpandedAccess((current) =>
+                          expanded ? accessPanelKey : current === accessPanelKey ? null : current,
+                        )
+                      }
                       api={api}
                       disabled={pending || editing || evidenceBusy}
                       onBusyChange={evidenceBusyChanged}

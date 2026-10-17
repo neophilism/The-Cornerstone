@@ -10,12 +10,16 @@ import {
 type Result = { record: CaseRecord; receipt: Receipt };
 export function DraftAccessPanel({
   record,
+  expanded,
+  onExpandedChange,
   api,
   onChanged,
   disabled,
   onBusyChange,
 }: {
   record: CaseRecord;
+  expanded: boolean;
+  onExpandedChange: (expanded: boolean) => void;
   api: (path: string, body?: unknown) => Promise<any>;
   onChanged: (result: Result) => Promise<void>;
   disabled: boolean;
@@ -69,7 +73,12 @@ export function DraftAccessPanel({
     recovery.submit('access/grant', { ...input, idempotencyKey: crypto.randomUUID() });
   }
   return (
-    <details className="action-panel access-panel" style={{ marginTop: 25 }}>
+    <details
+      className="action-panel access-panel"
+      style={{ marginTop: 25 }}
+      open={expanded}
+      onToggle={(event) => onExpandedChange(event.currentTarget.open)}
+    >
       <summary>Help with this record</summary>
       <h2>Give someone scoped access</h2>
       <p className="muted">
