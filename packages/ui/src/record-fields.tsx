@@ -193,13 +193,23 @@ export function RecordChoice({
   );
 }
 
-export function IncomeShare({ prefix, value }: { prefix: string; value: unknown }) {
+export function IncomeShare({
+  prefix,
+  value,
+  originalWorker = false,
+}: {
+  prefix: string;
+  value: unknown;
+  originalWorker?: boolean;
+}) {
   const [percent, setPercent] = useState(
     typeof value === 'number' ? String(Math.round(value * 10000) / 100) : '',
   );
   return (
     <div className="field">
-      <label htmlFor={`${prefix}-income-percent`}>Share of your earned income (%) (optional)</label>
+      <label htmlFor={`${prefix}-income-percent`}>
+        Share of {originalWorker ? 'the worker’s' : 'your'} earned income (%) (optional)
+      </label>
       <input
         type="hidden"
         name="earnedIncomeShare"
@@ -215,9 +225,9 @@ export function IncomeShare({ prefix, value }: { prefix: string; value: unknown 
         onChange={(e) => setPercent(e.target.value)}
       />
       <span className="hint">
-        Before the government action, how much of your earned income came from this livelihood? For
-        example, enter 75 for three quarters. Your annual hours provide another way to show your
-        established livelihood.
+        Before the government action, how much of {originalWorker ? 'the worker’s' : 'your'} earned
+        income came from this livelihood? For example, enter 75 for three quarters. Annual hours
+        provide another way to show the established livelihood.
       </span>
     </div>
   );

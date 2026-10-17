@@ -60,4 +60,8 @@ export const schemaInventory = [
     name: '015-runtime-schema-readiness.sql',
     sha256: 'df7d8cd8bd05ab55f5d96ea0c70cc6d701726b697b694867134c9819979b3777',
   },
+  {
+    name: '016-deceased-filings.sql',
+    sha256: '296c72c70a777b6ab2e70944e731415ebc86c187acb3e0d6b810e12886b61217',
+  },
 ] as const;

@@ -22,6 +22,10 @@ const preparation: Record<string, [string, string]> = {
     'Explain the government action',
     'Describe the implemented action, the lawful industry and evidence that its destruction or material contraction was deliberate. Include contrary evidence. Unlisted and historical events may be considered with reliable proof.',
   ],
+  deceased_filing: [
+    'Prepare one claim for the original worker',
+    'Explain the death, identity and succession chain with invented evidence. Assigned standing review comes first; the worker’s own livelihood and injury still need a separate eligibility claim. Never sign in as the worker.',
+  ],
   claim: [
     'Explain your own livelihood and injury',
     'An event finding does not decide your claim. Describe your established livelihood and direct material loss. Retained part-time work, later employment and ordinary transition benefits do not by themselves erase eligibility.',

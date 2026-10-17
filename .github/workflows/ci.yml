@@ -124,6 +124,7 @@ jobs:
       - run: node --import tsx tests/membership.integration.ts
       - run: node --import tsx tests/succession.integration.ts
       - run: node --import tsx tests/claim-survival.integration.ts
+      - run: node --import tsx tests/deceased-filings.integration.ts
       - run: node --import tsx tests/governance.integration.ts
       - run: node --import tsx tests/compact.integration.ts
       - run: node --import tsx tests/association-scale.integration.ts

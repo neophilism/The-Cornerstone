@@ -23,6 +23,7 @@ import { PreparationGuide, RecordNextStep } from './journey.js';
 import { CalculationSummary } from './financial-fields.js';
 import { SuccessionSummary } from './succession.js';
 import { ClaimSurvivalSummary } from './claim-survival.js';
+import { DeceasedFilingSummary } from './deceased-filing.js';
 import { GovernanceSummary } from './governance.js';
 import { CompactSummary } from './compacts.js';
 import { WorkflowAction } from './workflow-action.js';
@@ -734,6 +735,11 @@ export function Workspace({
               />
               <SuccessionSummary record={selected} />
               <ClaimSurvivalSummary record={selected} onOpen={(id) => void openRecord(id)} />
+              <DeceasedFilingSummary
+                record={selected}
+                disabled={pending || editing || evidenceBusy}
+                onOpen={(id) => void openRecord(id)}
+              />
               <div className="record-links">
                 {selected.state === 'draft' && permitted.includes('save_draft') ? (
                   <button

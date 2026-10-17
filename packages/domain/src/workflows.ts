@@ -54,6 +54,20 @@ const evidence = f(
   true,
   'An array of record IDs. Use synthetic records in the development environment.',
 );
+const individualClaimFields = [
+  f('eventId', 'Certified event record ID'),
+  f('workerType', 'Livelihood role', 'select', true, undefined, [
+    'employee',
+    'independent_worker',
+    'owner_operator',
+    'direct_supplier',
+  ]),
+  f('earnedIncomeShare', 'Pre-action earned-income share (0 to 1)', 'number', false),
+  f('annualHours', 'Pre-action annual hours', 'number', false),
+  f('injuryDescription', 'Direct material injury', 'textarea'),
+  f('lossDate', 'Attributable loss date', 'date'),
+  evidence,
+];
 const reference = f('referenceId', 'Related record ID');
 const consent = f('attested', 'I confirm this submission is complete and accurate', 'boolean');
 const action = (
@@ -280,20 +294,7 @@ export const workflows: WorkflowDefinition[] = [
     'Individual eligibility',
     'Request a separate established-livelihood and direct-injury finding.',
     participant,
-    [
-      f('eventId', 'Certified event record ID'),
-      f('workerType', 'Livelihood role', 'select', true, undefined, [
-        'employee',
-        'independent_worker',
-        'owner_operator',
-        'direct_supplier',
-      ]),
-      f('earnedIncomeShare', 'Pre-action earned-income share (0 to 1)', 'number', false),
-      f('annualHours', 'Pre-action annual hours', 'number', false),
-      f('injuryDescription', 'Direct material injury', 'textarea'),
-      f('lossDate', 'Attributable loss date', 'date'),
-      evidence,
-    ],
+    individualClaimFields,
     [
       submit(),
       review('labor', 'claim'),
@@ -598,6 +599,129 @@ export const workflows: WorkflowDefinition[] = [
           evidence,
         ],
         'Change control of the same un-enrolled claim in simulation. Do not copy the claim, decide eligibility, transfer an account or create a founding unit.',
+      ),
+      deny('labor', 'claim'),
+      appeal(),
+    ],
+  ),
+  w(
+    'deceased_filing',
+    'New deceased-worker filing',
+    'Establish personal standing to open one new claim for a deceased worker; eligibility remains separate.',
+    ['participant', 'member'],
+    [
+      f(
+        'workerId',
+        'Synthetic deceased-worker identity reference',
+        'text',
+        true,
+        'Use an independently supplied synthetic identity reference. Do not sign in as the worker. This reference is not proof of death, authority or eligibility.',
+      ),
+      f('capacity', 'Requested filing capacity', 'select', true, undefined, [
+        'designated_successor',
+        'estate_representative',
+      ]),
+      f('chain', 'Death, designation and succession chain', 'textarea'),
+      evidence,
+    ],
+    [
+      action(
+        'submit',
+        'Submit my deceased-worker filing packet',
+        ['draft'],
+        'submitted',
+        ['participant', 'member'],
+        null,
+        [
+          consent,
+          f(
+            'rightsAcknowledged',
+            "I request one new undivided claim for the worker, not another person's account or an extra unit",
+            'boolean',
+          ),
+        ],
+        "The proposed successor must submit personally. This is not proof of the original worker's eligibility.",
+      ),
+      review('labor', 'claim'),
+      action(
+        'request_changes',
+        'Request a corrected deceased-worker packet',
+        ['review'],
+        'changes_requested',
+        ['labor'],
+        'claim',
+        [reasons],
+        'Explain missing or conflicting evidence. No standing or eligibility is granted.',
+      ),
+      action(
+        'revise_request',
+        'Reopen my deceased-worker draft',
+        ['changes_requested'],
+        'draft',
+        ['participant', 'member'],
+        null,
+        [],
+        'Correct and resubmit personally. A new review will bind the corrected worker and capacity.',
+      ),
+      action(
+        'approve',
+        'Approve standing to file one new claim',
+        ['review'],
+        'approved',
+        ['labor'],
+        'claim',
+        [
+          f('undivided', 'Exactly one undivided worker claim may be opened', 'boolean'),
+          f(
+            'deathEstablished',
+            'The death of the identified worker is supported by the evidence',
+            'boolean',
+          ),
+          f(
+            'identityEstablished',
+            'The deceased worker and requesting successor or representative are reliably identified',
+            'boolean',
+          ),
+          f(
+            'chainEstablished',
+            'The designation or estate authority and chain are established',
+            'boolean',
+          ),
+          f(
+            'probateConsistent',
+            'The succession follows the applicable probate requirements',
+            'boolean',
+          ),
+          f(
+            'competingRightsResolved',
+            'Notice, review and competing claims have been addressed',
+            'boolean',
+          ),
+          f(
+            'caseAccessNecessary',
+            'Authority permits one new claim only, not account access or inheritance of unrelated records',
+            'boolean',
+          ),
+          f(
+            'eligibilitySeparate',
+            "The worker's eligibility still requires its own evidence and separate decision",
+            'boolean',
+          ),
+          f('legalBasis', 'Succession, case-access, notice and review basis', 'textarea'),
+          reasons,
+          evidence,
+        ],
+        'Authorize standing only. The requester may then open one claim draft. Do not certify eligibility, transfer an account or create a founding unit.',
+      ),
+      action(
+        'open_claim',
+        'Prepare the worker’s eligibility claim',
+        ['approved'],
+        'claim_opened',
+        ['participant', 'member'],
+        null,
+        individualClaimFields.filter((field) => field.key !== 'evidenceIds'),
+        'Personally open the one draft covered by this standing decision. Explain the deceased worker’s livelihood and injury; attach that evidence separately before submitting the new claim.',
       ),
       deny('labor', 'claim'),
       appeal(),
@@ -1856,9 +1980,12 @@ export function validateAction(
       'An association’s own material breach does not qualify.',
     );
   }
-  if (['succession', 'claim_survival'].includes(record.kind) && key === 'submit')
+  if (['succession', 'claim_survival', 'deceased_filing'].includes(record.kind) && key === 'submit')
     yes('rightsAcknowledged', 'Personally acknowledge the undivided rights and limits.');
-  if (['succession', 'claim_survival'].includes(record.kind) && key === 'approve')
+  if (
+    ['succession', 'claim_survival', 'deceased_filing'].includes(record.kind) &&
+    key === 'approve'
+  )
     for (const name of [
       'undivided',
       'deathEstablished',
@@ -1868,7 +1995,7 @@ export function validateAction(
       'competingRightsResolved',
     ])
       yes(name, 'A complete evidence-based succession finding is required.');
-  if (record.kind === 'claim_survival' && key === 'approve') {
+  if (['claim_survival', 'deceased_filing'].includes(record.kind) && key === 'approve') {
     yes('caseAccessNecessary', 'Record the necessary authority over this specific claim file.');
     yes('eligibilitySeparate', 'Succession cannot replace the worker eligibility finding.');
   }
@@ -1946,6 +2073,7 @@ export const workflowGroups = [
       'hearing',
       'succession',
       'claim_survival',
+      'deceased_filing',
     ],
   },
   {

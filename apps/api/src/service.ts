@@ -23,6 +23,7 @@ import { EvidenceService } from './evidence.js';
 import { MembershipService } from './membership.js';
 import { SuccessionService } from './succession.js';
 import { ClaimSurvivalService } from './claim-survival.js';
+import { DeceasedFilingService } from './deceased-filings.js';
 import { GovernanceService } from './governance.js';
 import { CompactService } from './compacts.js';
 import { Store, type Transaction } from '@cornerstone/store';
@@ -110,14 +111,8 @@ export class ProgramService {
         createdAt: now,
         updatedAt: now,
       };
-      const receipt = await this.store.save(
-        tx,
-        actor,
-        record,
-        'create',
-        input.idempotencyKey,
-        requestDigest,
-        true,
+      const receipt = await new DeceasedFilingService(this.store).checked(() =>
+        this.store.save(tx, actor, record, 'create', input.idempotencyKey, requestDigest, true),
       );
       if (record.kind === 'resolution')
         await tx.query('SELECT simulation_link_resolution($1,$2)', [
@@ -201,6 +196,11 @@ export class ProgramService {
         data = await new SuccessionService().prepare(tx, actor, record, a.key, data);
       if (record.kind === 'claim_survival')
         data = await new ClaimSurvivalService(this.store).prepare(tx, actor, record, a.key, data);
+      if (
+        record.kind === 'deceased_filing' ||
+        (record.kind === 'claim' && record.data['deceasedFilingId'])
+      )
+        data = await new DeceasedFilingService(this.store).prepare(tx, actor, record, a.key, data);
       const ballot =
         record.kind === 'resolution' && a.key === 'record_vote'
           ? await members.prepareBallot(tx, actor, record, data, now.slice(0, 10))
@@ -242,6 +242,8 @@ export class ProgramService {
         await new SuccessionService().finish(tx, next, receipt);
       if (record.kind === 'claim_survival' && a.key === 'approve')
         await new ClaimSurvivalService(this.store).finish(tx, actor, next, receipt);
+      if (record.kind === 'deceased_filing')
+        await new DeceasedFilingService(this.store).finish(tx, actor, next, receipt);
       if (ballot)
         await tx.query('SELECT simulation_cast_ballot($1,$2,$3,$4::jsonb,$5,$6)', [
           ballot.id,

@@ -69,7 +69,14 @@ export function WorkflowFields({
               api={api}
             />
           ) : f.key === 'earnedIncomeShare' ? (
-            <IncomeShare key={f.key} prefix={prefix} value={values[f.key]} />
+            <IncomeShare
+              key={f.key}
+              prefix={prefix}
+              value={values[f.key]}
+              originalWorker={
+                record?.kind === 'deceased_filing' || !!record?.data['deceasedFilingId']
+              }
+            />
           ) : f.type === 'json' ? (
             <StructuredField
               key={f.key}
