@@ -99,6 +99,7 @@ export const RecordCapabilitiesSchema = z
   })
   .strict();
 export type RecordCapabilities = z.infer<typeof RecordCapabilitiesSchema>;
+export const RecordReadContextSchema = z.object({ actorId: IdSchema, realm: RealmSchema }).strict();
 export const ActivityNotificationSchema = z
   .object({
     id: IdSchema,

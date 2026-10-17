@@ -56,6 +56,11 @@ export class RecordReader {
         actions.push('attach_evidence');
       return RecordCapabilitiesSchema.parse({ recordId: r.id, version: r.version, actions });
     });
-    return { records, capabilities, nextCursor: page.nextCursor };
+    return {
+      context: { actorId: actor.id, realm: actor.realm },
+      records,
+      capabilities,
+      nextCursor: page.nextCursor,
+    };
   }
 }

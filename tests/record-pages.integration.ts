@@ -70,6 +70,7 @@ try {
     .sort((a, b) => b.stamp.localeCompare(a.stamp) || b.id.localeCompare(a.id))
     .map((r) => r.id);
   const first = await reader.read(actor, { limit: '17' });
+  assert.deepEqual(first.context, { actorId: actor.id, realm: actor.realm });
   assert.equal(first.records.length, 17);
   assert.ok(first.nextCursor);
   assert.equal(first.capabilities[0]?.actions.includes('save_draft'), true);
@@ -101,9 +102,13 @@ try {
   );
   assert.equal((await reader.read(outsider)).records.length, 0);
   await assert.rejects(reader.read(outsider, { recordId: rows[0]!.id }), /not found/);
-  assert.equal(
-    (await reader.read(actor, { recordId: expected.at(-1) })).records[0]?.id,
-    expected.at(-1),
+  const referenced = await reader.read(actor, { recordId: expected.at(-1) });
+  assert.deepEqual(referenced.context, { actorId: actor.id, realm: actor.realm });
+  assert.equal(referenced.records[0]?.id, expected.at(-1));
+  assert.equal(referenced.nextCursor, null);
+  assert.deepEqual(
+    referenced.capabilities.map(({ recordId, version }) => ({ recordId, version })),
+    [{ recordId: referenced.records[0]!.id, version: referenced.records[0]!.version }],
   );
   await assert.rejects(
     reader.read({ ...actor, conflicts: [rows[0]!.id] }, { recordId: rows[0]!.id }),
