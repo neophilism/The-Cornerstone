@@ -40,7 +40,8 @@ export default function Preview() {
         </div>
         <Notice title="Official services are not open">
           Protected identity, evidence, rankings and payments require approved integrations,
-          independent review and enacted authority. Developer workspaces use synthetic records only.
+          verified security controls and enacted authority. External expert review is optional
+          follow-up. Developer workspaces use synthetic records only.
         </Notice>
         <h2 className="page-section-title">{group}</h2>
         <div className="workflow-catalog">
