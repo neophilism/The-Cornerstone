@@ -1,4 +1,5 @@
 import type { CaseRecord } from '@cornerstone/contracts';
+import { ClaimControlDetails, claimCapacityLabel } from './claim-survival.js';
 
 export function DeceasedFilingSummary({
   record,
@@ -22,8 +23,10 @@ export function DeceasedFilingSummary({
           Standing does not certify eligibility or create membership. Current case control is
           specific to this claim; no account, unrelated record or additional vote is inherited.
         </p>
+        <ClaimControlDetails record={record} />
         <button
           type="button"
+          className="button button-secondary"
           disabled={disabled}
           onClick={() => onOpen(String(record.data['deceasedFilingId']))}
         >
@@ -32,6 +35,7 @@ export function DeceasedFilingSummary({
       </section>
     );
   if (record.kind !== 'deceased_filing') return null;
+  const reviewed = record.data['reviewedFiling'] as Record<string, unknown> | undefined;
   return (
     <section className="action-panel" style={{ marginTop: 24 }}>
       <h2>One worker, one undivided claim</h2>
@@ -45,6 +49,25 @@ export function DeceasedFilingSummary({
         succession to an enrolled founding unit have their own workflows. These are synthetic
         preparation and review records, not probate decisions or government acceptance.
       </p>
+      {reviewed && (
+        <details className="standing-review-details">
+          <summary>Inspect the standing packet reviewed</summary>
+          <dl className="record-detail-list">
+            <dt>Requested capacity reviewed</dt>
+            <dd>{claimCapacityLabel(reviewed['capacity'])}</dd>
+            <dt>Packet version when review began</dt>
+            <dd>{String(reviewed['reviewVersion'])}</dd>
+            <dt>Worker reference reviewed</dt>
+            <dd className="workspace-id">{String(reviewed['workerId'])}</dd>
+            <dt>Applicant reference reviewed</dt>
+            <dd className="workspace-id">{String(reviewed['applicantId'])}</dd>
+          </dl>
+          <p className="hint">
+            These identify the packet considered. Review alone does not approve standing or
+            establish eligibility.
+          </p>
+        </details>
+      )}
       {record.state === 'approved' && (
         <div className="receipt">
           <strong>Standing recorded; eligibility is still unproved.</strong>
@@ -64,6 +87,7 @@ export function DeceasedFilingSummary({
           </p>
           <button
             type="button"
+            className="button button-secondary"
             disabled={disabled}
             onClick={() => onOpen(String(record.data['openedClaimId']))}
           >

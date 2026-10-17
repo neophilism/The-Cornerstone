@@ -1,4 +1,35 @@
 import type { CaseRecord } from '@cornerstone/contracts';
+export function claimCapacityLabel(value: unknown) {
+  return value === 'estate_representative'
+    ? 'Estate representative'
+    : value === 'designated_successor'
+      ? 'Designated successor'
+      : value === 'worker'
+        ? 'Original worker'
+        : 'Capacity unavailable';
+}
+export function ClaimControlDetails({ record }: { record: CaseRecord }) {
+  const control = record.data['claimControl'] as Record<string, unknown> | undefined;
+  if (record.kind !== 'claim' || !control) return null;
+  return (
+    <div className="claim-control-summary">
+      <p>
+        Recorded capacity: <strong>{claimCapacityLabel(control['capacity'])}</strong>.
+      </p>
+      <details>
+        <summary>Inspect the worker and current holder references</summary>
+        <dl className="record-detail-list">
+          <dt>Original worker</dt>
+          <dd className="workspace-id">{String(control['originalWorkerId'])}</dd>
+          <dt>Current case holder</dt>
+          <dd className="workspace-id">{String(control['holderId'])}</dd>
+          <dt>Scope of this recorded authority</dt>
+          <dd>This claim only. Eligibility and any later membership decision remain separate.</dd>
+        </dl>
+      </details>
+    </div>
+  );
+}
 export function ClaimSurvivalSummary({
   record,
   onOpen,
@@ -19,6 +50,7 @@ export function ClaimSurvivalSummary({
           This is not access to a different account, a second claim, or a new founding unit. A later
           founding invitation still requires your own informed consent.
         </p>
+        <ClaimControlDetails record={record} />
       </section>
     );
   }
@@ -61,6 +93,14 @@ export function ClaimSurvivalSummary({
             <dd>{String(reviewed['claimState']).replaceAll('_', ' ')}</dd>
             <dt>Holder version at review</dt>
             <dd>{Number(reviewed['holderVersion'])}</dd>
+            <dt>Holder capacity at review</dt>
+            <dd>{claimCapacityLabel(reviewed['holderCapacity'])}</dd>
+            <dt>Original worker reference</dt>
+            <dd className="workspace-id">{String(reviewed['originalWorkerId'])}</dd>
+            <dt>Holder reference at review</dt>
+            <dd className="workspace-id">{String(reviewed['predecessorId'])}</dd>
+            <dt>Rights-holder reference at review</dt>
+            <dd className="workspace-id">{String(reviewed['rightsHolderId'])}</dd>
           </dl>
         </details>
       )}
