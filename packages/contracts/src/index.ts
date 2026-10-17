@@ -57,6 +57,53 @@ export const WorkspaceSessionSchema = z
   .strict();
 export type WorkspaceSession = z.infer<typeof WorkspaceSessionSchema>;
 export const RevokeSessionSchema = z.object({ id: IdSchema }).strict();
+export const SessionContextSchema = z
+  .object({ actorId: IdSchema, realm: RealmSchema, currentSessionId: IdSchema })
+  .strict();
+export type SessionContext = z.infer<typeof SessionContextSchema>;
+export const WorkspaceSessionPageSchema = z
+  .object({ context: SessionContextSchema, sessions: WorkspaceSessionSchema.array().max(100) })
+  .strict()
+  .refine(
+    (page) =>
+      new Set(page.sessions.map((session) => session.id)).size === page.sessions.length &&
+      page.sessions.filter((session) => session.current).length === 1 &&
+      page.sessions.some(
+        (session) => session.current && session.id === page.context.currentSessionId,
+      ),
+    'Session inventory must identify one exact current session and unique sessions.',
+  );
+export type WorkspaceSessionPage = z.infer<typeof WorkspaceSessionPageSchema>;
+export const RevokeSelectedSessionsSchema = z
+  .object({ currentSessionId: IdSchema, sessionIds: IdSchema.array().min(1).max(100) })
+  .strict()
+  .refine(
+    (input) =>
+      new Set(input.sessionIds).size === input.sessionIds.length &&
+      !input.sessionIds.includes(input.currentSessionId),
+    'Select unique other sessions; use Sign out for the current session.',
+  );
+export const SessionRevocationEventSchema = z
+  .object({ id: IdSchema, sessionId: IdSchema, revokedAt: InstantSchema })
+  .strict();
+export const SessionRevocationResultSchema = z
+  .object({
+    context: SessionContextSchema,
+    sessionIds: IdSchema.array().min(1).max(100),
+    events: SessionRevocationEventSchema.array().min(1).max(100),
+  })
+  .strict()
+  .refine(
+    (result) =>
+      new Set(result.sessionIds).size === result.sessionIds.length &&
+      !result.sessionIds.includes(result.context.currentSessionId) &&
+      result.events.length === result.sessionIds.length &&
+      new Set(result.events.map((event) => event.id)).size === result.events.length &&
+      new Set(result.events.map((event) => event.sessionId)).size === result.events.length &&
+      result.events.every((event) => result.sessionIds.includes(event.sessionId)),
+    'One immutable revocation event is required for each exact other session.',
+  );
+export type SessionRevocationResult = z.infer<typeof SessionRevocationResultSchema>;
 export const draftAccessKinds = [
   'dossier',
   'organizing_group',

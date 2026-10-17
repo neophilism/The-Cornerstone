@@ -77,6 +77,7 @@ export function Workspace({
   const [recordReference, setRecordReference] = useState('');
   const recordGeneration = useRef(0);
   const sessionGeneration = useRef(0);
+  const accountSessionGeneration = sessionGeneration.current;
   const openingGeneration = useRef(0);
   const [recordOpening, setRecordOpening] = useState(false);
   const [capabilities, setCapabilities] = useState<RecordCapabilities[]>([]);
@@ -669,7 +670,15 @@ export function Workspace({
             </section>
           )}
           {view === 'account' && !selected && !creating && (
-            <AccountPanel actorId={session.actor.id} api={api} />
+            <AccountPanel
+              key={session.actor.realm + ':' + session.actor.id + ':' + accountSessionGeneration}
+              actor={session.actor}
+              api={api}
+              isCurrent={() => accountSessionGeneration === sessionGeneration.current}
+              onContextChanged={() => {
+                if (accountSessionGeneration === sessionGeneration.current) void refresh();
+              }}
+            />
           )}
           {view === 'memberships' && !selected && !creating && (
             <MembershipPanel

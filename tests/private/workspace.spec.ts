@@ -224,7 +224,7 @@ test('account controls revoke other sessions without ending the current one', as
     await page.getByRole('link', { name: 'Account & access', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Account & access.' })).toBeVisible();
     await expect(
-      page.getByRole('button', { name: 'Sign out other sessions', exact: true }),
+      page.getByRole('button', { name: 'Sign out listed other sessions', exact: true }),
     ).toBeEnabled();
     await accessible(page);
     await page.evaluate(() => window.scrollTo({ top: 0, left: 0, behavior: 'instant' }));
@@ -232,10 +232,10 @@ test('account controls revoke other sessions without ending the current one', as
       path: `test-results/private-account-${info.project.name}.png`,
       fullPage: true,
     });
-    await page.getByRole('button', { name: 'Sign out other sessions', exact: true }).click();
-    await expect(
-      page.getByText('Other active sessions have been signed out.', { exact: true }),
-    ).toBeVisible();
+    await page.getByRole('button', { name: 'Sign out listed other sessions', exact: true }).click();
+    await expect(page.locator('.session-revocation-confirmed')).toContainText(
+      'Revocation confirmed',
+    );
     expect((await other.request.get('/api/private/me')).status()).toBe(401);
     expect((await page.request.get('/api/private/me')).status()).toBe(200);
     await other.reload();

@@ -13,7 +13,6 @@ import {
   ModeSchema,
   RealmSchema,
   MarkActivityReadSchema,
-  WorkspaceSessionSchema,
   RevokeSessionSchema,
   IdSchema,
 } from '@cornerstone/contracts';
@@ -36,6 +35,7 @@ import { EvidenceService } from './evidence.js';
 import { MembershipService } from './membership.js';
 import { RecordReader } from './records.js';
 import { ReceiptReader } from './receipts.js';
+import { SessionService } from './sessions.js';
 
 class ApplicationModule {}
 Module({})(ApplicationModule);
@@ -219,20 +219,21 @@ route('get', '/workflows', async (req, res) => {
   res.json({ workflows: workflows.filter((w) => w.createRoles.some((r) => a.roles.includes(r))) });
 });
 route('get', '/auth/sessions', async (req, res) => {
-  await actor(req);
-  const rows = await requireStore().pool.query('SELECT * FROM auth_sessions($1)', [
-    digest(cookies(req)[cookieName]),
-  ]);
-  res.json({
-    sessions: rows.rows.map((s) =>
-      WorkspaceSessionSchema.parse({
-        id: s.id,
-        authenticatedAt: s.authenticated_at.toISOString(),
-        expiresAt: s.expires_at.toISOString(),
-        current: s.current_session,
-      }),
+  res.json(
+    await new SessionService(requireStore()).list(
+      await actor(req),
+      digest(cookies(req)[cookieName]),
     ),
-  });
+  );
+});
+route('post', '/auth/sessions/revoke-selected', async (req, res) => {
+  res.json(
+    await new SessionService(requireStore()).revoke(
+      await actor(req, true),
+      digest(cookies(req)[cookieName]),
+      req.body,
+    ),
+  );
 });
 route('post', '/auth/sessions/revoke', async (req, res) => {
   await actor(req, true);
