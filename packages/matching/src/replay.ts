@@ -12,11 +12,17 @@ const pairKey = (m: Match) => JSON.stringify([m.applicantId, m.offerId]);
 const ordered = (pairs: readonly Match[]) => pairs.map(pairKey).sort();
 function checkSnapshot(expected: readonly Match[], actual: readonly Match[]) {
   if (!Array.isArray(actual) || actual.length !== expected.length)
-    throw new MatchingError('REPLAY_MISMATCH', 'Recorded allocations diverge from frozen matching.');
+    throw new MatchingError(
+      'REPLAY_MISMATCH',
+      'Recorded allocations diverge from frozen matching.',
+    );
   const a = ordered(expected);
   const b = ordered(actual);
   if (a.some((pair, i) => pair !== b[i]))
-    throw new MatchingError('REPLAY_MISMATCH', 'Recorded allocations diverge from frozen matching.');
+    throw new MatchingError(
+      'REPLAY_MISMATCH',
+      'Recorded allocations diverge from frozen matching.',
+    );
 }
 
 /** Replay only declared frozen inputs; authentication and custody remain separate. */
@@ -27,7 +33,10 @@ export function replayFailedMatches(round: Round, events: readonly ReplayEvent[]
   const steps: { sequence: number; failed: Match; matches: Match[] }[] = [];
   for (const [index, event] of events.entries()) {
     if (!Number.isSafeInteger(event.sequence) || event.sequence !== index + 1)
-      throw new MatchingError('INVALID_REPLAY_SEQUENCE', 'Negotiation sequence must be contiguous.');
+      throw new MatchingError(
+        'INVALID_REPLAY_SEQUENCE',
+        'Negotiation sequence must be contiguous.',
+      );
     checkSnapshot(current, event.before);
     const next = continueFailedMatch(
       round,
