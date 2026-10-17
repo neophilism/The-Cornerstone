@@ -46,7 +46,7 @@ export function DeceasedFilingSummary({
       </p>
       <p className="hint">
         Use this route when no claim exists for the worker. Continuing an existing claim and
-        succession to an enrolled founding unit have their own workflows. These are synthetic
+        succession to an enrolled founding unit have their own workflows. Approved standing is not a worker claim. These are synthetic
         preparation and review records, not probate decisions or government acceptance.
       </p>
       {reviewed && (
