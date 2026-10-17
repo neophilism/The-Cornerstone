@@ -724,6 +724,16 @@ export const workflows: WorkflowDefinition[] = [
         'Authorize standing only. The requester may then open one claim draft. Do not certify eligibility, transfer an account or create a founding unit.',
       ),
       action(
+        'withdraw_standing',
+        'Relinquish unused standing',
+        ['approved'],
+        'standing_withdrawn',
+        ['participant', 'member'],
+        null,
+        [reasons],
+        'An unused approval may be relinquished, with a retained historical receipt.',
+      ),
+      action(
         'open_claim',
         'Prepare the worker’s eligibility claim',
         ['approved'],
