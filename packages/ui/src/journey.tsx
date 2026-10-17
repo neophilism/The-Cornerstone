@@ -1,4 +1,5 @@
 import { ReminderPanel } from './reminder.js';
+import type { SessionBoundRead } from './private-disclosure.js';
 import type { CaseRecord } from '@cornerstone/contracts';
 import { actionUnavailable, workflow } from '@cornerstone/domain';
 const preparation: Record<string, [string, string]> = {
@@ -54,7 +55,17 @@ export function PreparationGuide({ kind }: { kind: string }) {
     </aside>
   );
 }
-export function RecordNextStep({ record }: { record: CaseRecord }) {
+export function RecordNextStep({
+  record,
+  actorId,
+  readPrivate,
+  disabled,
+}: {
+  record: CaseRecord;
+  actorId: string;
+  readPrivate: SessionBoundRead;
+  disabled: boolean;
+}) {
   const transitions = workflow(record.kind).actions.filter((action) =>
     action.from.includes(record.state),
   );
@@ -128,7 +139,12 @@ export function RecordNextStep({ record }: { record: CaseRecord }) {
           <p>{message[1]}</p>
         </aside>
       )}
-      <ReminderPanel key={record.id} recordId={record.id} />
+      <ReminderPanel
+        record={record}
+        actorId={actorId}
+        readPrivate={readPrivate}
+        disabled={disabled}
+      />
     </>
   );
 }

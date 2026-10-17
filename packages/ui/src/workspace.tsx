@@ -127,7 +127,7 @@ export function Workspace({
     setSelected(null);
     setCreating(null);
   }
-  async function api(path: string, body?: unknown) {
+  async function api(path: string, body?: unknown, signal?: AbortSignal) {
     const requestSession = sessionGeneration.current;
     const response = await fetch(`/api/private/${path}`, {
       method: body === undefined ? 'GET' : 'POST',
@@ -139,6 +139,7 @@ export function Workspace({
           : {}),
       },
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+      ...(signal === undefined ? {} : { signal }),
     });
     // Expired sessions clear private UI even if a proxy returns a non-JSON error body.
     if (response.status === 401 && requestSession === sessionGeneration.current) clearSession();
@@ -152,10 +153,10 @@ export function Workspace({
     }
     return data;
   }
-  async function referenceRead(path: string) {
+  async function referenceRead(path: string, signal?: AbortSignal) {
     const requestSession = sessionGeneration.current;
-    const isCurrent = () => requestSession === sessionGeneration.current;
-    const data = await api(path);
+    const isCurrent = () => requestSession === sessionGeneration.current && !signal?.aborted;
+    const data = await api(path, undefined, signal);
     if (!isCurrent())
       throw Error('The session changed before current reference access was confirmed.');
     return { data, isCurrent };
@@ -782,7 +783,23 @@ export function Workspace({
                   Back to records
                 </button>
               </div>
-              <RecordNextStep record={selected} />
+              <RecordNextStep
+                key={
+                  session.actor.id +
+                  ':' +
+                  session.actor.realm +
+                  ':' +
+                  sessionGeneration.current +
+                  ':' +
+                  selected.id +
+                  ':' +
+                  selected.version
+                }
+                record={selected}
+                actorId={session.actor.id}
+                readPrivate={referenceRead}
+                disabled={editing || pending || evidenceBusy}
+              />
               <CompactSummary
                 record={selected}
                 onOpen={(id) => void openRecord(id)}

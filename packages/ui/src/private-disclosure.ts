@@ -1,4 +1,7 @@
-export type SessionBoundRead = (path: string) => Promise<{
+export type SessionBoundRead = (
+  path: string,
+  signal?: AbortSignal,
+) => Promise<{
   data: unknown;
   isCurrent: () => boolean;
 }>;
