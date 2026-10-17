@@ -103,11 +103,12 @@ test('a substituted ballot receipt freezes the original choice until exact recov
     );
     await login(page, 'member');
     await page.getByRole('link', { name: 'My records', exact: true }).click();
-    await page
-      .locator('.task-card')
-      .filter({ has: page.getByRole('heading', { name: resolution.title, exact: true }) })
-      .getByRole('button', { name: 'Open', exact: true })
-      .click();
+    // Suite fixtures can put this resolution beyond the first record page.
+    // Use the same authenticated reference lookup available to a member.
+    await page.getByText('Open a record by reference', { exact: true }).click();
+    await page.getByLabel('Record reference', { exact: true }).fill(resolution.id);
+    await page.getByRole('button', { name: 'Open reference', exact: true }).click();
+    await expect(page.getByRole('heading', { name: resolution.title, exact: true })).toBeVisible();
     const panel = page.locator('.member-ballot');
     const wires: string[] = [];
     let accepted: any;
