@@ -137,15 +137,65 @@ jobs:
         run: node --import tsx tests/restore.integration.ts
         env:
           POSTGRES_CONTAINER: ${{ job.services.postgres.id }}
+  private-browser:
+    name: private-browser (${{ matrix.project }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [desktop, mobile]
+    services:
+      postgres:
+        image: postgis/postgis:18-3.6@sha256:60f6ad1d21ea86a67d47780b9a0d1e1d200500f62b19293fa834d0dea80b8677
+        env:
+          POSTGRES_DB: cornerstone_test
+          POSTGRES_USER: cornerstone_migration
+          POSTGRES_PASSWORD: synthetic_ci_only
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U cornerstone_migration -d cornerstone_test"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      MIGRATION_DATABASE_URL: postgresql://cornerstone_migration:synthetic_ci_only@localhost:5432/cornerstone_test
+      DATABASE_URL: postgresql://cornerstone_runtime:synthetic_ci_runtime_only@localhost:5432/cornerstone_test
+      WORKER_DATABASE_URL: postgresql://cornerstone_worker:synthetic_ci_worker_only@localhost:5432/cornerstone_test
+      DATA_REALM: simulation
+      CORNERSTONE_MODE: simulation
+      NODE_ENV: development
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build:packages
+      - run: node --import tsx scripts/create-runtime-role.ts
+      - run: pnpm db:migrate
+      - run: pnpm db:seed:simulation
+      - run: node scripts/test-field-key.mjs
+      - name: Prepare this project's isolated synthetic browser fixtures
+        run: node --import tsx tests/private-browser-setup.ts
       - run: pnpm -r --filter @cornerstone/api --filter @cornerstone/portal --filter @cornerstone/staff --filter @cornerstone/worker build
         env:
           NODE_ENV: production
       - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm test:private --project=desktop --output=test-results/desktop
-      - run: pnpm test:private --project=mobile --output=test-results/mobile
+      - run: pnpm test:private --project=${{ matrix.project }} --output=test-results/${{ matrix.project }}
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
-          name: private-browser-verification
+          name: private-browser-verification-${{ matrix.project }}
           path: test-results/
           retention-days: 7
+  private-browser-acceptance:
+    if: ${{ always() }}
+    needs: [private-browser]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    steps:
+      - name: Require successful desktop and mobile projects
+        env:
+          PRIVATE_BROWSER_RESULT: ${{ needs.private-browser.result }}
+        run: test "$PRIVATE_BROWSER_RESULT" = success
