@@ -1,6 +1,6 @@
 import { test, expect, type Browser, type Page } from '@playwright/test';
 import { randomUUID } from 'node:crypto';
-import AxeBuilder from '@axe-core/playwright';
+import { AxeBuilder } from '@axe-core/playwright';
 
 const origin = 'http://127.0.0.1:3001';
 async function signIn(page: Page, persona = 'participant') {
@@ -78,12 +78,16 @@ test('a lost single revocation recovers its original event through a denied retr
         exact: true,
       })
       .click();
-    await expect(page.getByRole('alert')).toContainText('outcome is unknown');
+    await expect(page.getByRole('alert').filter({ hasText: 'outcome is unknown' })).toContainText(
+      'outcome is unknown',
+    );
     expect((await other.context.request.get('/api/private/me')).status()).toBe(401);
     const retry = page.getByRole('button', { name: 'Retry exact session revocation', exact: true });
     mode = 'denied';
     await retry.click();
-    await expect(page.getByRole('alert')).toContainText('outcome is unknown');
+    await expect(page.getByRole('alert').filter({ hasText: 'outcome is unknown' })).toContainText(
+      'outcome is unknown',
+    );
     await expect(retry).toBeEnabled();
     await capture(page, 'private-session-recovery-' + info.project.name);
     await page.route('**/api/private/auth/sessions', (route) =>
@@ -97,7 +101,9 @@ test('a lost single revocation recovers its original event through a denied retr
     await expect(page.locator('.session-revocation-confirmed')).toContainText(
       'Revocation confirmed for 1',
     );
-    await expect(page.getByRole('alert')).toContainText('Session details are unavailable');
+    await expect(
+      page.getByRole('alert').filter({ hasText: 'Session details are unavailable' }),
+    ).toContainText('Session details are unavailable');
     await expect(page.getByRole('heading', { name: 'Current session', exact: true })).toHaveCount(
       0,
     );
@@ -144,7 +150,9 @@ test('bulk recovery rejects a substituted reply and never revokes a session crea
       }
     });
     await page.getByRole('button', { name: 'Sign out listed other sessions', exact: true }).click();
-    await expect(page.getByRole('alert')).toContainText('outcome is unknown');
+    await expect(page.getByRole('alert').filter({ hasText: 'outcome is unknown' })).toContainText(
+      'outcome is unknown',
+    );
     expect(original.sessionIds).toContain(first.id);
     expect(original.sessionIds).toContain(second.id);
     later = await anotherSession(browser);
