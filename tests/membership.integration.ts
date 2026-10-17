@@ -304,7 +304,9 @@ try {
   const pu = (await members.list(await actor('participant'))).units.find(
     (u) => u.associationId === association.id,
   )!;
-  const mu = (await members.list(m)).units.find((u) => u.associationId === association.id)!;
+  const memberSnapshot = await members.list(m);
+  assert.deepEqual(memberSnapshot.context, { actorId: m.id, realm: m.realm });
+  const mu = memberSnapshot.units.find((u) => u.associationId === association.id)!;
   assert.ok(pu && mu);
   await assert.rejects(respond('member', association.id, 'declined', false), {
     code: 'ROLL_CLOSED',

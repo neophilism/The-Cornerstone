@@ -1,7 +1,6 @@
 'use client';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import {
-  EvidenceViewSchema,
   MAX_SYNTHETIC_EVIDENCE_BYTES,
   type EvidenceView,
   type CaseRecord,
@@ -15,6 +14,13 @@ import {
 } from './evidence-recovery.js';
 import { EvidenceDownloader } from './evidence-downloader.js';
 import type { EvidenceDownload } from './evidence-download-session.js';
+import { PrivateReferenceCopy } from './private-reference-copy.js';
+import {
+  currentEvidenceReference,
+  verifiedEvidencePage,
+  preparePrivateReference,
+  type ReferenceRead,
+} from './private-reference.js';
 import { actionFailure } from './action-recovery.js';
 type Result = { record: CaseRecord; receipt: Receipt };
 export function EvidencePanel({
@@ -23,6 +29,7 @@ export function EvidencePanel({
   canAttach,
   api,
   download,
+  readReference,
   onChanged,
   onBusyChange,
   disabled,
@@ -32,6 +39,7 @@ export function EvidencePanel({
   canAttach: boolean;
   api: (path: string, body?: unknown) => Promise<any>;
   download: EvidenceDownload;
+  readReference: ReferenceRead;
   onChanged: (result: Result) => Promise<void>;
   onBusyChange: (busy: boolean) => void;
   disabled: boolean;
@@ -67,15 +75,25 @@ export function EvidencePanel({
     return () => window.removeEventListener('beforeunload', warn);
   }, [attempt]);
   async function refresh() {
-    const version = ++generation.current,
-      result = await api('evidence?recordId=' + record.id);
-    if (version === generation.current) {
-      setItems(EvidenceViewSchema.array().parse(result.evidence));
-      setEnabled(result.enabled === true);
+    const version = ++generation.current;
+    setItems([]);
+    setError('');
+    try {
+      const result = verifiedEvidencePage(
+        await api('evidence?recordId=' + record.id),
+        record,
+        actorId,
+      );
+      if (version === generation.current) {
+        setItems(result.evidence);
+        setEnabled(result.enabled);
+      }
+    } catch {
+      if (version === generation.current) setError('Evidence details are unavailable.');
     }
   }
   useEffect(() => {
-    void refresh().catch(() => setError('Evidence details are unavailable.'));
+    void refresh();
     return () => {
       generation.current++;
     };
@@ -280,20 +298,18 @@ export function EvidencePanel({
                     </a>
                   </p>
                 )}
-                <p className="workspace-id">{item.id}</p>
-                <button
-                  className="quiet-button"
-                  onClick={async () => {
-                    try {
-                      await navigator.clipboard.writeText(item.id);
-                      setMessage('Evidence ID copied.');
-                    } catch {
-                      setError('Select and copy the evidence ID above.');
-                    }
-                  }}
-                >
-                  Copy evidence ID
-                </button>
+                <PrivateReferenceCopy
+                  key={actorId + ':' + record.id + ':' + record.version + ':' + item.id}
+                  label="evidence"
+                  disabled={disabled || pending || !!attempt}
+                  verify={() =>
+                    preparePrivateReference(
+                      readReference,
+                      'evidence?recordId=' + encodeURIComponent(record.id),
+                      (raw) => currentEvidenceReference(raw, item, record, actorId),
+                    )
+                  }
+                />
                 {item.state === 'quarantined' &&
                   enabled &&
                   canAttach &&

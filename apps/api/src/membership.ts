@@ -58,6 +58,7 @@ export class MembershipService {
         [actor.id],
       );
       return MembershipSnapshotSchema.parse({
+        context: { actorId: actor.id, realm: actor.realm },
         invitations: invitations.rows.map((i) => this.invitation(i, actor.id)),
         units: units.rows.map((u) => ({
           unitId: u.id,
