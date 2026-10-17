@@ -9,7 +9,7 @@ The successful [PR 51 database job](https://github.com/neophilism/The-Cornerston
 | `database`                   | The existing complete database integration sequence, migration/readiness checks, and actual logical backup/restore rehearsal, once.                              |
 | `private-browser (desktop)`  | A fresh job-local database, complete bootstrap, explicit browser fixtures, compiled API/portal/staff/worker and every desktop private browser case.              |
 | `private-browser (mobile)`   | A different fresh job-local database with the same preparation and every mobile private browser case.                                                            |
-| `private-browser-acceptance` | Runs after the matrix even on failure, cancellation or skipped dependencies, and succeeds only when the matrix result is `success`.                              |
+| `private-browser-acceptance` | On active runs, checks failed/skipped dependencies and accepts only matrix `success`. Canceled runs remain cancellable and ineligible for acceptance.            |
 | `verify`                     | Existing unit/domain checks, source/secret/format checks, all application builds, compiled private-proxy HTTP checks, public browsers and worker process checks. |
 | `local-setup`                | Existing actual Docker bootstrap, repeated setup preservation, runtime readiness and authenticated synthetic API checks.                                         |
 
