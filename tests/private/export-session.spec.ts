@@ -92,21 +92,24 @@ for (const flow of flows)
             return original(input, init);
           };
         }, path);
-        let release!: () => void, observed!: () => void, settled!: () => void;
+        let release!: () => void,
+          observed!: () => void,
+          allowFetch!: () => void,
+          fetched!: () => void,
+          settled!: () => void;
         const held = new Promise<void>((resolve) => (release = resolve));
         const requested = new Promise<void>((resolve) => (observed = resolve));
+        const logoutCompleted = new Promise<void>((resolve) => (allowFetch = resolve));
+        const responseCaptured = new Promise<void>((resolve) => (fetched = resolve));
         const done = new Promise<void>((resolve) => (settled = resolve));
         await page.route('**' + path, async (route) => {
-          if (expired) {
-            const logout = await page.request.post('/api/private/auth/logout', {
-              headers: { Origin: 'http://127.0.0.1:3001', 'X-CSRF-Token': me.csrf },
-              data: {},
-            });
-            expect(logout.status()).toBe(200);
-          }
+          observed();
+          // Let the real UI sign out while its session is still valid. Revoking
+          // it here could let an unrelated current 401 remove that button first.
+          if (expired) await logoutCompleted;
           const response = await route.fetch();
           expect(response.status()).toBe(expired ? 401 : 200);
-          observed();
+          fetched();
           await held;
           try {
             if (expired)
@@ -122,10 +125,21 @@ for (const flow of flows)
         });
         await page.getByRole('button', { name: flow.confirm, exact: true }).click();
         await requested;
+        if (!expired) await responseCaptured;
+        const logout = page.waitForResponse(
+          (response) =>
+            response.url().endsWith('/api/private/auth/logout') &&
+            response.request().method() === 'POST',
+        );
         await page.getByRole('button', { name: 'Sign out', exact: true }).click();
+        expect((await logout).status()).toBe(200);
         await expect(
           page.getByRole('heading', { name: 'Your private workspace.', exact: true }),
         ).toBeVisible();
+        // Capture the old request's actual 401 before the replacement session
+        // exists, then hold delivery until after that replacement has signed in.
+        allowFetch();
+        await responseCaptured;
         await page
           .getByRole('button', { name: 'successor · synthetic development', exact: true })
           .click();
