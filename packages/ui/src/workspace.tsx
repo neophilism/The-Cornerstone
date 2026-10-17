@@ -714,9 +714,10 @@ export function Workspace({
               </p>
               <p>{receipt.id}</p>
               <ReceiptExporter
-                key={receipt.id}
+                key={session.actor.id + ':' + receipt.realm + ':' + receipt.id}
                 receipt={receipt}
-                api={api}
+                actorId={session.actor.id}
+                readPrivate={referenceRead}
                 disabled={pending || editing || !!creating}
               />
               <button className="quiet-button" onClick={() => setReceipt(null)}>
@@ -862,7 +863,8 @@ export function Workspace({
               <RecordExporter
                 key={'print:' + session.actor.id + ':' + selected.id + ':' + selected.version}
                 record={selected}
-                api={api}
+                actorId={session.actor.id}
+                readPrivate={referenceRead}
                 disabled={pending || editing || !!creating}
                 format="print"
               />
@@ -877,7 +879,8 @@ export function Workspace({
                   selected.version
                 }
                 record={selected}
-                api={api}
+                actorId={session.actor.id}
+                readPrivate={referenceRead}
                 disabled={pending || editing || evidenceBusy}
               />
               {editing ? (

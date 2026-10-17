@@ -3,15 +3,22 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { printReviewedRecord } from './record-print.js';
 import type { CaseRecord } from '@cornerstone/contracts';
 import { reviewRecordExport, confirmRecordExport, type ExportReview } from './record-export.js';
+import {
+  disclosePrivate,
+  preparePrivateDisclosure,
+  type SessionBoundRead,
+} from './private-disclosure.js';
 
 export function RecordExporter({
   record,
-  api,
+  actorId,
+  readPrivate,
   disabled,
   format = 'file',
 }: {
   record: CaseRecord;
-  api: (path: string, body?: unknown) => Promise<any>;
+  actorId: string;
+  readPrivate: SessionBoundRead;
   disabled: boolean;
   format?: 'file' | 'print';
 }) {
@@ -59,43 +66,53 @@ export function RecordExporter({
     setError('');
     setMessage('');
     try {
-      const raw: unknown = await api('records?recordId=' + encodeURIComponent(record.id));
+      const response = await preparePrivateDisclosure(
+        readPrivate,
+        'records?recordId=' + encodeURIComponent(record.id),
+        (raw) =>
+          confirm && review
+            ? confirmRecordExport(raw, review, consent)
+            : { status: 'review' as const, review: reviewRecordExport(raw, record, actorId) },
+      );
       if (generation.current !== current || blocked.current) return;
-      if (!confirm || !review) {
-        setReview(reviewRecordExport(raw, record));
-        setConsent(false);
-      } else {
-        const result = confirmRecordExport(raw, review, consent);
-        setConsent(false);
-        if (result.status === 'changed') {
+      const result = response.value;
+      if (result.status !== 'ready') {
+        disclosePrivate(response, () => {
           setReview(result.review);
-          setMessage(
-            'The saved record changed. Review version ' +
-              result.review.record.version +
-              ' and confirm again. No file was exported.',
-          );
-          return;
-        }
+          setConsent(false);
+          if (result.status === 'changed')
+            setMessage(
+              'The saved record changed. Review version ' +
+                result.review.record.version +
+                ' and confirm again. No file was exported.',
+            );
+        });
+      } else {
+        setConsent(false);
         if (printing) {
           releasePrint.current?.();
-          releasePrint.current = printReviewedRecord(result.content);
+          releasePrint.current = disclosePrivate(response, () =>
+            printReviewedRecord(result.content),
+          );
           setMessage(
             'The reviewed record was sent to the browser print dialog. This does not confirm that printing or saving a PDF completed.',
           );
         } else {
-          const url = URL.createObjectURL(
-            new Blob([result.content], { type: 'application/json;charset=utf-8' }),
-          );
-          const link = document.createElement('a');
-          try {
-            link.href = url;
-            link.download = 'cornerstone-synthetic-record.json';
-            document.body.append(link);
-            link.click();
-          } finally {
-            link.remove();
-            setTimeout(() => URL.revokeObjectURL(url), 1000);
-          }
+          disclosePrivate(response, () => {
+            const url = URL.createObjectURL(
+              new Blob([result.content], { type: 'application/json;charset=utf-8' }),
+            );
+            const link = document.createElement('a');
+            try {
+              link.href = url;
+              link.download = 'cornerstone-synthetic-record.json';
+              document.body.append(link);
+              link.click();
+            } finally {
+              link.remove();
+              setTimeout(() => URL.revokeObjectURL(url), 1000);
+            }
+          });
           setMessage(
             'Record file prepared. Check your browser downloads. This is not a legal filing or a verified external delivery.',
           );

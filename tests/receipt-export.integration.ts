@@ -23,6 +23,7 @@ try {
   const reviewed = reviewReceiptExport(
     await reader.read(actor, { receiptId: receipt.id }),
     receipt,
+    actor.id,
   );
   assert.deepEqual(
     JSON.parse(
@@ -47,7 +48,12 @@ try {
   // Being able to read a record does not grant the receipt author's download endpoint.
   await assert.rejects(reader.read(outsider, { receiptId: receipt.id }), /not found|accessible/i);
   const result = await reader.read(actor, { receiptId: receipt.id });
-  assert.deepEqual(Object.keys(result), ['receipt']);
+  assert.deepEqual(Object.keys(result), ['context', 'receipt']);
+  assert.deepEqual(result.context, { actorId: actor.id, realm: actor.realm });
+  await assert.rejects(
+    reader.read({ ...actor, realm: 'proposal' }, { receiptId: receipt.id }),
+    /not found|accessible/i,
+  );
   assert.equal(result.receipt.version, 1);
   assert.equal((await sim.get(actor, record.id))!.version, 2);
   assert.equal(confirmReceiptExport(result, reviewed, true), reviewed.content);

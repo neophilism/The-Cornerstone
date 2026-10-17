@@ -11,7 +11,11 @@ try {
     lossDescription: 'Invented export loss',
   });
   const reader = new RecordReader(sim.store);
-  const reviewed = reviewRecordExport(await reader.read(actor, { recordId: record.id }), record);
+  const reviewed = reviewRecordExport(
+    await reader.read(actor, { recordId: record.id }),
+    record,
+    actor.id,
+  );
   const originalCounts = (
     await sim.owner.query('SELECT count(*) count FROM receipts WHERE record_id=$1', [record.id])
   ).rows[0];

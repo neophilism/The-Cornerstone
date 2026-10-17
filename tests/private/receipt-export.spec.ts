@@ -92,9 +92,13 @@ test('denied access and a substituted receipt never release cached download byte
   await expect(page.getByRole('alert').filter({ hasText: 'No file was exported.' })).toBeVisible();
   await expect(consent(page)).toHaveCount(0);
   await page.unroute(endpoint);
-  await page.route(endpoint, (route) =>
-    route.fulfill({ status: 200, json: { receipt: { ...receipt, recordId: randomUUID() } } }),
-  );
+  await page.route(endpoint, async (route) => {
+    const current = await (await route.fetch()).json();
+    await route.fulfill({
+      status: 200,
+      json: { ...current, receipt: { ...receipt, recordId: randomUUID() } },
+    });
+  });
   await page.getByRole('button', { name: 'Check receipt access again', exact: true }).click();
   await expect(page.getByRole('alert').filter({ hasText: 'No file was exported.' })).toBeVisible();
   expect(downloads).toBe(0);

@@ -115,9 +115,10 @@ test('denied or malformed current access never exports cached record contents', 
   await expect(consent(page)).toHaveCount(0);
   expect(count).toBe(0);
   await page.unroute(endpoint);
-  await page.route(endpoint, (route) =>
-    route.fulfill({ status: 200, json: { records: [{ id: record.id }] } }),
-  );
+  await page.route(endpoint, async (route) => {
+    const current = await (await route.fetch()).json();
+    await route.fulfill({ status: 200, json: { ...current, records: [{ id: record.id }] } });
+  });
   await page.getByRole('button', { name: 'Check access again', exact: true }).click();
   await expect(page.getByRole('alert').filter({ hasText: 'No file was exported.' })).toBeVisible();
   await expect(downloadButton(page)).toHaveCount(0);
