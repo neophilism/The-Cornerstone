@@ -6,6 +6,6 @@ The initial public preview uses Render; a separate Neon development branch has n
 
 The user explicitly approved publication of the five supplied source documents and paired legislative drafts on October 11, 2026. Seven source byte counts and SHA-256 values are verified before publication. Internal Library identifiers are excluded from the public manifest. The full internal planning package remains private after automatic approval review rejected its publication. Public implementation documentation records actual behavior and continuation without reproducing that package.
 
-The End-To-End-Everywhere Security Architecture Standard was inspected at ddfbd40c47d13890ebb81ea91c81fe329417058e. The existing server-field adapter is encryption at rest; recipient/device encryption and independent assurance remain required before real private intake. No certification is claimed.
+The End-To-End-Everywhere Security Architecture Standard was inspected at ddfbd40c47d13890ebb81ea91c81fe329417058e. The existing server-field adapter is encryption at rest; recipient/device encryption and verified identity/recovery controls remain required before real private intake; external security assessment is deferred follow-up. No certification is claimed.
 
 Source originals are preserved. The census/workbook use a broader research screen than the proposed statutory eligibility criteria; importer and UI preserve that distinction. No supplied event becomes an official certificate.

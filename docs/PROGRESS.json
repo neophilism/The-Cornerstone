@@ -1,44 +1,33 @@
 {
-  "updated": "2026-10-12",
-  "observedAt": "2026-10-12T23:32:00Z",
+  "updated": "2026-10-16",
+  "observedAt": "2026-10-16T16:25:30Z",
   "scope": "public proposal and synthetic preparation; full program unfinished; no deployment inferred",
-  "lastVerifiedCommit": "dc94adfb7085ec989c2a86aebce44ce1d0ab025a",
-  "lastVerifiedTree": "6b51dcba56acee94a2ff879eb04122a5ae3b6cb0",
-  "testedHead": "f1c0b3d3ac2e67f4b3d5cbfc156cad355435188c",
-  "lastVerifiedRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/38321432792",
-  "sourceEvidenceRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/38321432881",
-  "releasePullRequest": "https://github.com/neophilism/The-Cornerstone/pull/28",
+  "lastVerifiedCommit": "6784147d1a9a15b5357774d77108ae61632eacd3",
+  "lastVerifiedTree": "4a4cd16e5a34bef5a1f6890342219d81858456e0",
+  "testedHead": "6784147d1a9a15b5357774d77108ae61632eacd3",
+  "lastVerifiedRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/38928453821",
+  "sourceEvidenceRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/38928453590",
+  "releasePullRequest": "https://github.com/neophilism/The-Cornerstone/pull/39",
   "observedMergedPullRequests": [
     1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 23, 24, 25, 26, 27,
-    28
+    28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39
   ],
-  "openPullRequestsAtCheckpoint": [22],
-  "localUnitTests": 292,
+  "openPullRequestsAtCheckpoint": [22, 40, 41, 42],
+  "localUnitTests": 354,
   "livePublicUrl": "https://cornerstone-policy-preview.onrender.com",
-  "deploymentVerifiedAtCheckpoint": false,
+  "deploymentVerifiedAtCheckpoint": true,
   "protectedIntake": false,
   "sourcePublicationApproved": true,
   "internalPlanPublicationApproved": false,
   "securityAssessment": "security/e2eesa-status.json",
   "pending": [
-    "remaining non-draft commands and receipt/print/copy disclosure boundaries",
+    "final acceptance of membership recovery, database restore rehearsal and attachment download review",
     "new deceased-worker filings and complete program journeys",
-    "protected integrations, provider compatibility and independent review",
-    "separate CircleCI connection and exact-suite acceptance"
+    "protected identity/recipient/custody integrations and provider capacity",
+    "separate CircleCI connection and exact-suite acceptance",
+    "independent human security review as deferred final follow-up"
   ],
   "repositoryMigrations": 15,
-  "developmentMigrations": 10,
-  "providerObservation": {
-    "basis": "earlier October 12 inspection; not refreshed by this handoff",
-    "changed": false,
-    "productionApplicationTables": false
-  },
-  "migrationRehearsal": {
-    "branch": "br-super-frost-b4ga2f8q",
-    "parent": "br-falling-band-b4eeukqt",
-    "appliedMigrations": 13,
-    "productionChanged": false
-  },
   "trackingBaseline": {
     "units": 25,
     "originalVerifiedMappings": 11,
@@ -46,17 +35,25 @@
     "wholeProgramCompletionPercent": null
   },
   "verificationCounts": {
-    "unitTests": 292,
-    "postgresIntegrationSuites": 19,
-    "privateBrowserCases": 72,
-    "newInspectedCaptures": 10,
-    "additionalRosterCaptures": 2,
-    "scope": "combined accepted synthetic source; not an independent security assessment"
+    "unitTests": 342,
+    "privateBrowserCases": 104,
+    "scope": "PR 39 accepted combined synthetic source; public checks, actual database suites and Docker/bootstrap/API job passed; not independent security assessment"
   },
   "ciDatabaseImage": {
     "image": "postgis/postgis:18-3.6@sha256:60f6ad1d21ea86a67d47780b9a0d1e1d200500f62b19293fa834d0dea80b8677",
     "observedPassingRun": "38319682293",
     "observedJob": "115044519623",
     "scope": "exact test image, not a production database or security certification"
+  },
+  "publicDeployment": {
+    "commit": "b6891ef2d1f0fe1a63dd1c4beedcfdd99fb0ea5c",
+    "httpVerifiedAt": "2026-10-16T15:40:31Z",
+    "scope": "public proposal only; newer merged source has not been observed deployed at this checkpoint"
+  },
+  "reviewPolicy": {
+    "humanSecurityReviewRequiredBeforeDevelopment": false,
+    "humanSecurityReviewRequiredBeforeTestDeployment": false,
+    "technicalControlsAndRequiredChecksPreserved": true,
+    "certificationClaimed": false
   }
 }

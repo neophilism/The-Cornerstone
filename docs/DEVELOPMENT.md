@@ -1,5 +1,7 @@
 # Public application development guide
 
+Owner policy (16 October 2026): continue implementation, substantive security testing, checked merges and test deployment. Independent human security review is deferred to the final follow-up; it is not a prerequisite for this work. Preserve actual cryptographic, authorization, privacy, data-integrity and transaction controls, required checks and honest assessment metadata. Never label AI-assisted testing an independent audit or certification.
+
 This guide describes the repository's actual implementation and engineering continuation. The earlier internal planning package is excluded from public publication. No completion of that full program scope is claimed here.
 
 ## Current architecture
@@ -22,6 +24,6 @@ Complete independent engineering with synthetic adapters when external integrati
 
 Run relevant unit/domain tests, actual PostgreSQL/API isolation tests for data changes, browser journeys and accessibility checks for forms, and visual inspection for affected interfaces. Maintain frozen policy versions and financial provenance; forbid duplicate deductions, ballots and command side effects. Use independent expected results for finance/matching and exact amounts.
 
-The public preview can release explanations and approved research while sensitive intake is closed. Protected services require the appropriate encryption/identity/recovery, provider configurations, independent assessment and authority evidence. Branch protection/review and signed-release requirements are not self-attested. A successful CI run is verification evidence, not a statutory authorization.
+The public preview can release explanations and approved research while sensitive intake is closed. Protected services require the appropriate encryption/identity/recovery, provider configurations, verified safeguards and authority evidence. Branch protection/review and signed-release requirements are not self-attested. A successful CI run is verification evidence, not a statutory authorization.
 
 Routine setup and commands are in README.md. Last verified commit, pending changes and blockers are in PROGRESS.md; actual provider configuration is in DEPLOYMENT.md. Credentials belong in approved secret configuration, never repository documents.

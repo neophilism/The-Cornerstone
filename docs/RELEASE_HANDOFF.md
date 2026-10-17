@@ -1,5 +1,7 @@
 # Release and continuation handoff
 
+Historical October 12 checkpoint. Current accepted source, public deployment evidence and the owner-directed review policy are recorded in [PROGRESS.md](PROGRESS.md) and [SECURITY_SCOPE.md](SECURITY_SCOPE.md).
+
 Observation checkpoint: 2026-10-12T23:32:00Z. Accepted main is `dc94adfb7085ec989c2a86aebce44ce1d0ab025a`, tree `6b51dcba56acee94a2ff879eb04122a5ae3b6cb0`. This supersedes the 22:34 UTC checkpoint. Source acceptance is not deployment, independent security approval or enacted authority.
 
 ## Exact accepted baseline
@@ -39,12 +41,12 @@ Use the current merged tree as the baseline. Creation recovery, reviewed JSON ex
 
 Keep every existing CI command: draft and creation recovery, reviewed record export, activity and pagination, worker drain/process, private proxy HTTP, identity/access, evidence, membership, succession, claim survival, governance, compact, association scale, record pages, financial journeys, migration inventory, public/private browsers and source/security metadata checks. Do not resolve shared-file conflicts by dropping tests or approved instructions. Re-run the final integrated candidate and inspect affected views before merging.
 
-Fresh isolated synthetic databases prevent fixture-heavy suites interfering with each other. Separate owner/runtime/worker credentials and immutable applied migration bytes remain mandatory. No test repair may delete or weaken hosted records, RLS, production guards or independent-review requirements.
+Fresh isolated synthetic databases prevent fixture-heavy suites interfering with each other. Separate owner/runtime/worker credentials and immutable applied migration bytes remain mandatory. No test repair may delete or weaken hosted records, RLS, production guards or required technical checks and release protections.
 
 ## Infrastructure and activation
 
 No Neon/Render resource was changed or newly inspected by this handoff. Earlier October 12 inspection recorded main development through 010, claim-survival child through 013 and production without application tables. Repository SQL is 015. Compatible schema verification must precede any private runtime deployment; the public site is database-independent. A successful local or CI migration is not promotion to a hosted branch.
 
-The repository's Render URL alone does not establish availability, deployed commit, project assignment or protected configuration. Complete protected identity/device and recovery architecture, recipient encryption, real evidence custody/scanning/retention, independent ranking custody, valid notices, signatures, institution/Treasury acceptance, independent review and measured provider recovery before activation. Prepared/queued commands are not external acceptance.
+The repository's Render URL alone does not establish availability, deployed commit, project assignment or protected configuration. Complete protected identity/device and recovery architecture, recipient encryption, real evidence custody/scanning/retention, independent ranking custody, valid notices, signatures, institution/Treasury acceptance and measured provider recovery before activation. Prepared/queued commands are not external acceptance.
 
 Keep `registry/roadmap.json` and `registry/prs.json` unchanged unless their established acceptance/approval rules are satisfied. Their 25 units and 11 mappings are scoped tracking, not a percentage of operational completion. Source originals and the private-planning publication boundary remain unchanged.

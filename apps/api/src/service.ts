@@ -52,7 +52,7 @@ export class ProgramService {
     requireCondition(
       this.mode === 'simulation' && this.realm === 'simulation',
       'PROTECTED_INTAKE_DISABLED',
-      'Protected production intake requires independently reviewed recipient security and approved authority; this release is synthetic-only.',
+      'Protected production intake requires verified recipient security, identity/recovery controls and approved authority; this release is synthetic-only.',
     );
   }
   private async replay(tx: Transaction, actor: Actor, receipt: Receipt) {

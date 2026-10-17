@@ -12,7 +12,7 @@ Use a separate migration-owner connection to run `pnpm db:check` and `pnpm db:mi
 
 The check deliberately requires an exact version set. A previous application build must not start against a newer unreviewed schema. Do not solve rollback by editing the ledger or deleting a migration: use an assessed forward-compatible application fix or the documented database recovery procedure. This initial mechanism is a startup gate, not an online DDL protection mechanism. Do not migrate a database concurrently with a serving protected release; coordinate maintenance until a separately reviewed rolling-upgrade protocol exists.
 
-Checksums describe which migration files the owner recorded. They do not prove live SQL definitions are untouched, validate backups, replace source/release review or confer E2EE/security conformance. Production migration, institutional activation and independent assessment are still separate prerequisites. The supplied production database is not changed by this work.
+Checksums describe which migration files the owner recorded. They do not prove live SQL definitions are untouched, validate backups, replace source/release review or confer E2EE/security conformance. Production migration and institutional activation remain separate controlled actions. Independent security assessment is deferred follow-up, not an implementation or deployment prerequisite. The supplied production database is not changed by this work.
 
 ## Verification
 
