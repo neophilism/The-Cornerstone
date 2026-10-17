@@ -7,9 +7,11 @@ import {
   CompactApprovalSchema,
   RecordSchema,
   IdSchema,
+  PublishedStateOfferViewSchema,
   type CaseRecord,
 } from '@cornerstone/contracts';
 import type { Field } from '@cornerstone/domain';
+import { PublishedOfferDetails } from './state-offers.js';
 
 type Api = (path: string, body?: unknown) => Promise<any>;
 export function CommercialTermsEditor({
@@ -31,7 +33,9 @@ export function CommercialTermsEditor({
   const [terms, setTerms] = useState<Record<string, string | number | boolean | null>>(
     initial.success ? initial.data : {},
   );
-  const [offer, setOffer] = useState<CaseRecord | null>(null);
+  const [offer, setOffer] = useState<{ title: string; version: number; menu: unknown } | null>(
+    null,
+  );
   const [state, setState] = useState<'choose' | 'loading' | 'ready' | 'error'>('choose');
   useEffect(() => {
     let active = true;
@@ -41,30 +45,57 @@ export function CommercialTermsEditor({
       return;
     }
     const local = records.find((record) => record.id === offerId);
-    const accept = (record: CaseRecord) => {
+    const accept = (source: { title: string; version: number; menu: unknown }) => {
       if (!active) return;
-      if (
-        record.kind !== 'offer' ||
-        record.state !== 'published' ||
-        !CommercialMenuSchema.safeParse(record.data['commercialMenu']).success
-      ) {
+      if (!CommercialMenuSchema.safeParse(source.menu).success) {
         setState('error');
         return;
       }
-      setOffer(record);
+      setOffer(source);
       setState('ready');
-      const menu = CommercialMenuSchema.parse(record.data['commercialMenu']);
+      const menu = CommercialMenuSchema.parse(source.menu);
       setTerms((old) =>
         Object.fromEntries(
           Object.entries(old).filter(([key, choice]) => menu[key]?.includes(choice)),
         ),
       );
     };
-    if (local) accept(local);
-    else if (api) {
+    const acceptPrivate = (record: CaseRecord) => {
+      if (
+        record.id !== offerId ||
+        record.realm !== 'simulation' ||
+        record.kind !== 'offer' ||
+        record.state !== 'published' ||
+        record.data['stateOrigin']
+      )
+        throw Error('Current published terms are required.');
+      accept({ title: record.title, version: record.version, menu: record.data['commercialMenu'] });
+    };
+    if (local && !local.data['stateOrigin']) {
+      try {
+        acceptPrivate(local);
+      } catch {
+        setState('error');
+      }
+    } else if (api) {
       setState('loading');
-      void api('records?recordId=' + encodeURIComponent(offerId))
-        .then((result) => accept(RecordSchema.parse(result.records[0])))
+      void api('published-offers?offerId=' + encodeURIComponent(offerId))
+        .then(async (result) => {
+          if (!active) return;
+          if (result.offers.length) {
+            const view = PublishedStateOfferViewSchema.parse(result.offers[0]);
+            if (view.status !== 'published' || view.publication.offerId !== offerId)
+              throw Error('Offer unavailable.');
+            accept({
+              title: view.publication.title,
+              version: view.publication.version,
+              menu: view.publication.commercialMenu,
+            });
+          } else {
+            const privateResult = await api('records?recordId=' + encodeURIComponent(offerId));
+            acceptPrivate(RecordSchema.parse(privateResult.records[0]));
+          }
+        })
         .catch(() => {
           if (active) setState('error');
         });
@@ -73,7 +104,7 @@ export function CommercialTermsEditor({
       active = false;
     };
   }, [offerId, records]);
-  const menu = offer ? CommercialMenuSchema.safeParse(offer.data['commercialMenu']) : null;
+  const menu = offer ? CommercialMenuSchema.safeParse(offer.menu) : null;
   return (
     <fieldset className="structured-field" aria-busy={state === 'loading'}>
       <legend>{field.label}</legend>
@@ -172,6 +203,12 @@ export function CompactSummary({
           </p>
         )}
         <h3>{p.title}</h3>
+        {p.offer.publication && (
+          <details>
+            <summary>Inspect the original published offer</summary>
+            <PublishedOfferDetails publication={p.offer.publication} />
+          </details>
+        )}
         <p>
           {p.offer.trade} - {p.offer.district}
         </p>

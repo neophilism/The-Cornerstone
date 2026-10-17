@@ -14,6 +14,7 @@ const routes = new Set([
   'me',
   'workflows',
   'records',
+  'published-offers',
   'receipts',
   'commands',
   'memberships',

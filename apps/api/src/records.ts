@@ -6,6 +6,9 @@ import {
   evidencePreparationStanding,
   financialAdjudicationActions,
   independentFinancialReviewer,
+  independentStateReviewer,
+  statePacketOwner,
+  stateReviewActions,
 } from '@cornerstone/domain';
 import { canRead, canAct } from '@cornerstone/security';
 import { Store } from '@cornerstone/store';
@@ -40,13 +43,21 @@ export class RecordReader {
         .filter(
           (action) =>
             action.from.includes(r.state) &&
+            (!['state_authority', 'offer'].includes(r.kind) ||
+              (stateReviewActions.includes(action.key)
+                ? independentStateReviewer(actor, r)
+                : statePacketOwner(actor, r))) &&
             (r.kind !== 'financial_schedule' ||
               !financialAdjudicationActions.includes(action.key) ||
               independentFinancialReviewer(actor, r)) &&
             canAct(actor, r, action.roles, grants, action.key, now),
         )
         .map((action) => action.key);
-      if (r.state === 'draft' && canAct(actor, r, wf.createRoles, grants, 'save_draft', now))
+      if (
+        r.state === 'draft' &&
+        (!['state_authority', 'offer'].includes(r.kind) || statePacketOwner(actor, r)) &&
+        canAct(actor, r, wf.createRoles, grants, 'save_draft', now)
+      )
         actions.push('save_draft');
       if (
         evidencePreparationRoles(r).length > 0 &&

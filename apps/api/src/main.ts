@@ -34,6 +34,7 @@ import { DraftAccessService } from './access.js';
 import { EvidenceService } from './evidence.js';
 import { MembershipService } from './membership.js';
 import { RecordReader } from './records.js';
+import { StateOfferService } from './state-offers.js';
 import { ReceiptReader } from './receipts.js';
 import { SessionService } from './sessions.js';
 
@@ -217,6 +218,9 @@ route('get', '/me', async (req, res) => {
 route('get', '/workflows', async (req, res) => {
   const a = await actor(req);
   res.json({ workflows: workflows.filter((w) => w.createRoles.some((r) => a.roles.includes(r))) });
+});
+route('get', '/published-offers', async (req, res) => {
+  res.json(await new StateOfferService(requireStore()).catalogue(await actor(req), req.query));
 });
 route('get', '/auth/sessions', async (req, res) => {
   res.json(

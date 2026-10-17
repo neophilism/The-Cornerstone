@@ -168,6 +168,7 @@ export function renewal(input: {
 }
 
 export { actionUnavailable } from './availability.js';
+export { stateReviewActions, statePacketOwner, independentStateReviewer } from './state-offer.js';
 export {
   evidencePreparationRoles,
   evidencePreparationStanding,

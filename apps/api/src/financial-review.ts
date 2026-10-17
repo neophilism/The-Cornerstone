@@ -28,7 +28,7 @@ export function freezeFinancialBasis(
   data: Record<string, unknown>,
   actor: Actor,
   compact: CaseRecord,
-  offer: CaseRecord,
+  offer: Pick<CaseRecord, 'id' | 'version' | 'data'>,
   now: string,
 ) {
   const basis = FinancialCalculationBasisSchema.parse({

@@ -20,7 +20,8 @@ import { SuccessionService } from './succession.js';
 import { ClaimSurvivalService } from './claim-survival.js';
 import { DeceasedFilingService } from './deceased-filings.js';
 import { GovernanceService } from './governance.js';
-import { CompactService } from './compacts.js';
+import { CompactService, frozenCompactFinancialSource } from './compacts.js';
+import { StateOfferService } from './state-offers.js';
 import { FinancialReviewService, freezeFinancialBasis } from './financial-review.js';
 import { calculateWireSchedule } from './financial-calculation.js';
 export { calculateWireSchedule } from './financial-calculation.js';
@@ -86,6 +87,8 @@ export class ProgramService {
         await new GovernanceService(this.store).bindResolution(tx, actor, data);
         await new CompactService(this.store).bindResolution(tx, actor, data);
       }
+      if (input.kind === 'state_authority' || input.kind === 'offer')
+        data['stateOrigin'] = new StateOfferService(this.store).origin(actor);
       const record: CaseRecord = {
         id: randomUUID(),
         realm: actor.realm,
@@ -104,6 +107,8 @@ export class ProgramService {
       const receipt = await new DeceasedFilingService(this.store).checked(() =>
         this.store.save(tx, actor, record, 'create', input.idempotencyKey, requestDigest, true),
       );
+      if (record.kind === 'state_authority' || record.kind === 'offer')
+        await new StateOfferService(this.store).opened(tx, record, receipt);
       if (record.kind === 'resolution')
         await tx.query('SELECT simulation_link_resolution($1,$2)', [
           record.id,
@@ -204,6 +209,11 @@ export class ProgramService {
             )
           : { data };
       data = financialReview.data;
+      const stateOffer =
+        record.kind === 'state_authority' || record.kind === 'offer'
+          ? await new StateOfferService(this.store).prepare(tx, actor, record, a.key, data, now)
+          : { data };
+      data = stateOffer.data;
       const ballot =
         record.kind === 'resolution' && a.key === 'record_vote'
           ? await members.prepareBallot(tx, actor, record, data, now.slice(0, 10))
@@ -213,9 +223,10 @@ export class ProgramService {
         ...history,
         { version: record.version + 1, action: a.key, at: now, actorId: actor.id },
       ];
-      let institution = financialReview.institutionId ?? record.institutionId;
+      let institution =
+        stateOffer.institutionId ?? financialReview.institutionId ?? record.institutionId;
       if (
-        a.key === 'submit' ||
+        (a.key === 'submit' && !['state_authority', 'offer'].includes(record.kind)) ||
         (record.kind === 'resolution' && a.key === 'open_vote') ||
         (record.kind === 'opportunity' && a.key === 'propose')
       ) {
@@ -247,6 +258,8 @@ export class ProgramService {
         await new ClaimSurvivalService(this.store).finish(tx, actor, next, receipt);
       if (record.kind === 'deceased_filing')
         await new DeceasedFilingService(this.store).finish(tx, actor, next, receipt);
+      if (record.kind === 'state_authority' || record.kind === 'offer')
+        await new StateOfferService(this.store).finish(tx, next, receipt);
       if (ballot)
         await tx.query('SELECT simulation_cast_ballot($1,$2,$3,$4::jsonb,$5,$6)', [
           ballot.id,
@@ -408,15 +421,6 @@ export class ProgramService {
     if (r.kind === 'resolution' && k === 'tally') {
       await new MembershipService(this.store, this.mode, this.realm).tally(tx, r, d, today);
     }
-    if (r.kind === 'offer' && k === 'publish') {
-      await this.linked(tx, d['authorityId'], 'state_authority', ['verified']);
-      const terms = d['financialTerms'] as { version: string; rateActId: string };
-      requireCondition(
-        terms.version === d['financialVersion'] && terms.rateActId === d['rateAct'],
-        'PUBLISHED_FINANCIAL_METHOD',
-        'The published rate act and method version must match the financial terms.',
-      );
-    }
     if (r.kind === 'permit' && k === 'verify')
       await this.linked(tx, d['compactId'], 'compact', ['effective']);
     if (r.kind === 'launch' && ['approve', 'operate'].includes(k)) {
@@ -500,7 +504,9 @@ export class ProgramService {
     }
     if (r.kind === 'financial_schedule' && ['calculate', 'correct'].includes(k)) {
       const compact = await this.linked(tx, d['compactId'], 'compact', ['effective']);
-      const offer = await this.linked(tx, compact.data['offerId'], 'offer', ['published']);
+      const offer =
+        frozenCompactFinancialSource(compact) ??
+        (await this.linked(tx, compact.data['offerId'], 'offer', ['published']));
       requireCondition(
         d['schedule'] && typeof d['schedule'] === 'object' && offer.data['financialTerms'],
         'INVALID_SCHEDULE',

@@ -69,6 +69,14 @@ test('state financial terms require a supplied prospective rate and persist the 
   await page
     .getByLabel('Express federal authorization, if needed', { exact: true })
     .fill('Invented preparation only; no legal authorization asserted.');
+  for (const label of [
+    'Public technical and financial readiness summary',
+    'Public service obligations',
+    'Public launch requirements',
+    'Public regulatory and tax terms',
+    'Public protections and neutral end-of-term regime',
+  ])
+    await page.getByLabel(label, { exact: true }).fill('Invented public preparation only.');
   await capture(page, `test-results/private-financial-terms-${info.project.name}.png`);
   await page.getByRole('button', { name: 'Save synthetic draft', exact: true }).click();
   await expect(page.getByText('Simulation receipt · version 1', { exact: true })).toBeVisible();

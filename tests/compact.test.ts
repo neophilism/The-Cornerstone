@@ -7,7 +7,7 @@ import {
 } from '@cornerstone/contracts';
 import { parseFields, validateCommercialTerms, workflow } from '@cornerstone/domain';
 import { digest } from '@cornerstone/security';
-import { compactPlan } from '../apps/api/src/compacts.js';
+import { compactPlan, frozenCompactFinancialSource } from '../apps/api/src/compacts.js';
 import { compactDraftDetails } from './helpers/compact-fixture.js';
 function fixture() {
   const associationId = randomUUID(),
@@ -98,6 +98,77 @@ describe('published commercial choices', () => {
   });
 });
 describe('compact mandate integrity', () => {
+  it('preserves effective compact financial terms without reopening a withdrawn offer', () => {
+    const { compact, offer, match } = fixture(),
+      plan = compactPlan(compact, offer, match);
+    const resolutionId = randomUUID(),
+      binding = {
+        recordId: compact.id,
+        associationId: plan.associationId,
+        version: compact.version,
+        digest: digest(plan),
+        plan,
+      };
+    const approval = {
+      resolutionId,
+      resolutionVersion: 6,
+      resolutionDigest: 'a'.repeat(64),
+      associationId: plan.associationId,
+      binding,
+      unitCount: 2,
+      yes: 2,
+      no: 0,
+      abstain: 0,
+      notCast: 0,
+      rollDigest: 'b'.repeat(64),
+      source: 'verified-terminal-tally-at-submission',
+    };
+    const effective: CaseRecord = {
+      ...compact,
+      state: 'effective',
+      version: 8,
+      data: {
+        ...compact.data,
+        compactApproval: approval,
+        memberResolutionId: resolutionId,
+        approvedCompactVersion: binding.version,
+        approvedCompactDigest: binding.digest,
+        approvedResolutionVersion: 6,
+        financialTerms: plan.offer.financialTerms,
+      },
+    };
+    offer.state = 'withdrawn';
+    offer.data['financialTerms'] = {
+      ...plan.offer.financialTerms,
+      rate: { numerator: '1', denominator: '10' },
+    };
+    expect(frozenCompactFinancialSource(effective)).toEqual({
+      id: plan.offer.id,
+      version: plan.offer.version,
+      data: { financialTerms: plan.offer.financialTerms },
+    });
+    for (const change of [
+      { offerId: randomUUID() },
+      { associationId: randomUUID() },
+      { matchId: randomUUID() },
+      { memberResolutionId: randomUUID() },
+      { approvedCompactVersion: 99 },
+      { approvedCompactDigest: 'c'.repeat(64) },
+      { approvedResolutionVersion: 99 },
+      { financialTerms: offer.data['financialTerms'] },
+      {
+        compactApproval: {
+          ...approval,
+          binding: { ...binding, plan: { ...plan, title: 'Changed' } },
+        },
+      },
+    ])
+      expect(() =>
+        frozenCompactFinancialSource({ ...effective, data: { ...effective.data, ...change } }),
+      ).toThrow();
+    expect(() => frozenCompactFinancialSource({ ...effective, state: 'published' })).toThrow();
+    expect(frozenCompactFinancialSource({ ...compact, state: 'effective' })).toBeNull();
+  });
   it('binds each commercial choice and all substantive obligations', () => {
     const { compact, offer, match } = fixture(),
       original = digest(compactPlan(compact, offer, match));

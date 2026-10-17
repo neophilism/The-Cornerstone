@@ -5,6 +5,8 @@ import {
   CommercialMenuSchema,
   StateTermsSchema,
   IdSchema,
+  PublishedStateOfferViewSchema,
+  type PublishedStateOffer,
   type Actor,
   type CaseRecord,
   type CompactPlan,
@@ -13,8 +15,19 @@ import { requireCondition, validateCommercialTerms } from '@cornerstone/domain';
 import { digest } from '@cornerstone/security';
 import { Store, type Transaction } from '@cornerstone/store';
 
+type CompactOffer = Pick<
+  CaseRecord,
+  'id' | 'kind' | 'state' | 'version' | 'title' | 'policyVersion' | 'data'
+> & {
+  publication?: PublishedStateOffer;
+  publicationDigest?: string;
+};
 /** Excludes changing lifecycle metadata but binds every substantive compact field. */
-export function compactPlan(record: CaseRecord, offer: CaseRecord, match: CaseRecord): CompactPlan {
+export function compactPlan(
+  record: CaseRecord,
+  offer: CompactOffer,
+  match: CaseRecord,
+): CompactPlan {
   const d = record.data;
   const terms = validateCommercialTerms(offer.data['commercialMenu'], d['terms']);
   requireCondition(
@@ -55,21 +68,73 @@ export function compactPlan(record: CaseRecord, offer: CaseRecord, match: CaseRe
     offer: {
       id: offer.id,
       version: offer.version,
-      digest: digest({
-        id: offer.id,
-        version: offer.version,
-        title: offer.title,
-        policyVersion: offer.policyVersion,
-        data: offer.data,
-      }),
+      digest:
+        offer.publicationDigest ??
+        digest({
+          id: offer.id,
+          version: offer.version,
+          title: offer.title,
+          policyVersion: offer.policyVersion,
+          data: offer.data,
+        }),
       title: offer.title,
       trade: offer.data['trade'],
       district: offer.data['district'],
       financialTerms,
       commercialMenu: CommercialMenuSchema.parse(offer.data['commercialMenu']),
+      ...(offer.publication ? { publication: offer.publication } : {}),
     },
     match: { id: match.id, roundId: match.data['roundId'], version: match.version },
   });
+}
+
+/** Existing effective obligations use the exact approval, even if future offers cease. */
+export function frozenCompactFinancialSource(
+  compact: CaseRecord,
+): Pick<CaseRecord, 'id' | 'version' | 'data'> | null {
+  if (compact.data['compactApproval'] === undefined) return null;
+  const parsed = CompactApprovalSchema.safeParse(compact.data['compactApproval']);
+  requireCondition(
+    parsed.success,
+    'COMPACT_FINANCIAL_BINDING',
+    'The effective compact must retain its complete verified member approval.',
+  );
+  const approval = parsed.data,
+    binding = approval.binding,
+    plan = binding.plan,
+    d = compact.data;
+  requireCondition(
+    compact.kind === 'compact' &&
+      compact.state === 'effective' &&
+      binding.recordId === compact.id &&
+      binding.associationId === d['associationId'] &&
+      binding.digest === digest(plan) &&
+      binding.digest === d['approvedCompactDigest'] &&
+      binding.version === d['approvedCompactVersion'] &&
+      approval.resolutionId === d['memberResolutionId'] &&
+      approval.resolutionVersion === d['approvedResolutionVersion'] &&
+      plan.offer.id === d['offerId'] &&
+      plan.matchId === d['matchId'] &&
+      digest(plan.offer.financialTerms) === digest(d['financialTerms']),
+    'COMPACT_FINANCIAL_BINDING',
+    'The unchanged effective compact and frozen approved offer must identify the same financial obligations.',
+  );
+  if (plan.offer.publication) {
+    const publication = plan.offer.publication;
+    requireCondition(
+      digest(publication) === plan.offer.digest &&
+        publication.offerId === plan.offer.id &&
+        publication.version === plan.offer.version &&
+        digest(publication.financialTerms) === digest(plan.offer.financialTerms),
+      'COMPACT_FINANCIAL_BINDING',
+      'The financial obligation must retain the original published offer snapshot.',
+    );
+  }
+  return {
+    id: plan.offer.id,
+    version: plan.offer.version,
+    data: { financialTerms: plan.offer.financialTerms },
+  };
 }
 export class CompactService {
   constructor(readonly store: Store) {}
@@ -80,8 +145,45 @@ export class CompactService {
     await tx.query('SELECT id FROM case_records WHERE id=ANY($1::uuid[]) ORDER BY id FOR SHARE', [
       [offerId, matchId],
     ]);
-    const offer = await this.store.get(tx, offerId),
-      match = await this.store.get(tx, matchId);
+    const published = (
+      await tx.query('SELECT simulation_state_offer_choice($1) AS offer', [offerId])
+    ).rows[0]?.offer;
+    let offer: CompactOffer | null;
+    if (published) {
+      const view = PublishedStateOfferViewSchema.parse(published),
+        p = view.publication;
+      requireCondition(
+        view.digest === digest(p),
+        'STATE_PUBLICATION_INTEGRITY',
+        'The exact published offer could not be verified.',
+      );
+      offer = {
+        id: p.offerId,
+        kind: 'offer',
+        state: 'published',
+        version: p.version,
+        title: p.title,
+        policyVersion: p.policyVersion,
+        publication: p,
+        publicationDigest: view.digest,
+        data: {
+          trade: p.trade,
+          district: p.district,
+          financialTerms: p.financialTerms,
+          financialVersion: p.financialTerms.version,
+          rateAct: p.financialTerms.rateActId,
+          commercialMenu: p.commercialMenu,
+        },
+      };
+    } else {
+      offer = await this.store.get(tx, offerId);
+      requireCondition(
+        !offer?.data['stateOrigin'],
+        'STATE_OFFER_UNAVAILABLE',
+        'New compact choices require the exact current publication and unexpired, unwithdrawn authority.',
+      );
+    }
+    const match = await this.store.get(tx, matchId);
     requireCondition(
       offer && match,
       'COMPACT_PREREQUISITES',

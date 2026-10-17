@@ -5,6 +5,7 @@ import {
   type Role,
 } from '@cornerstone/contracts';
 import { workflow } from './workflows.js';
+import { statePacketOwner } from './state-offer.js';
 
 export const financialAdjudicationActions = [
   'begin_calculation_review',
@@ -48,6 +49,7 @@ export function evidencePreparationRoles(record: CaseRecord): Role[] {
 }
 
 export function evidencePreparationStanding(actor: Actor, record: CaseRecord): boolean {
+  if (['state_authority', 'offer'].includes(record.kind)) return statePacketOwner(actor, record);
   return (
     record.state === 'draft' ||
     actor.id === record.ownerId ||

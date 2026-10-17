@@ -84,6 +84,16 @@ export class EvidenceService {
           'Current member ownership or independent adjudicator standing is required for hearing evidence.',
         );
       }
+      if (['state_authority', 'offer'].includes(record.kind)) {
+        const currentScope = await tx.query('SELECT simulation_state_owner($1) AS allowed', [
+          record.id,
+        ]);
+        requireCondition(
+          currentScope.rows[0]?.allowed === true,
+          'RECORD_PERMISSION',
+          'Current originating state role and institution are required for packet attachments.',
+        );
+      }
     }
     return record;
   }
