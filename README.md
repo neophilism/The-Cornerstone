@@ -59,3 +59,5 @@ Synthetic attachment downloads require disclosure consent, fresh access and exac
 Draft delegation preserves exact uncertain grant/revocation requests and refreshes current access after receipt recovery. See [session and access controls](docs/SESSION_AND_ACCESS.md).
 
 Direct record opening verifies the requested record, authenticated workspace and current permission version. Navigation and session changes cancel earlier reads; see [record opening](docs/RECORD_OPENING.md).
+
+The matching library validates frozen continuation inputs, preserves surviving allocations and advances failed negotiations through the original rankings. See [matching continuation](docs/MATCHING_CONTINUATION.md) for its input contract, independent expected results and the separate custody/Exchange requirements.
