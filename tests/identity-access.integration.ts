@@ -141,15 +141,39 @@ try {
   );
   const list = await access.list(a, saved.record!.id);
   assert.equal(list.length, 1);
-  const revoked = await access.revoke(a, {
+  const revocation = {
     recordId: saved.record!.id,
     expectedVersion: 2,
     grantId: list[0]!.id,
     idempotencyKey: randomUUID(),
-  });
+  };
+  const revoked = await access.revoke(a, revocation);
   assert.equal(revoked.record!.version, 3);
   assert.equal((await store.list(b)).length, 0);
   assert.equal(await store.transaction(b, (tx) => store.getVersion(tx, saved.record!.id, 1)), null);
+  const olderAuthentication = {
+    ...a,
+    authenticationTime: new Date(Date.now() - 601000).toISOString(),
+  };
+  const recoveredGrant = await access.grant(olderAuthentication, grant);
+  const recoveredRevocation = await access.revoke(olderAuthentication, revocation);
+  assert.equal(recoveredGrant.receipt.id, one.receipt.id);
+  assert.equal(recoveredGrant.record!.version, 2);
+  assert.equal(recoveredRevocation.receipt.id, revoked.receipt.id);
+  assert.equal((await access.list(a, saved.record!.id))[0]!.revokedAt !== null, true);
+  assert.equal((await store.transaction(a, (tx) => store.get(tx, saved.record!.id)))!.version, 3);
+  await assert.rejects(
+    access.revoke(olderAuthentication, { ...revocation, idempotencyKey: randomUUID() }),
+    /sign in again/,
+  );
+  await owner.query('UPDATE actors SET conflicts=ARRAY[$2::uuid] WHERE id=$1', [
+    a.id,
+    saved.record!.id,
+  ]);
+  await assert.rejects(access.grant(a, grant), /you own/);
+  await assert.rejects(access.revoke(a, revocation), /you own/);
+  await owner.query("UPDATE actors SET conflicts='{}' WHERE id=$1", [a.id]);
+
   await assert.rejects(
     access.grant(a, {
       ...grant,
