@@ -191,7 +191,7 @@ jobs:
           path: test-results/
           retention-days: 7
   private-browser-acceptance:
-    if: ${{ always() }}
+    if: ${{ !cancelled() }}
     needs: [private-browser]
     runs-on: ubuntu-24.04
     timeout-minutes: 1
