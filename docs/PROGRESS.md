@@ -89,3 +89,13 @@ Attachment downloads now require explicit disclosure consent, fresh metadata/acc
 ## 2026-10-17 — integrated stack and membership browser navigation
 
 The membership recovery browser journey now opens its exact resolution through the authenticated record-reference form. The previous first-page assumption timed out once accumulated suite fixtures moved that resolution beyond the page boundary; recovery, receipt correlation, one-ballot persistence and accessibility assertions remain intact. The attachment-download candidate also incorporates current main, preserving the owner-policy, public-deployment verification and shared registry changes. Required CI acceptance is recorded separately from this implementation note.
+
+## 2026-10-17 — exact access-change recovery
+
+Draft delegation now freezes the original grant or revocation request after an uncertain outcome, retains it across denied retries, checks receipt correlation and refreshes current permissions before another action. The workspace locks other mutations/navigation while recovering; confirmed grants require fresh consent for any later request. Added semantic unit coverage and actual synthetic desktop/mobile browser journeys for lost and substituted replies, denied retries, one-grant persistence, revoked state and accessibility. Candidate verification is separate from acceptance and hosted deployment.
+
+## 2026-10-17 — access recovery browser fixes
+
+[PR 45 application run 39032346308](https://github.com/neophilism/The-Cornerstone/actions/runs/39032346308) at `5378aa8de4f9d35490caa4b131f7e941536a620d` exposed three desktop failures: draft editing lacked native disabled semantics during recovery, and the current-access refresh remounted the access panel closed after a successful grant. The fix preserves only the expanded-panel preference for the same actor, realm and record. It still removes the selected record and controls during authorization refresh, reloads grants, resets recipient/scope/consent and clears the preference on session changes. All existing assertions remain; the browser journeys now hold the fresh record read to check that cached controls disappear, and verify that another record receives its own closed panel and grant list.
+
+Local candidate verification passed 364 unit tests, both private application production builds, package/schema compilation, boundary and secret checks. The browser scenarios were collected successfully; actual PostgreSQL and desktop/mobile acceptance of this fix remains required in CI before merge. The initial restricted-sandbox unit attempt could not bind its loopback test server; the unchanged suite passed with loopback permission. No hosted change, independent audit or production activation is claimed.
