@@ -1,6 +1,7 @@
-import { RecordSchema, type CaseRecord } from '@cornerstone/contracts';
+import { IdSchema, RecordSchema, type CaseRecord } from '@cornerstone/contracts';
+import { verifiedRecordOpening } from './record-opening.js';
 
-export type ExportReview = { record: CaseRecord; content: string };
+export type ExportReview = { actorId: string; record: CaseRecord; content: string };
 const maximumBytes = 2_000_000;
 function canonical(value: unknown, ancestors = new Set<object>(), depth = 0): unknown {
   if (depth > 50) throw Error('Record nesting exceeds the export limit.');
@@ -39,12 +40,19 @@ function content(record: CaseRecord): string {
   return result;
 }
 /** Only the current authenticated read result can prepare a synthetic export. */
-export function reviewRecordExport(raw: unknown, selected: CaseRecord): ExportReview {
+export function reviewRecordExport(
+  raw: unknown,
+  selected: CaseRecord,
+  actorId: string,
+): ExportReview {
   const baseline = RecordSchema.parse(selected);
-  const value = raw as { records?: unknown } | null;
-  if (!value || !Array.isArray(value.records) || value.records.length !== 1)
-    throw Error('Current record access could not be verified.');
-  const record = RecordSchema.parse(value.records[0]);
+  const readerId = IdSchema.parse(actorId);
+  const { record } = verifiedRecordOpening(
+    raw,
+    baseline.id,
+    { id: readerId, realm: baseline.realm },
+    baseline.version,
+  );
   if (
     baseline.realm !== 'simulation' ||
     record.realm !== baseline.realm ||
@@ -53,7 +61,7 @@ export function reviewRecordExport(raw: unknown, selected: CaseRecord): ExportRe
     record.version < baseline.version
   )
     throw Error('Current record does not match the selected synthetic record.');
-  return { record, content: content(record) };
+  return { actorId: readerId, record, content: content(record) };
 }
 /** Recheck access and bind disclosure consent to the exact reviewed saved version. */
 export function confirmRecordExport(
@@ -62,7 +70,7 @@ export function confirmRecordExport(
   consent: boolean,
 ): { status: 'ready'; content: string } | { status: 'changed'; review: ExportReview } {
   if (consent !== true) throw Error('Explicit export consent is required.');
-  const current = reviewRecordExport(raw, reviewed.record);
+  const current = reviewRecordExport(raw, reviewed.record, reviewed.actorId);
   if (current.record.version > reviewed.record.version)
     return { status: 'changed', review: current };
   if (current.content !== reviewed.content)

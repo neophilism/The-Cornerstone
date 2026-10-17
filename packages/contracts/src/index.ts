@@ -677,6 +677,9 @@ export const ReceiptSchema = z
   })
   .strict();
 export type Receipt = z.infer<typeof ReceiptSchema>;
+export const ReceiptReadSchema = z
+  .object({ context: RecordReadContextSchema, receipt: ReceiptSchema })
+  .strict();
 export const ReceiptQuerySchema = z.object({ receiptId: IdSchema }).strict();
 export const ApiErrorSchema = z
   .object({

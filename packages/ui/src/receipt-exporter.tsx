@@ -2,14 +2,21 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import type { Receipt } from '@cornerstone/contracts';
 import { reviewReceiptExport, confirmReceiptExport, type ReceiptReview } from './receipt-export.js';
+import {
+  disclosePrivate,
+  preparePrivateDisclosure,
+  type SessionBoundRead,
+} from './private-disclosure.js';
 
 export function ReceiptExporter({
   receipt,
-  api,
+  actorId,
+  readPrivate,
   disabled,
 }: {
   receipt: Receipt;
-  api: (path: string, body?: unknown) => Promise<any>;
+  actorId: string;
+  readPrivate: SessionBoundRead;
   disabled: boolean;
 }) {
   const id = useId();
@@ -51,27 +58,38 @@ export function ReceiptExporter({
     setError('');
     setMessage('');
     try {
-      const raw: unknown = await api('receipts?receiptId=' + encodeURIComponent(receipt.id));
+      const response = await preparePrivateDisclosure(
+        readPrivate,
+        'receipts?receiptId=' + encodeURIComponent(receipt.id),
+        (raw) =>
+          confirm && review
+            ? { status: 'ready' as const, content: confirmReceiptExport(raw, review, consent) }
+            : { status: 'review' as const, review: reviewReceiptExport(raw, receipt, actorId) },
+      );
       if (generation.current !== current || blocked.current) return;
-      if (!confirm || !review) {
-        setReview(reviewReceiptExport(raw, receipt));
-        setConsent(false);
+      const result = response.value;
+      if (result.status === 'review') {
+        disclosePrivate(response, () => {
+          setReview(result.review);
+          setConsent(false);
+        });
       } else {
-        const result = confirmReceiptExport(raw, review, consent);
         setConsent(false);
-        const url = URL.createObjectURL(
-          new Blob([result], { type: 'application/json;charset=utf-8' }),
-        );
-        const link = document.createElement('a');
-        try {
-          link.href = url;
-          link.download = 'cornerstone-simulation-receipt.json';
-          document.body.append(link);
-          link.click();
-        } finally {
-          link.remove();
-          setTimeout(() => URL.revokeObjectURL(url), 1000);
-        }
+        disclosePrivate(response, () => {
+          const url = URL.createObjectURL(
+            new Blob([result.content], { type: 'application/json;charset=utf-8' }),
+          );
+          const link = document.createElement('a');
+          try {
+            link.href = url;
+            link.download = 'cornerstone-simulation-receipt.json';
+            document.body.append(link);
+            link.click();
+          } finally {
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+          }
+        });
         setMessage(
           'Receipt file prepared. Check your browser downloads. This is not a legal filing or a verified external delivery.',
         );

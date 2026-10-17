@@ -1,4 +1,4 @@
-import { ReceiptQuerySchema, type Actor } from '@cornerstone/contracts';
+import { ReceiptQuerySchema, ReceiptReadSchema, type Actor } from '@cornerstone/contracts';
 import { DomainError } from '@cornerstone/domain';
 import { canRead } from '@cornerstone/security';
 import { Store } from '@cornerstone/store';
@@ -20,7 +20,10 @@ export class ReceiptReader {
       )
         throw new DomainError('NOT_FOUND', 'Receipt not found or no longer accessible.', 404);
       // Do not return record contents, other actors' receipts, request keys or audit internals.
-      return { receipt };
+      return ReceiptReadSchema.parse({
+        context: { actorId: actor.id, realm: actor.realm },
+        receipt,
+      });
     });
   }
 }
