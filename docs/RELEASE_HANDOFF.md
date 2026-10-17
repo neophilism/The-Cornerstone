@@ -1,6 +1,31 @@
 # Release and continuation handoff
 
-Historical October 12 checkpoint. Current accepted source, public deployment evidence and the owner-directed review policy are recorded in [PROGRESS.md](PROGRESS.md) and [SECURITY_SCOPE.md](SECURITY_SCOPE.md).
+## Current release handoff — 17 October 2026
+
+Checkpoint: 12:37:56 UTC. Use accepted main `3fa24879d12066b5fb976a84bd1112a12a64e918` (PR 44), with the exact tested tree `717c123ffcf954951c623b5f733deecdff945421`. Its [application run 39032086554](https://github.com/neophilism/The-Cornerstone/actions/runs/39032086554) and [source run 39032086521](https://github.com/neophilism/The-Cornerstone/actions/runs/39032086521) passed. Counts: 356 unit, 36 public-browser and 114 private-browser cases; actual PostgreSQL, logical restore, build, proxy, worker and local bootstrap checks also passed. Exact per-PR source/merge evidence is in [PROGRESS.json](PROGRESS.json).
+
+PR 45 is an implemented candidate at repaired head `fbd639b8518bbf01dd5e4931ca17a7604851faef`; final-head application/source runs 39033272230 and 39033272265 were queued. Keep the repaired disclosure/disabled-control behavior and appended regression tests when integrating. The original failed browser candidate is historical evidence, not the current repair result. PR 22 remains a separate unverified CircleCI proposal.
+
+### Release the accepted public site
+
+1. Recheck current main, candidate checks and the existing `cornerstone/application` branch. Choose a merged, fully checked commit and confirm its tree; a candidate containing additional code needs its own complete required checks.
+2. Advance only the existing authorized public deployment branch by fast-forward with an expected-head guard. Its Render auto-deploy starts the build; avoid an unnecessary duplicate manual deploy.
+3. Observe the exact deployed commit, then run the existing deployed-public-preview workflow. It must verify the SHA, proposal-only health, closed sensitive intake and homepage content/security headers. Record the actual URL, revision, result and time in PROGRESS.md/JSON and STATUS.md.
+4. Continue the independent [scoped development queue](CONTINUATION.md) while builds run. GitHub merges, Render live status and HTTP acceptance are separate facts.
+
+At the 12:28 UTC provider observation, the public service was still live at `0da2d023b0421802f1b0464e9cc9908a47265f77`. That commit passed [deployed verification run 38933016935](https://github.com/neophilism/The-Cornerstone/actions/runs/38933016935) at 16:36:14 UTC on October 16. There is no fresh October 17 HTTP measurement in this checkpoint and no claim that PRs 40–44 are hosted.
+
+### Start or extend the private synthetic runtime
+
+Use the tested local install/setup/run path in [LOCAL_SETUP.md](LOCAL_SETUP.md); it needs no external provider API keys. Hosted private work uses the explicit configuration inventory in [CONTINUATION.md](CONTINUATION.md). Confirm intended database migration inventory and separate restricted runtime/worker identities before startup. The accepted baseline requires 015; newly introduced migrations require a fresh compatibility check. Keep the local persona bypass limited to loopback synthetic development.
+
+The accepted restore is a disposable same-cluster logical backup/restore, not provider/account/key disaster recovery. No protected identity, recipient-encryption, custody, institutional or Treasury integration is supplied by the public deployment. Owner policy permits continued engineering and checked test release while independent human security review remains deferred; actual technical and transaction controls remain in place.
+
+The active tracking source is `registry/prs.json`; `registry/roadmap.json` is only its deprecated retirement notice. The denominator remains 25, with 11 original complete-unit mappings; newer accepted PRs are partial contributions until their full work unit is complete.
+
+## Historical handoff — 12 October 2026
+
+The following source, artifact and provider observations are retained as dated evidence. Current accepted source and owner policy are recorded above and in [PROGRESS.md](PROGRESS.md) and [SECURITY_SCOPE.md](SECURITY_SCOPE.md).
 
 Observation checkpoint: 2026-10-12T23:32:00Z. Accepted main is `dc94adfb7085ec989c2a86aebce44ce1d0ab025a`, tree `6b51dcba56acee94a2ff879eb04122a5ae3b6cb0`. This supersedes the 22:34 UTC checkpoint. Source acceptance is not deployment, independent security approval or enacted authority.
 
