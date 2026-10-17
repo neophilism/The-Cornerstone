@@ -119,6 +119,18 @@ describe('hosted original integrity', () => {
     },
   );
 
+  it('accepts the stricter no-store policy applied by the deployed public proxy', async () => {
+    const noStoreHeaders = { ...headers(), 'cache-control': 'no-store' };
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(new Response('abc', { headers: noStoreHeaders }))
+      .mockResolvedValueOnce(new Response(null, { status: 304, headers: noStoreHeaders }));
+    expect(await verifySource(fetchImpl, source)).toMatchObject({
+      bytes: 3,
+      sha256: source.sha256,
+    });
+  });
+
   it('cancels an oversized stream before reading the rest', async () => {
     const cancel = vi.fn();
     const stream = new ReadableStream({
@@ -131,6 +143,17 @@ describe('hosted original integrity', () => {
       verifySource(async () => new Response(stream, { headers: headers() }), source),
     ).rejects.toThrow('byte bound');
     expect(cancel).toHaveBeenCalledOnce();
+  });
+
+  it('accepts a bodyless 304 with representation headers omitted by the host', async () => {
+    const conditionalHeaders = new Headers(headers());
+    conditionalHeaders.delete('content-type');
+    conditionalHeaders.delete('content-length');
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(new Response('abc', { headers: headers() }))
+      .mockResolvedValueOnce(new Response(null, { status: 304, headers: conditionalHeaders }));
+    expect(await verifySource(fetchImpl, source)).toMatchObject({ conditionalStatus: 304 });
   });
 
   it.each([

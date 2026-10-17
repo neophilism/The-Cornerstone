@@ -5,7 +5,7 @@ The existing Render preview is checked at its exact authorized deployment-branch
 `scripts/preview-smoke.mjs` verifies the fixed public origin, `https://cornerstone-policy-preview.onrender.com`. Run it with `EXPECTED_PREVIEW_COMMIT` set to the exact 40-character deployment revision. It waits up to four minutes for that revision's healthy proposal-only API, then checks the following observable behavior:
 
 - The homepage, policy page and one representative research detail return HTTP 200 with the nonce-based content security policy. The policy page links all seven registered originals. Research retains its research-only scope, evidence provenance and workbook link.
-- Every original in `policy/SOURCE_MANIFEST.json` downloads with its registered filename, media type, exact content length, no-sniff/no-index controls, SHA-256 metadata and digest ETag. The streamed body is bounded to the recorded byte count, and its independently computed SHA-256 digest must match the manifest.
+- Every original in `policy/SOURCE_MANIFEST.json` downloads with its registered filename, media type, exact content length, no-sniff/no-index controls, SHA-256 metadata and digest ETag. Cache controls must require revalidation or prevent storage; the deployed public proxy currently applies `no-store`. The streamed body is bounded to the recorded byte count, and its independently computed SHA-256 digest must match the manifest.
 - Each digest produces a conditional HTTP 304. An unregistered document route returns 404. Redirects are rejected so another origin cannot supply the acceptance response.
 - The health endpoint still reports the same exact commit and closed protected intake after all downloads. A revision change during verification fails acceptance.
 

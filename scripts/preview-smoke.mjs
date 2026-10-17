@@ -93,14 +93,22 @@ async function health(fetchImpl, expectedCommit) {
 }
 
 function sourceHeaders(response, source, requireLength) {
+  const contentType = response.headers.get('content-type');
+  const cacheDirectives = response.headers
+    .get('cache-control')
+    ?.toLowerCase()
+    .split(',')
+    .map((directive) => directive.trim());
+  const controlledCache =
+    cacheDirectives?.includes('no-store') || cacheDirectives?.includes('must-revalidate');
   if (
-    response.headers.get('content-type') !== source.contentType ||
+    ((requireLength || contentType !== null) && contentType !== source.contentType) ||
     response.headers.get('content-disposition') !== `attachment; filename="${source.filename}"` ||
     response.headers.get('x-content-type-options') !== 'nosniff' ||
     response.headers.get('x-robots-tag') !== 'noindex' ||
     response.headers.get('x-content-sha256') !== source.sha256 ||
     response.headers.get('etag') !== `"${source.sha256}"` ||
-    !response.headers.get('cache-control')?.includes('must-revalidate') ||
+    !controlledCache ||
     (requireLength && response.headers.get('content-length') !== String(source.bytes))
   )
     throw Error('The document metadata does not match the approved original.');
