@@ -47,7 +47,7 @@ describe('new deceased-worker standing and claim preparation', () => {
   });
   it('cannot open the new draft before standing approval or a second time after opening', () => {
     const open = workflow('deceased_filing').actions.find((action) => action.key === 'open_claim')!;
-    for (const state of ['draft', 'submitted', 'review', 'denied', 'claim_opened'])
+    for (const state of ['draft', 'submitted', 'review', 'denied', 'claim_opened', 'standing_withdrawn'])
       expect(() => assertTransition({ ...packet, state }, open)).toThrow();
     expect(() => assertTransition({ ...packet, state: 'approved' }, open)).not.toThrow();
   });
