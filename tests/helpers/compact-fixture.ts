@@ -17,10 +17,15 @@ export const compactDraftDetails = {
     'Invented ordinary labor, safety, environment, consumer and civil rights protections.',
   investorRights: noOutsideControl,
 };
-/** Explicit downstream fixture. This does not run or attest offer authority or the disabled exchange. */
-export async function compactPrerequisites(w: Simulation, member: Actor, association: CaseRecord) {
+/** Explicit downstream match fixture. An existing synthetic publication may supply the offer; no actual exchange result is asserted. */
+export async function compactPrerequisites(
+  w: Simulation,
+  member: Actor,
+  association: CaseRecord,
+  publishedOffer?: CaseRecord,
+) {
   const supervisor = await w.persona('supervisor'),
-    offerId = randomUUID(),
+    offerId = publishedOffer?.id ?? randomUUID(),
     matchId = randomUUID();
   const now = new Date().toISOString();
   const method = {
@@ -78,7 +83,7 @@ export async function compactPrerequisites(w: Simulation, member: Actor, associa
       updatedAt: now,
     },
   ];
-  for (const row of rows)
+  for (const row of publishedOffer ? rows.slice(1) : rows)
     await w.owner.query(
       `INSERT INTO case_records(id,realm,kind,state,version,owner_id,policy_version,jurisdiction,payload_cipher,institution_id)
      VALUES($1,'simulation',$2,$3,1,$4,$5,'EX',$6,$7)`,
@@ -94,10 +99,10 @@ export async function compactPrerequisites(w: Simulation, member: Actor, associa
     );
   await w.owner.query(
     'UPDATE actors SET assignments=array_cat(assignments,$2::uuid[]) WHERE id=$1',
-    [supervisor.id, [offerId, matchId, association.id]],
+    [supervisor.id, [...(publishedOffer ? [] : [offerId]), matchId, association.id]],
   );
   return {
-    offer: rows[0]!,
+    offer: publishedOffer ?? rows[0]!,
     match: rows[1]!,
     supervisor,
     input: { ...compactDraftDetails, offerId, matchId, associationId: association.id },

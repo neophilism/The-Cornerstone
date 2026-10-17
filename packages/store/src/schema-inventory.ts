@@ -68,4 +68,8 @@ export const schemaInventory = [
     name: '017-financial-calculation-review.sql',
     sha256: '49cc757b50d8ac1e37526bcf4447268606caed8795b3424226161c0c93c94093',
   },
+  {
+    name: '018-synthetic-state-offers.sql',
+    sha256: '50845b90ddce5f4bfe7b0d205ec7007f3feb5bde08ee075e83c9496e31f3b84c',
+  },
 ] as const;

@@ -23,6 +23,7 @@ import { isRecordReference } from './record-fields.js';
 import { PreparationGuide, RecordNextStep } from './journey.js';
 import { CalculationSummary } from './financial-fields.js';
 import { FinancialReviewSummary } from './financial-review.js';
+import { PublishedOffers, StateOfferSummary } from './state-offers.js';
 import { SuccessionSummary } from './succession.js';
 import { ClaimSurvivalSummary } from './claim-survival.js';
 import { DeceasedFilingSummary } from './deceased-filing.js';
@@ -532,6 +533,13 @@ export function Workspace({
             </a>
             <a
               href="#workspace"
+              aria-current={view === 'offers' ? 'page' : undefined}
+              onClick={() => navigate('offers')}
+            >
+              Published offers
+            </a>
+            <a
+              href="#workspace"
               aria-current={view === 'activity' ? 'page' : undefined}
               onClick={() => navigate('activity')}
             >
@@ -680,6 +688,12 @@ export function Workspace({
               }}
             />
           )}
+          {view === 'offers' && !selected && !creating && (
+            <PublishedOffers
+              key={session.actor.realm + ':' + session.actor.id + ':' + session.csrf}
+              api={api}
+            />
+          )}
           {view === 'memberships' && !selected && !creating && (
             <MembershipPanel
               key={session.actor.id + ':' + session.actor.realm + ':' + session.csrf}
@@ -817,6 +831,7 @@ export function Workspace({
                   : {})}
               />
               <SuccessionSummary record={selected} />
+              <StateOfferSummary record={selected} />
               <ClaimSurvivalSummary record={selected} onOpen={(id) => void openRecord(id)} />
               <DeceasedFilingSummary
                 record={selected}
@@ -904,6 +919,10 @@ export function Workspace({
                           'compactApproval',
                           'financialBasis',
                           'financialReview',
+                          'stateOrigin',
+                          'stateAuthorityVerification',
+                          'stateOfferBinding',
+                          'publishedStateOffer',
                           'reviewedFiling',
                           'approvedStanding',
                           'openedStanding',
@@ -1135,7 +1154,7 @@ export function Workspace({
                   )}
               </fieldset>
             </div>
-          ) : ['activity', 'account', 'memberships'].includes(view) ? null : (
+          ) : ['activity', 'account', 'memberships', 'offers'].includes(view) ? null : (
             <>
               <div className="workspace-heading">
                 <div>

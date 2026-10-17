@@ -838,6 +838,7 @@ export const CompactPlanSchema = z
         district: z.string().min(1).max(12000),
         financialTerms: StateTermsSchema,
         commercialMenu: CommercialMenuSchema,
+        publication: z.lazy(() => PublishedStateOfferSchema).optional(),
       })
       .strict(),
     match: z
@@ -888,3 +889,107 @@ export const CompactApprovalSchema = z
       a.yes * 2 > a.unitCount,
     'The unchanged compact requires a verified majority of all frozen units',
   );
+
+// Synthetic preparation records do not confer public office or activate an Exchange.
+export const StateOriginSchema = z
+  .object({
+    actorId: IdSchema,
+    institutionId: IdSchema,
+    jurisdiction: z.string().min(1).max(100),
+  })
+  .strict();
+export type StateOrigin = z.infer<typeof StateOriginSchema>;
+export const StateAuthorityVerificationSchema = z
+  .object({
+    schemaVersion: z.literal(1),
+    authorityId: IdSchema,
+    authorityVersion: z.number().int().positive(),
+    origin: StateOriginSchema,
+    verifierId: IdSchema,
+    verifierInstitutionId: IdSchema,
+    verifiedAt: InstantSchema,
+    packetDigest: z.string().regex(/^[a-f0-9]{64}$/),
+    enactmentReference: z.string().min(1).max(12000),
+    appointmentReference: z.string().min(1).max(12000),
+    fiscalReportReference: z.string().min(1).max(12000),
+    supervisionResources: z.string().min(1).max(12000),
+    effectiveFrom: DateSchema,
+    validThrough: DateSchema,
+    rulesPublishedDate: DateSchema,
+    financialTerms: StateTermsSchema,
+  })
+  .strict();
+export type StateAuthorityVerification = z.infer<typeof StateAuthorityVerificationSchema>;
+export const StateOfferBindingSchema = z
+  .object({
+    schemaVersion: z.literal(1),
+    recordId: IdSchema,
+    submittedVersion: z.number().int().positive(),
+    origin: StateOriginSchema,
+    draftDigest: z.string().regex(/^[a-f0-9]{64}$/),
+    authority: StateAuthorityVerificationSchema,
+  })
+  .strict();
+export type StateOfferBinding = z.infer<typeof StateOfferBindingSchema>;
+
+// Only these intentionally disclosed fields may leave the private offer workflow.
+export const PublishedStateOfferSchema = z
+  .object({
+    schemaVersion: z.literal(1),
+    synthetic: z.literal(true),
+    offerId: IdSchema,
+    version: z.number().int().positive(),
+    title: z.string().min(1).max(160),
+    jurisdiction: z.string().min(1).max(100),
+    policyVersion: z.string().min(1).max(100),
+    trade: z.string().min(1).max(12000),
+    district: z.string().min(1).max(12000),
+    readinessSummary: z.string().min(1).max(12000),
+    serviceObligations: z.string().min(1).max(12000),
+    launchRequirements: z.string().min(1).max(12000),
+    regulatoryTerms: z.string().min(1).max(12000),
+    publicProtections: z.string().min(1).max(12000),
+    federalAuthority: z.string().min(1).max(12000),
+    publicFindings: z.string().min(1).max(12000),
+    financialTerms: StateTermsSchema,
+    commercialMenu: CommercialMenuSchema,
+    initialYears: z.literal(30),
+    renewalYears: z.literal(10),
+    renewalLimit: z.literal(1),
+    authority: z
+      .object({
+        id: IdSchema,
+        version: z.number().int().positive(),
+        packetDigest: z.string().regex(/^[a-f0-9]{64}$/),
+        enactmentReference: z.string().min(1).max(12000),
+        appointmentReference: z.string().min(1).max(12000),
+        fiscalReportReference: z.string().min(1).max(12000),
+        supervisionResources: z.string().min(1).max(12000),
+        effectiveFrom: DateSchema,
+        validThrough: DateSchema,
+        rulesPublishedDate: DateSchema,
+      })
+      .strict(),
+    publishedAt: InstantSchema,
+    earliestRankingsClose: DateSchema,
+    earliestRankingsCloseAt: InstantSchema,
+  })
+  .strict();
+export type PublishedStateOffer = z.infer<typeof PublishedStateOfferSchema>;
+export const PublishedStateOfferViewSchema = z
+  .object({
+    publication: PublishedStateOfferSchema,
+    digest: z.string().regex(/^[a-f0-9]{64}$/),
+    status: z.enum(['published', 'withdrawn', 'authority_unavailable']),
+    withdrawnAt: InstantSchema.nullable(),
+  })
+  .strict();
+export type PublishedStateOfferView = z.infer<typeof PublishedStateOfferViewSchema>;
+export const PublishedOffersQuerySchema = z
+  .object({
+    offerId: IdSchema.optional(),
+    after: IdSchema.optional(),
+    limit: z.coerce.number().int().min(1).max(50).default(20),
+  })
+  .strict()
+  .refine((q) => !(q.offerId && q.after), 'Use one offer or a page cursor');
