@@ -87,7 +87,7 @@ for (const flow of flows)
             const url = new URL(address, location.href);
             if (url.pathname + url.search === heldPath) {
               window.fetch = original;
-              return original(input, { ...init, signal: undefined });
+              return original(input, { ...init, signal: null });
             }
             return original(input, init);
           };
