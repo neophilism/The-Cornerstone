@@ -75,3 +75,7 @@ Added actual `pg_dump`/`pg_restore` verification to the isolated PostgreSQL CI j
 ## 2026-10-16 — reviewed synthetic attachment download
 
 Attachment downloads now require explicit disclosure consent, fresh metadata/access verification and bounded byte/digest validation. Cancelled and late responses cannot release a file. Added unit and desktop/mobile denial, substitution and cancellation cases; the existing original-byte download journey now exercises review and consent. See [EVIDENCE_DOWNLOAD.md](EVIDENCE_DOWNLOAD.md). No real evidence provider or legal acceptance is introduced.
+
+## 2026-10-17 — integrated stack and membership browser navigation
+
+The membership recovery browser journey now opens its exact resolution through the authenticated record-reference form. The previous first-page assumption timed out once accumulated suite fixtures moved that resolution beyond the page boundary; recovery, receipt correlation, one-ballot persistence and accessibility assertions remain intact. The attachment-download candidate also incorporates current main, preserving the owner-policy, public-deployment verification and shared registry changes. Required CI acceptance is recorded separately from this implementation note.
