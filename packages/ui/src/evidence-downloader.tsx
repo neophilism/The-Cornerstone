@@ -1,14 +1,17 @@
 'use client';
 import { useEffect, useId, useRef, useState } from 'react';
 import type { EvidenceView } from '@cornerstone/contracts';
-import { reviewEvidenceDownload, verifiedEvidenceBytes } from './evidence-download.js';
+import { reviewEvidenceDownload } from './evidence-download.js';
+import type { EvidenceDownload } from './evidence-download-session.js';
 export function EvidenceDownloader({
   item,
   api,
+  download,
   disabled,
 }: {
   item: EvidenceView;
   api: (path: string, body?: unknown) => Promise<unknown>;
+  download: EvidenceDownload;
   disabled: boolean;
 }) {
   const id = useId(),
@@ -68,24 +71,17 @@ export function EvidenceDownloader({
       const abort = new AbortController();
       controller.current = abort;
       const timeout = setTimeout(() => abort.abort(), 15000);
-      let bytes: Uint8Array<ArrayBuffer>;
+      let downloaded: Awaited<ReturnType<EvidenceDownload>>;
       try {
-        const response = await fetch(
-          '/api/private/evidence/download?id=' + encodeURIComponent(checked.id),
-          {
-            credentials: 'same-origin',
-            cache: 'no-store',
-            redirect: 'error',
-            signal: abort.signal,
-          },
-        );
-        bytes = await verifiedEvidenceBytes(response, checked);
+        downloaded = await download(checked, abort.signal);
       } finally {
         clearTimeout(timeout);
         if (controller.current === abort) controller.current = null;
       }
-      if (generation.current !== current || blocked.current) return;
-      const url = URL.createObjectURL(new Blob([bytes], { type: 'text/plain;charset=utf-8' })),
+      if (generation.current !== current || blocked.current || !downloaded.isCurrent()) return;
+      const url = URL.createObjectURL(
+          new Blob([downloaded.bytes], { type: 'text/plain;charset=utf-8' }),
+        ),
         link = document.createElement('a');
       try {
         link.href = url;
