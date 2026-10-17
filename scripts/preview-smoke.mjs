@@ -135,9 +135,15 @@ export async function verifySource(fetchImpl, source) {
 
 async function page(fetchImpl, path) {
   const response = await request(fetchImpl, path);
+  const scriptPolicy = response.headers
+    .get('content-security-policy')
+    ?.split(';')
+    .map((directive) => directive.trim())
+    .find((directive) => directive.startsWith('script-src '));
   if (
     response.status !== 200 ||
-    !response.headers.get('content-security-policy')?.includes("'strict-dynamic'")
+    !scriptPolicy?.includes("'strict-dynamic'") ||
+    !/'nonce-[A-Za-z0-9+/]{24,}={0,2}'/.test(scriptPolicy)
   )
     throw Error(`The public page or content security policy is unavailable: ${path || '/'}.`);
   return textBody(response, 2 * 1024 * 1024);

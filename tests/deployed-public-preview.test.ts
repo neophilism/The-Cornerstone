@@ -36,7 +36,9 @@ function headers(document = source) {
 
 function html(body: string) {
   return new Response(body, {
-    headers: { 'content-security-policy': "script-src 'nonce-test' 'strict-dynamic'" },
+    headers: {
+      'content-security-policy': "script-src 'nonce-YWJjZGVmZ2hpamtsbW5vcHFy' 'strict-dynamic'",
+    },
   });
 }
 
@@ -234,6 +236,21 @@ describe('public release acceptance', () => {
     await expect(
       verifyPublicPreview({ expectedCommit: commit, manifest, fetchImpl }),
     ).rejects.toThrow('exact checked');
+  });
+
+  it.each([
+    "script-src 'strict-dynamic'",
+    "default-src 'nonce-YWJjZGVmZ2hpamtsbW5vcHFy' 'strict-dynamic'",
+  ])('requires the script-src nonce rather than a CSP substring: %s', async (policy) => {
+    const original = hostedFixture();
+    const fetchImpl = vi.fn(async (url: string, init: RequestInit) =>
+      url === previewOrigin
+        ? new Response('When policy takes', { headers: { 'content-security-policy': policy } })
+        : original(url, init),
+    );
+    await expect(
+      verifyPublicPreview({ expectedCommit: commit, manifest, fetchImpl }),
+    ).rejects.toThrow('content security policy');
   });
 
   it.each([
