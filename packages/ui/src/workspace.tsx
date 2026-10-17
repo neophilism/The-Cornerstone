@@ -4,8 +4,8 @@ import {
   ActivityPageSchema,
   ActivityReadResultSchema,
   draftAccessKinds,
+  IdSchema,
   RecordCapabilitiesSchema,
-  RecordSchema,
   type RecordCapabilities,
   type ActivityNotification,
   type Actor,
@@ -31,6 +31,7 @@ import { WorkflowAction } from './workflow-action.js';
 import { DraftEditor } from './draft-editor.js';
 import { RecordExporter } from './record-exporter.js';
 import { RecordReferenceCopy } from './record-reference-copy.js';
+import { verifiedRecordOpening, verifiedRecordPage } from './record-opening.js';
 import { ReceiptExporter } from './receipt-exporter.js';
 import { RecordCreator } from './record-creator.js';
 import { WorkspaceRequestError } from './draft-review.js';
@@ -74,12 +75,57 @@ export function Workspace({
   const [pagePending, setPagePending] = useState(false);
   const [recordReference, setRecordReference] = useState('');
   const recordGeneration = useRef(0);
+  const sessionGeneration = useRef(0);
+  const openingGeneration = useRef(0);
+  const [recordOpening, setRecordOpening] = useState(false);
   const [capabilities, setCapabilities] = useState<RecordCapabilities[]>([]);
   const permitted = selected
     ? (capabilities.find((c) => c.recordId === selected.id && c.version === selected.version)
         ?.actions ?? [])
     : [];
+  function cancelRecordOpening() {
+    openingGeneration.current++;
+    setRecordOpening(false);
+  }
+  function clearPrivateState() {
+    recordGeneration.current++;
+    activityGeneration.current++;
+    cancelRecordOpening();
+    setRecords([]);
+    setNotifications([]);
+    setActivityCursor(null);
+    setUnreadCount(0);
+    setCapabilities([]);
+    setSelected(null);
+    setExpandedAccess(null);
+    setReceipt(null);
+    setNextCursor(null);
+    setCreating(null);
+    setCreationDefaults({});
+    setEditing(false);
+    setRecordReference('');
+    setRecordSearch('');
+    setError('');
+    setView('home');
+  }
+  function clearSession() {
+    sessionGeneration.current++;
+    setSession(null);
+    clearPrivateState();
+    setPending(false);
+    setPagePending(false);
+    setActivityPending(false);
+    setLoading(false);
+    evidenceBusyChanged(false);
+  }
+  function navigate(next: string) {
+    cancelRecordOpening();
+    setView(next);
+    setSelected(null);
+    setCreating(null);
+  }
   async function api(path: string, body?: unknown) {
+    const requestSession = sessionGeneration.current;
     const response = await fetch(`/api/private/${path}`, {
       method: body === undefined ? 'GET' : 'POST',
       credentials: 'same-origin',
@@ -92,20 +138,7 @@ export function Workspace({
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
     });
     // Expired sessions clear private UI even if a proxy returns a non-JSON error body.
-    if (response.status === 401) {
-      recordGeneration.current++;
-      setSession(null);
-      setRecords([]);
-      setNotifications([]);
-      setActivityCursor(null);
-      setUnreadCount(0);
-      activityGeneration.current++;
-      setCapabilities([]);
-      setSelected(null);
-      setExpandedAccess(null);
-      setReceipt(null);
-      setNextCursor(null);
-    }
+    if (response.status === 401 && requestSession === sessionGeneration.current) clearSession();
     const data = await response.json();
     if (!response.ok) {
       throw new WorkspaceRequestError(
@@ -117,19 +150,35 @@ export function Workspace({
     return data;
   }
   async function refresh() {
-    const generation = ++recordGeneration.current;
+    cancelRecordOpening();
+    setError('');
+    let generation = ++recordGeneration.current;
     activityGeneration.current++;
     try {
       const me = await api('me');
       if (generation !== recordGeneration.current) return [];
-      setSession(me);
-      const list = await api('records?limit=50');
+      // A changed HTTP session must hide its predecessor's data immediately,
+      // even if loading the new actor's records then stalls or fails.
+      if (
+        session &&
+        (session.actor.id !== me.actor.id ||
+          session.actor.realm !== me.actor.realm ||
+          session.csrf !== me.csrf)
+      ) {
+        sessionGeneration.current++;
+        clearPrivateState();
+        generation = recordGeneration.current;
+        setSession(me);
+        setLoading(true);
+      }
+      const list = verifiedRecordPage(await api('records?limit=50'), me.actor);
       if (generation !== recordGeneration.current) return [];
-      setRecords(list.records);
-      setNextCursor(list.nextCursor);
-      setCapabilities(RecordCapabilitiesSchema.array().parse(list.capabilities));
       const inbox = ActivityPageSchema.parse(await api('notifications'));
       if (generation !== recordGeneration.current) return [];
+      setSession(me);
+      setRecords(list.records);
+      setNextCursor(list.nextCursor);
+      setCapabilities(list.capabilities);
       setNotifications(inbox.notifications);
       setActivityCursor(inbox.nextCursor);
       setUnreadCount(inbox.unreadCount);
@@ -139,7 +188,7 @@ export function Workspace({
         setError(e instanceof Error ? e.message : 'Unavailable');
       return [];
     } finally {
-      setLoading(false);
+      if (generation === recordGeneration.current) setLoading(false);
     }
   }
   async function loadOlderActivity() {
@@ -192,7 +241,10 @@ export function Workspace({
     setPagePending(true);
     setError('');
     try {
-      const page = await api('records?limit=50&cursor=' + encodeURIComponent(nextCursor));
+      const page = verifiedRecordPage(
+        await api('records?limit=50&cursor=' + encodeURIComponent(nextCursor)),
+        session!.actor,
+      );
       if (generation !== recordGeneration.current) return;
       setRecords((previous) => [
         ...new Map([...previous, ...page.records].map((r) => [r.id, r])).values(),
@@ -210,15 +262,33 @@ export function Workspace({
     }
   }
   async function openRecord(id: string) {
-    if (pagePending || pending) return;
+    if (pagePending || pending || !session) return;
+    const reference = IdSchema.safeParse(id.trim());
+    if (!reference.success) {
+      cancelRecordOpening();
+      setError('Enter a valid record reference.');
+      return;
+    }
     const generation = recordGeneration.current;
-    setPagePending(true);
+    const request = ++openingGeneration.current;
+    const requestSession = sessionGeneration.current;
+    const actor = session.actor;
+    const current = () =>
+      generation === recordGeneration.current &&
+      request === openingGeneration.current &&
+      requestSession === sessionGeneration.current;
+    setRecordOpening(true);
+    setSelected(null);
     setError('');
     try {
-      const result = await api('records?recordId=' + encodeURIComponent(id.trim()));
-      if (generation !== recordGeneration.current) return;
-      const record = result.records[0] as CaseRecord;
-      const actions = RecordCapabilitiesSchema.array().parse(result.capabilities);
+      const result = await api('records?recordId=' + encodeURIComponent(reference.data));
+      if (!current()) return;
+      const { record, capabilities: actions } = verifiedRecordOpening(
+        result,
+        reference.data,
+        actor,
+        records.find((record) => record.id === reference.data)?.version,
+      );
       setRecords((previous) => [...previous.filter((r) => r.id !== record.id), record]);
       setCapabilities((previous) => [
         ...previous.filter((c) => c.recordId !== record.id),
@@ -229,20 +299,21 @@ export function Workspace({
       setEditing(false);
       setView('records');
     } catch (e) {
-      if (generation === recordGeneration.current) {
+      if (current()) {
         setSelected(null);
-        setRecords((previous) => previous.filter((r) => r.id !== id.trim()));
-        setCapabilities((previous) => previous.filter((c) => c.recordId !== id.trim()));
+        setRecords((previous) => previous.filter((r) => r.id !== reference.data));
+        setCapabilities((previous) => previous.filter((c) => c.recordId !== reference.data));
         setError(e instanceof Error ? e.message : 'The record could not be opened.');
       }
     } finally {
-      setPagePending(false);
+      if (current()) setRecordOpening(false);
     }
   }
   async function confirmedAction(result: { record: CaseRecord; receipt: Receipt }) {
     // A recovered receipt describes the accepted historical version. Re-read
     // current permissions/state before presenting another workflow action.
     setReceipt(result.receipt);
+    cancelRecordOpening();
     setSelected(null);
     setEditing(false);
     setPending(true);
@@ -250,8 +321,12 @@ export function Workspace({
     try {
       const current = await api('records?recordId=' + encodeURIComponent(result.record.id));
       if (generation !== recordGeneration.current) return;
-      const record = RecordSchema.parse(current.records?.[0]);
-      const actions = RecordCapabilitiesSchema.array().parse(current.capabilities);
+      const { record, capabilities: actions } = verifiedRecordOpening(
+        current,
+        result.record.id,
+        session!.actor,
+        result.record.version,
+      );
       if (
         record.id !== result.record.id ||
         record.realm !== result.record.realm ||
@@ -279,9 +354,15 @@ export function Workspace({
       .then((s) => setLocal(s.localAuth === true))
       .catch(() => {});
     void refresh();
+    return () => {
+      sessionGeneration.current++;
+      recordGeneration.current++;
+      openingGeneration.current++;
+    };
   }, []);
   async function signIn(persona: string) {
-    recordGeneration.current++;
+    const generation = ++sessionGeneration.current;
+    clearPrivateState();
     setError('');
     setPending(true);
     try {
@@ -291,22 +372,14 @@ export function Workspace({
         body: JSON.stringify({ persona }),
       });
       const r = await response.json();
+      if (generation !== sessionGeneration.current) return;
       if (!response.ok) throw Error(r.message);
-      setSelected(null);
-      setExpandedAccess(null);
-      setCreating(null);
-      setReceipt(null);
-      setEditing(false);
-      setNotifications([]);
-      setActivityCursor(null);
-      setUnreadCount(0);
-      activityGeneration.current++;
-      setCapabilities([]);
       await refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Sign-in unavailable.');
+      if (generation === sessionGeneration.current)
+        setError(e instanceof Error ? e.message : 'Sign-in unavailable.');
     } finally {
-      setPending(false);
+      if (generation === sessionGeneration.current) setPending(false);
     }
   }
   if (loading)
@@ -424,11 +497,7 @@ export function Workspace({
             <a
               href="#workspace"
               aria-current={view === 'home' ? 'page' : undefined}
-              onClick={() => {
-                setView('home');
-                setSelected(null);
-                setCreating(null);
-              }}
+              onClick={() => navigate('home')}
             >
               Overview
             </a>
@@ -437,33 +506,18 @@ export function Workspace({
                 key={g.label}
                 href="#workspace"
                 aria-current={view === g.label ? 'page' : undefined}
-                onClick={() => {
-                  setView(g.label);
-                  setSelected(null);
-                  setCreating(null);
-                }}
+                onClick={() => navigate(g.label)}
               >
                 {g.label}
               </a>
             ))}
-            <a
-              href="#workspace"
-              onClick={() => {
-                setView('records');
-                setSelected(null);
-                setCreating(null);
-              }}
-            >
+            <a href="#workspace" onClick={() => navigate('records')}>
               My records
             </a>
             <a
               href="#workspace"
               aria-current={view === 'activity' ? 'page' : undefined}
-              onClick={() => {
-                setView('activity');
-                setSelected(null);
-                setCreating(null);
-              }}
+              onClick={() => navigate('activity')}
             >
               Activity
               {unreadCount ? ` (${unreadCount} unread)` : ''}
@@ -471,22 +525,14 @@ export function Workspace({
             <a
               href="#workspace"
               aria-current={view === 'memberships' ? 'page' : undefined}
-              onClick={() => {
-                setView('memberships');
-                setSelected(null);
-                setCreating(null);
-              }}
+              onClick={() => navigate('memberships')}
             >
               Membership & votes
             </a>
             <a
               href="#workspace"
               aria-current={view === 'account' ? 'page' : undefined}
-              onClick={() => {
-                setView('account');
-                setSelected(null);
-                setCreating(null);
-              }}
+              onClick={() => navigate('account')}
             >
               Account & access
             </a>
@@ -500,27 +546,14 @@ export function Workspace({
             <button
               className="quiet-button"
               onClick={async () => {
+                const generation = ++sessionGeneration.current;
                 recordGeneration.current++;
+                cancelRecordOpening();
                 try {
                   await api('auth/logout', {});
-                  recordGeneration.current++;
-                  setSession(null);
-                  setRecords([]);
-                  setNotifications([]);
-                  setActivityCursor(null);
-                  setUnreadCount(0);
-                  activityGeneration.current++;
-                  setCapabilities([]);
-                  setView('home');
-                  setSelected(null);
-                  setExpandedAccess(null);
-                  setCreating(null);
-                  setReceipt(null);
-                  setNextCursor(null);
-                  setRecordReference('');
-                  setRecordSearch('');
+                  if (generation === sessionGeneration.current) clearSession();
                 } catch (e) {
-                  setError(String(e));
+                  if (generation === sessionGeneration.current) setError(String(e));
                 }
               }}
             >
@@ -532,6 +565,14 @@ export function Workspace({
               {error}
             </p>
           ) : null}
+          {recordOpening && (
+            <div className="info-card record-opening">
+              <p role="status">Checking current record access…</p>
+              <button className="quiet-button" onClick={cancelRecordOpening}>
+                Cancel record opening
+              </button>
+            </div>
+          )}
           {view === 'activity' && !selected && !creating && (
             <section className="activity-inbox">
               <p className="eyebrow">Your workspace</p>
@@ -650,7 +691,13 @@ export function Workspace({
                   <h1>{workflow(creating).label}</h1>
                   <p>{workflow(creating).description}</p>
                 </div>
-                <button className="quiet-button" onClick={() => setCreating(null)}>
+                <button
+                  className="quiet-button"
+                  onClick={() => {
+                    cancelRecordOpening();
+                    setCreating(null);
+                  }}
+                >
                   Cancel
                 </button>
               </div>
@@ -683,7 +730,13 @@ export function Workspace({
                   <h1>{selected.title}</h1>
                   <span className="badge">{selected.state.replaceAll('_', ' ')}</span>
                 </div>
-                <button className="quiet-button" onClick={() => setSelected(null)}>
+                <button
+                  className="quiet-button"
+                  onClick={() => {
+                    cancelRecordOpening();
+                    setSelected(null);
+                  }}
+                >
                   Back to records
                 </button>
               </div>
@@ -698,6 +751,7 @@ export function Workspace({
                 session.actor.roles.includes('member')
                   ? {
                       onVote: () => {
+                        cancelRecordOpening();
                         setCreationDefaults({
                           title: ('Compact vote: ' + selected.title).slice(0, 160),
                           associationId: selected.data['associationId'],
@@ -719,6 +773,7 @@ export function Workspace({
                 {...(!editing && selected.kind === 'opportunity' && permitted.includes('adopt_plan')
                   ? {
                       onVote: () => {
+                        cancelRecordOpening();
                         setCreationDefaults({
                           title: ('Plan vote: ' + selected.title).slice(0, 160),
                           associationId: selected.data['associationId'],
@@ -746,7 +801,10 @@ export function Workspace({
                   <button
                     className="button button-secondary"
                     disabled={pending || evidenceBusy}
-                    onClick={() => setEditing(!editing)}
+                    onClick={() => {
+                      cancelRecordOpening();
+                      setEditing(!editing);
+                    }}
                   >
                     {editing ? 'Cancel editing' : 'Edit draft'}
                   </button>
@@ -1161,14 +1219,20 @@ export function Workspace({
                           id="record-reference"
                           required
                           value={recordReference}
-                          onChange={(e) => setRecordReference(e.target.value)}
+                          onChange={(e) => {
+                            cancelRecordOpening();
+                            setRecordReference(e.target.value);
+                          }}
                         />
                         <span className="hint">
                           Use the record ID from a receipt or invitation. A reference does not grant
                           access.
                         </span>
                       </div>
-                      <button className="button button-secondary" disabled={pagePending || pending}>
+                      <button
+                        className="button button-secondary"
+                        disabled={pagePending || pending || recordOpening}
+                      >
                         Open reference
                       </button>
                     </form>
@@ -1185,6 +1249,7 @@ export function Workspace({
                       <button
                         className="button button-secondary"
                         onClick={() => {
+                          cancelRecordOpening();
                           setCreationDefaults({});
                           setCreating(w.kind);
                           setError('');

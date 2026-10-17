@@ -57,3 +57,5 @@ New deceased-worker preparation uses a personal standing packet, assigned review
 Synthetic attachment downloads require disclosure consent, fresh access and exact byte verification. See [attachment download review](docs/EVIDENCE_DOWNLOAD.md).
 
 Draft delegation preserves exact uncertain grant/revocation requests and refreshes current access after receipt recovery. See [session and access controls](docs/SESSION_AND_ACCESS.md).
+
+Direct record opening verifies the requested record, authenticated workspace and current permission version. Navigation and session changes cancel earlier reads; see [record opening](docs/RECORD_OPENING.md).
