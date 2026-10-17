@@ -1,49 +1,53 @@
 {
   "updated": "2026-10-17",
-  "observedAt": "2026-10-17T12:37:56Z",
-  "scope": "public proposal and synthetic preparation; full program unfinished; no deployment inferred",
-  "lastVerifiedCommit": "3fa24879d12066b5fb976a84bd1112a12a64e918",
-  "lastVerifiedTree": "717c123ffcf954951c623b5f733deecdff945421",
-  "testedHead": "1949c920a6ac2f3b8ba6fb5dda15b35794c52d37",
-  "lastVerifiedRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39032086554",
-  "sourceEvidenceRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39032086521",
-  "releasePullRequest": "https://github.com/neophilism/The-Cornerstone/pull/44",
+  "observedAt": "2026-10-17T14:40:48Z",
+  "scope": "Public proposal and synthetic preparation; bounded source acceptance, measured public deployment, full program unfinished.",
+  "lastVerifiedCommit": "43c9c249b7489124cc788fac2c649e5a30a09ada",
+  "lastVerifiedTree": "f9450a2462287fe079b9906cb342c868eabbf036",
+  "testedHead": "d4b67cd8bdde9c73bd5b1296a6130604cd2694e3",
+  "lastVerifiedRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39040084831",
+  "sourceEvidenceRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39040084681",
+  "releasePullRequest": "https://github.com/neophilism/The-Cornerstone/pull/60",
   "observedMergedPullRequests": [
     1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 23, 24, 25, 26, 27,
-    28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44
+    28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51,
+    52, 53, 54, 55, 56, 57, 58, 59, 60
   ],
-  "openPullRequestsAtCheckpoint": [22, 45],
+  "openPullRequestsAtCheckpoint": [22],
   "livePublicUrl": "https://cornerstone-policy-preview.onrender.com",
-  "deploymentVerifiedAtCheckpoint": false,
+  "deploymentVerifiedAtCheckpoint": true,
   "protectedIntake": false,
   "sourcePublicationApproved": true,
   "internalPlanPublicationApproved": false,
   "securityAssessment": "security/e2eesa-status.json",
   "pending": [
-    "final-head acceptance of PR 45 access-form recovery",
-    "new deceased-worker filings and complete program journeys",
-    "remaining session/reference disclosure controls",
-    "protected identity/recipient/custody integrations and provider compatibility",
-    "delivery, settlement and financial reconciliation",
-    "CircleCI PR 22 remains separate and unverified; existing GitHub checks remain active",
-    "independent human security review as deferred final follow-up"
+    "Contested estate/standing and remaining claim lifecycle; new deceased-worker filing is implemented.",
+    "State objections/supervision and institutional notice; bounded synthetic publication is implemented.",
+    "Authenticated sealed-choice custody, constrained release, witnessed draw and end-to-end replay.",
+    "Compact delivery/renewal, source-account reconciliation and final settlement/Treasury adapters.",
+    "Protected OIDC/recipient/device/delegate authorization and key/account recovery.",
+    "Real evidence/scanner/custody/retention and legal notice/filing/signature adapters.",
+    "Compatible private-provider migration and recovery, reviewed translations and complete program journeys.",
+    "CircleCI PR 22 remains a separate unverified proposal; working GitHub checks stay active.",
+    "Independent human security review remains deferred follow-up, without blocking owner-authorized engineering."
   ],
-  "repositoryMigrations": 15,
+  "repositoryMigrations": 18,
   "trackingBaseline": {
     "units": 25,
     "originalVerifiedMappings": 11,
     "changed": false,
     "wholeProgramCompletionPercent": null,
     "activeRegistry": "registry/prs.json",
-    "observedMergedPrCount": 43
+    "observedMergedPrCount": 59
   },
   "verificationCounts": {
-    "unitTests": 356,
+    "unitTests": 522,
+    "unitFiles": 42,
     "publicBrowserCases": 36,
-    "privateBrowserCases": 114,
-    "privateDesktopCases": 57,
-    "privateMobileCases": 57,
-    "scope": "PR 44 tested head; application/source workflows succeeded; builds, actual PostgreSQL integrations, logical restore, proxy, worker and Docker/bootstrap/API checks passed; counts are not additive across PRs"
+    "privateBrowserCases": 178,
+    "privateDesktopCases": 89,
+    "privateMobileCases": 89,
+    "scope": "Actual accepted PR 60 final-head application checks. Counts are not additive across PRs; database, restore, build, proxy, worker and actual Docker/bootstrap/API acceptance are separate checks."
   },
   "ciDatabaseImage": {
     "image": "postgis/postgis:18-3.6@sha256:60f6ad1d21ea86a67d47780b9a0d1e1d200500f62b19293fa834d0dea80b8677",
@@ -52,15 +56,35 @@
     "scope": "exact test image, not a production database or security certification"
   },
   "publicDeployment": {
-    "commit": "0da2d023b0421802f1b0464e9cc9908a47265f77",
-    "providerObservedAt": "2026-10-17T12:28:00Z",
+    "commit": "43c9c249b7489124cc788fac2c649e5a30a09ada",
+    "localHttpVerifiedAt": "2026-10-17T14:37:06.535Z",
+    "localHttpResult": "PASS",
+    "localEvidenceScope": "Working verifier JSON; durable workflow artifact is recorded separately.",
+    "lastHttpVerificationRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39041385269",
+    "pages": 3,
+    "pagePaths": ["/", "/policy", "/events/C-001"],
+    "originalFiles": 7,
+    "originalBytes": 4746977,
+    "protectedIntake": false,
+    "scope": "Exact public revision bracket, proposal mode, closed sensitive intake, original SHA-256 bytes, content/security/cache headers, all seven conditional 304 responses and unknown-document 404. No private activation.",
     "providerStatus": "live",
-    "providerObservationBasis": "authorized Render API observation; no new HTTP measurement at this checkpoint",
-    "lastHttpVerifiedAt": "2026-10-16T16:36:14Z",
-    "lastHttpVerificationRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/38933016935",
-    "lastHttpVerifiedCommit": "0da2d023b0421802f1b0464e9cc9908a47265f77",
-    "acceptedMainObservedDeployed": false,
-    "scope": "public proposal only; accepted main and current provider revision are separate"
+    "providerFinishedAt": "2026-10-17T14:36:57.329264Z",
+    "providerObservedAt": "2026-10-17T14:37:15Z",
+    "providerCreatedAt": "2026-10-17T14:35:14.310423Z",
+    "providerObservationBasis": "Authorized Render API observation of exact accepted revision on existing public service; automatic new_commit trigger, no manual deployment or configuration change.",
+    "lastHttpVerifiedAt": "2026-10-17T14:37:05.302Z",
+    "lastHttpVerificationJob": 117421422838,
+    "lastHttpVerifiedCommit": "43c9c249b7489124cc788fac2c649e5a30a09ada",
+    "httpResult": "PASS",
+    "artifact": {
+      "id": 12103868696,
+      "name": "deployed-public-preview-evidence",
+      "sizeBytes": 920,
+      "sha256": "e0f8f23ec39080fd9c91c44338336b5407726c268e731699cc83183cdf39eca7",
+      "downloadVerified": true,
+      "zipCrcVerified": true
+    },
+    "acceptedMainObservedDeployed": true
   },
   "reviewPolicy": {
     "humanSecurityReviewRequiredBeforeDevelopment": false,
@@ -121,26 +145,349 @@
       "checks": "success",
       "testedTree": "717c123ffcf954951c623b5f733deecdff945421",
       "mergeTreeMatchesTestedTree": true
-    }
-  ],
-  "candidates": [
+    },
     {
       "pullRequest": 45,
-      "head": "fbd639b8518bbf01dd5e4931ca17a7604851faef",
-      "status": "implemented; repaired final-head CI pending",
+      "summary": "Recover exact committed access changes without a second grant or revoke.",
+      "testedHead": "fbd639b8518bbf01dd5e4931ca17a7604851faef",
+      "testedTree": "717d5e22b663e971158a6925c6b49956f0a50804",
+      "mergeCommit": "227fde99642f312e07a052f779c8158953fb406b",
+      "mergedAt": "2026-10-17T12:55:03Z",
       "applicationRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39033272230",
       "sourceEvidenceRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39033272265",
-      "accepted": false
+      "checks": "success",
+      "mergeTreeMatchesTestedTree": true
+    },
+    {
+      "pullRequest": 46,
+      "summary": "Record accepted source, owner review policy and a scoped continuation queue.",
+      "testedHead": "698c7383c8f2a64dca488524d6404ba2c8774d18",
+      "testedTree": "b0680c2edfe8869b33d5eceeaf26adf6e50b7679",
+      "mergeCommit": "056340984c63c7b6bd6a16c579230539784f2744",
+      "mergedAt": "2026-10-17T13:00:05Z",
+      "applicationRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39033840124",
+      "sourceEvidenceRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39033840107",
+      "checks": "success",
+      "mergeTreeMatchesTestedTree": true
+    },
+    {
+      "pullRequest": 47,
+      "summary": "Verify the exact public revision, all original source bytes and HTTP behavior.",
+      "testedHead": "bd4df456abfc205c315514d57422f53f09158e17",
+      "testedTree": "623dbbf6b993ecf04512973ace9a19f4db27d5aa",
+      "mergeCommit": "8ccd48fb21fd0aecc947e3591b5bab46640ab398",
+      "mergedAt": "2026-10-17T13:08:12Z",
+      "applicationRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39034442775",
+      "sourceEvidenceRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39034442786",
+      "checks": "success",
+      "mergeTreeMatchesTestedTree": true
+    },
+    {
+      "pullRequest": 48,
+      "summary": "Create a reviewed deceased-worker filing with immutable original-worker identity and one-claim concurrency.",
+      "testedHead": "67fc98b793a5bc24b0c721c1ee6951e56a352842",
+      "testedTree": "83f851ca77a27052a44f6ad158b7dbebc5784019",
+      "mergeCommit": "6d5da81a752b516f92ce617d99e91db9647484d5",
+      "mergedAt": "2026-10-17T13:14:39Z",
+      "applicationRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39034570532",
+      "sourceEvidenceRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39034570539",
+      "checks": "success",
+      "mergeTreeMatchesTestedTree": true
+    },
+    {
+      "pullRequest": 49,
+      "summary": "Route an independent financial appeal, freeze hearing evidence and recover an exact decision.",
+      "testedHead": "faad450ace4dcf89771d4915e921f7601ee42e85",
+      "testedTree": "51850d14879b0a6139e609806b426ad1824d230a",
+      "mergeCommit": "1ac384f20b7a18f9839831054ccd3564bca7ddb8",
+      "mergedAt": "2026-10-17T13:24:43Z",
+      "applicationRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39035221682",
+      "sourceEvidenceRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39035221642",
+      "checks": "success",
+      "mergeTreeMatchesTestedTree": true
+    },
+    {
+      "pullRequest": 50,
+      "summary": "Bind private record opening and refresh to the authenticated actor, realm, capabilities and session.",
+      "testedHead": "1270cd0ffd647338ef8343d6c83edb8450208bed",
+      "testedTree": "61a2a02ebab1156a07808a647f000e43f3620d83",
+      "mergeCommit": "9389a593cb1620a3d26ed79ae292a81cd9ba5d60",
+      "mergedAt": "2026-10-17T13:31:08Z",
+      "applicationRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39035272316",
+      "sourceEvidenceRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39035272283",
+      "checks": "success",
+      "mergeTreeMatchesTestedTree": true
+    },
+    {
+      "pullRequest": 51,
+      "summary": "Clear current-session binary-download expiry and reject late responses before releasing verified bytes.",
+      "testedHead": "a9a599731f26ac4cf323bd32f16064fa81018006",
+      "testedTree": "eba1e3f4f110a0fe094b702a93f6637b8ef08a47",
+      "mergeCommit": "e655c84819e75ccb750a388de38295e0b2f38673",
+      "mergedAt": "2026-10-17T13:34:51Z",
+      "applicationRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39035584423",
+      "sourceEvidenceRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39035584381",
+      "checks": "success",
+      "mergeTreeMatchesTestedTree": true
+    },
+    {
+      "pullRequest": 52,
+      "summary": "Revalidate membership, evidence and record references at their final display or clipboard disclosure.",
+      "testedHead": "758b07fcc28ce1290feff92da9c4e1bf75435469",
+      "testedTree": "1b6e80948840c828ccd5b5b58f2c9f76f75db3e0",
+      "mergeCommit": "db73fcef16985581d583b9d80474e470df5a211e",
+      "mergedAt": "2026-10-17T13:42:36Z",
+      "applicationRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39036141710",
+      "sourceEvidenceRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39036141709",
+      "checks": "success",
+      "mergeTreeMatchesTestedTree": true
+    },
+    {
+      "pullRequest": 53,
+      "summary": "Present filing capacity and current holder clearly while preserving stored and exported records.",
+      "testedHead": "d84bd8076120514ba08f2935bfacfae385ebe1b3",
+      "testedTree": "eb811e8cb73235f37d6bf4a63a76716e5f668878",
+      "mergeCommit": "5cd568fbc275bab0ad72339478113a38773ec1bb",
+      "mergedAt": "2026-10-17T13:49:31Z",
+      "applicationRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39036484041",
+      "sourceEvidenceRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39036484028",
+      "checks": "success",
+      "mergeTreeMatchesTestedTree": true
+    },
+    {
+      "pullRequest": 57,
+      "summary": "Run desktop and mobile browser projects on isolated databases while retaining every database suite and restore.",
+      "testedHead": "34cd75e69ed1e834fea2c22914e081c492d4d159",
+      "testedTree": "96508d0d371325b85a876358e2d7d8e00e47bf01",
+      "mergeCommit": "486c08bdb5ad3323354e959162ef2a04bc602a50",
+      "mergedAt": "2026-10-17T14:17:50Z",
+      "applicationRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39037967319",
+      "sourceEvidenceRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39037967322",
+      "checks": "success",
+      "mergeTreeMatchesTestedTree": true
+    },
+    {
+      "pullRequest": 54,
+      "summary": "Recover a fixed set of session revocations with immutable events, current-caller checks and atomic batches.",
+      "testedHead": "f5d040a085586b6011e4a82d0a843ea8a8484ad5",
+      "testedTree": "14298deec67b6305b7f88c988901f1bfd968b2a3",
+      "mergeCommit": "9c9e47302656dc85480a5519a97a82164a958983",
+      "mergedAt": "2026-10-17T14:26:44Z",
+      "applicationRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39038125236",
+      "sourceEvidenceRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39038125253",
+      "checks": "success",
+      "mergeTreeMatchesTestedTree": true
+    },
+    {
+      "pullRequest": 55,
+      "summary": "Publish inspectable synthetic state offers bound to independent current authority, a Rate Act and immutable terms.",
+      "testedHead": "9d3f7567dd122d0c7d3483d3250e4fa6cb18b8fc",
+      "testedTree": "66336ed09705a74fcdfcbad2458698ac85d639bd",
+      "mergeCommit": "30c491247dae11ed975a4bba3cea401bcfd6d474",
+      "mergedAt": "2026-10-17T14:27:57Z",
+      "applicationRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39038302605",
+      "sourceEvidenceRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39038302631",
+      "checks": "success",
+      "mergeTreeMatchesTestedTree": true
+    },
+    {
+      "pullRequest": 56,
+      "summary": "Keep record files, print previews and receipt output bound to the current session through final disclosure.",
+      "testedHead": "4898d0e3a03c8f7969372be7d8db42c8b1ca0277",
+      "testedTree": "9f5ac0677c176632a9daa7ba6f3bc7cf75321b8a",
+      "mergeCommit": "d1b13fbdeb36f61b68efc1d95eefbf59ada9aec1",
+      "mergedAt": "2026-10-17T14:32:59Z",
+      "applicationRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39038889312",
+      "sourceEvidenceRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39038889316",
+      "checks": "success",
+      "mergeTreeMatchesTestedTree": true
+    },
+    {
+      "pullRequest": 58,
+      "summary": "Validate failed-match continuation against frozen rankings, eligibility, active allocations and cumulative history.",
+      "testedHead": "0cecbe1e14e482ab67e2864f81b6e4f4d6bcbca2",
+      "testedTree": "f8730230b1c927d3d3615175762b161c5ea54431",
+      "mergeCommit": "6f6f307ed4c4f17312546980aab98771a50a9024",
+      "mergedAt": "2026-10-17T14:33:37Z",
+      "applicationRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39039018145",
+      "sourceEvidenceRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39039018231",
+      "checks": "success",
+      "mergeTreeMatchesTestedTree": true
+    },
+    {
+      "pullRequest": 59,
+      "summary": "Recheck the current session and record before a personal calendar file, including close/reopen cancellation.",
+      "testedHead": "a4089284bb96dbaeeae011a0c34d2b6635796328",
+      "testedTree": "6bf4fbe16e7ce28169c99f16f96cedb5a43a552f",
+      "mergeCommit": "ed236785d2956d85a06c58660d856dfb2c6fa5df",
+      "mergedAt": "2026-10-17T14:34:08Z",
+      "applicationRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39039543172",
+      "sourceEvidenceRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39039543166",
+      "checks": "success",
+      "mergeTreeMatchesTestedTree": true
+    },
+    {
+      "pullRequest": 60,
+      "summary": "Keep canceled obsolete browser aggregates cancellable while preserving exact-success acceptance.",
+      "testedHead": "d4b67cd8bdde9c73bd5b1296a6130604cd2694e3",
+      "testedTree": "f9450a2462287fe079b9906cb342c868eabbf036",
+      "mergeCommit": "43c9c249b7489124cc788fac2c649e5a30a09ada",
+      "mergedAt": "2026-10-17T14:34:44Z",
+      "applicationRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39040084831",
+      "sourceEvidenceRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39040084681",
+      "checks": "success",
+      "mergeTreeMatchesTestedTree": true
     }
   ],
+  "candidates": [],
   "restoreRehearsal": {
-    "applicationRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39032086554",
-    "job": 117394445723,
-    "backupMilliseconds": 1084,
-    "restoreMilliseconds": 1139,
-    "verificationMilliseconds": 136,
+    "pullRequest": 60,
+    "applicationRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39040084831",
+    "job": 117417592933,
+    "backupMilliseconds": 997,
+    "restoreMilliseconds": 1214,
+    "verificationMilliseconds": 119,
     "checkedTables": 6,
-    "scope": "disposable synthetic same-cluster PostgreSQL; no provider disaster-recovery RPO/RTO claim"
+    "scope": "Disposable synthetic same-cluster PostgreSQL; exact ciphertext/history/receipt/audit/outbox bytes, schema, role/RLS and decryption denial checks. No provider disaster-recovery RPO/RTO claim."
   },
-  "continuation": "docs/CONTINUATION.md"
+  "continuation": "docs/CONTINUATION.md",
+  "deploymentVerificationScope": "Exact publicDeployment.commit; accepted-main deployment is recorded separately by acceptedMainObservedDeployed.",
+  "implementedSourceBase": {
+    "pullRequest": 60,
+    "head": "d4b67cd8bdde9c73bd5b1296a6130604cd2694e3",
+    "tree": "f9450a2462287fe079b9906cb342c868eabbf036",
+    "repositoryMigrations": 18,
+    "acceptance": "accepted"
+  },
+  "publicDeploymentHistory": [
+    {
+      "commit": "0da2d023b0421802f1b0464e9cc9908a47265f77",
+      "providerObservedAt": "2026-10-17T12:28:00Z",
+      "providerStatus": "live",
+      "providerObservationBasis": "authorized Render API observation; no new HTTP measurement at this checkpoint",
+      "lastHttpVerifiedAt": "2026-10-16T16:36:14Z",
+      "lastHttpVerificationRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/38933016935",
+      "lastHttpVerifiedCommit": "0da2d023b0421802f1b0464e9cc9908a47265f77",
+      "acceptedMainObservedDeployed": false,
+      "scope": "public proposal only; accepted main and current provider revision are separate"
+    },
+    {
+      "commit": "e655c84819e75ccb750a388de38295e0b2f38673",
+      "providerStatus": "live",
+      "providerFinishedAt": "2026-10-17T13:37:08.531625Z",
+      "providerObservationBasis": "Authorized Render API observation; existing public service.",
+      "localHttpVerifiedAt": "2026-10-17T13:37:17.815Z",
+      "localEvidenceScope": "Working verifier JSON; durable workflow artifact is recorded separately.",
+      "lastHttpVerifiedAt": "2026-10-17T13:40:48.101Z",
+      "lastHttpVerificationRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39037185891",
+      "lastHttpVerificationJob": 117409284323,
+      "lastHttpVerifiedCommit": "e655c84819e75ccb750a388de38295e0b2f38673",
+      "httpResult": "PASS",
+      "pages": 3,
+      "originalFiles": 7,
+      "originalBytes": 4746977,
+      "protectedIntake": false,
+      "artifact": {
+        "id": 12102827033,
+        "name": "deployed-public-preview-evidence",
+        "sizeBytes": 919,
+        "sha256": "62e5f85df76ad19a1a9bf89214ddcfe9976e4813406c6de55c98e77147f6ea42",
+        "expiresAt": "2026-10-31T13:40:48Z"
+      },
+      "scope": "Public proposal only; exact health SHA bracket, pages, original byte hashes, content/security/cache headers, conditional 304 and unknown-source 404. No hosted private activation."
+    }
+  ],
+  "publicServiceConfiguration": {
+    "observedAt": "2026-10-17T14:28:28Z",
+    "publicUrl": "https://cornerstone-policy-preview.onrender.com",
+    "branch": "cornerstone/application",
+    "autoDeploy": "yes",
+    "autoDeployTrigger": "commit",
+    "healthCheckPath": "",
+    "healthCheckTransport": "tcp",
+    "serviceType": "web_service",
+    "runtime": "node",
+    "instances": 1,
+    "runtimePlan": "free",
+    "region": "ohio",
+    "suspended": false,
+    "providerUpdatedAt": "2026-10-17T13:37:08.775432Z",
+    "desiredBlueprint": {
+      "branch": "main",
+      "autoDeployTrigger": "checksPass",
+      "healthCheckPath": "/api/healthz"
+    },
+    "configurationChanged": false,
+    "scope": "Read-only current service configuration; separate from deployed SHA and actual HTTP acceptance.",
+    "sources": ["https://render.com/docs/health-checks", "https://render.com/docs/deploys"]
+  },
+  "providerCompatibility": {
+    "observedAtRange": "2026-10-17T13:41:30Z/2026-10-17T13:45:50Z",
+    "operation": "read-only schema/role/provider metadata inspection; no private case reads or provider changes",
+    "production": "No public application tables, migration ledger or Cornerstone roles.",
+    "development": "Exact applied prefix 001–010; checksum plan validation passed.",
+    "claimSurvivalDevelopmentChild": "Exact applied prefix 001–015; checksum plan validation passed.",
+    "exactReadiness": "At the inspection, both existing development branches failed the full 017 and 018 inventories; no hosted private readiness was established.",
+    "engine": "PostgreSQL 18.6 / PostGIS 3.6.4",
+    "runtimeRole": "LOGIN, no admin/BYPASSRLS/replication flags, memberships or owned relations.",
+    "workerRole": "NOLOGIN, no admin/BYPASSRLS/replication flags, memberships, owned relations or private-table SELECT.",
+    "firstProposedTarget": "Existing claim-survival child 015 to accepted source inventory 018, after recovery and fresh role/readiness prerequisites.",
+    "recoveryStatus": "open prerequisite",
+    "recoveryObservation": "Six-hour history setting and no listed snapshots do not prove child-branch recovery. Current Neon instant restore documentation is root-branch only.",
+    "recoveryPrerequisite": "Secured logical backup, approved compatible PostgreSQL 18/PostGIS restore destination and field-key continuity, or explicitly approved supported snapshot recovery.",
+    "migrationMethod": "Separate direct owner TLS connection; checked db:check/db:migrate runner, complete prefix checksums, session advisory lock and per-file SQL/ledger transaction.",
+    "inventoryDigests": {
+      "017": "e7be49952eebc5b40ea5163ea66cb8dc9726db0819ee17fba7a9694249293589",
+      "018": "2529092f177f5736e94e4702f1e1f0a7f3eb5b3210b2468737a3c884392ecb33"
+    },
+    "sources": [
+      "https://neon.com/docs/postgres/backup-restore/branch-restore",
+      "https://neon.com/docs/connect/connection-pooling"
+    ]
+  },
+  "historicalCheckpoints": [
+    {
+      "observedAt": "2026-10-17T12:37:56Z",
+      "lastVerifiedCommit": "3fa24879d12066b5fb976a84bd1112a12a64e918",
+      "publicDeployment": {
+        "commit": "0da2d023b0421802f1b0464e9cc9908a47265f77",
+        "providerObservedAt": "2026-10-17T12:28:00Z",
+        "providerStatus": "live",
+        "providerObservationBasis": "authorized Render API observation; no new HTTP measurement at this checkpoint",
+        "lastHttpVerifiedAt": "2026-10-16T16:36:14Z",
+        "lastHttpVerificationRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/38933016935",
+        "lastHttpVerifiedCommit": "0da2d023b0421802f1b0464e9cc9908a47265f77",
+        "acceptedMainObservedDeployed": false,
+        "scope": "public proposal only; accepted main and current provider revision are separate"
+      },
+      "source": "https://github.com/neophilism/The-Cornerstone/blob/698c7383c8f2a64dca488524d6404ba2c8774d18/docs/PROGRESS.json"
+    }
+  ],
+  "verificationArtifacts": {
+    "applicationRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39040084831",
+    "scope": "GitHub-reported artifact metadata for the exact final application run. These archives were not downloaded again for the CI-only PR 60; changed private views were inspected on their feature PRs, including PRs 54, 55, 56 and 59.",
+    "artifacts": [
+      {
+        "project": "desktop",
+        "id": 12104112381,
+        "sizeBytes": 21980048,
+        "sha256": "3e3d98a37c042ead7dc8cf5d47d0ec8b0f95ec64859870b5aac3fdc22f02ed37",
+        "downloadVerified": false
+      },
+      {
+        "project": "mobile",
+        "id": 12104097000,
+        "sizeBytes": 77013688,
+        "sha256": "00ecff60e51bd21350c18f9ae2fb6585f5d35adb55dda96d42b865152ff4cb24",
+        "downloadVerified": false
+      },
+      {
+        "project": "public",
+        "id": 12104151665,
+        "sizeBytes": 8497430,
+        "sha256": "b916f7e4c9644f877683d8aff5ad97243576ceaf5f77428faff9b53e0989ecea",
+        "downloadVerified": false
+      }
+    ]
+  }
 }
