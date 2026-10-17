@@ -131,6 +131,10 @@ jobs:
       - run: node --import tsx tests/record-export.integration.ts
       - run: node --import tsx tests/receipt-export.integration.ts
       - run: node --import tsx tests/financial-journey.integration.ts
+      - name: Rehearse isolated synthetic backup and restore
+        run: node --import tsx tests/restore.integration.ts
+        env:
+          POSTGRES_CONTAINER: ${{ job.services.postgres.id }}
       - run: pnpm -r --filter @cornerstone/api --filter @cornerstone/portal --filter @cornerstone/staff --filter @cornerstone/worker build
         env:
           NODE_ENV: production

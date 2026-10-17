@@ -1,0 +1,9 @@
+# Synthetic PostgreSQL recovery rehearsal
+
+The required database CI job performs an actual custom-format `pg_dump` and transactional `pg_restore` into a separate disposable database. It uses the pinned PostGIS container's matching tools. The script accepts only the exact checked-in CI connection profiles, synthetic mode and that job's container identifier; arbitrary local and hosted URLs are refused.
+
+The rehearsal creates a synthetic record and action receipt, binds the Docker target to that exact fixture, and snapshots encrypted record versions, historical ownership, receipts, audit and outbox rows. After restore it compares those bytes, checks every migration checksum, verifies runtime and worker privileges, verifies row-level-security configuration, decrypts the authorized record with the original fixture key, rejects an unrelated actor and a wrong encryption key, and reconstructs the historical receipt digest. It also denies runtime migration writes and worker access to private records.
+
+CI logs report separate backup, restore and verification durations. The database is created only if absent and removed only if this invocation created it. The dump stays inside the disposable CI container, is removed at completion and is never uploaded as an artifact. The source database and its records are retained for the rest of the test suite.
+
+This is measured logical recovery of synthetic data in the same PostgreSQL cluster, where the existing restricted roles are already present. It does not prove provider point-in-time recovery, region/account loss recovery, role provisioning in a new cluster, recipient-held key recovery or a production recovery-time/data-loss objective. Restoring ciphertext without its original encryption key intentionally fails. Those operational scenarios remain separate work; a missing human audit does not prevent this rehearsal or implementation.
