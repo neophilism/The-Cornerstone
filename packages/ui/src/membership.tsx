@@ -1,4 +1,5 @@
 'use client';
+import { useMemberAction } from './member-action.js';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import {
   MembershipSnapshotSchema,
@@ -222,21 +223,32 @@ export function FoundingConsentPanel({
   actorId,
   api,
   onChanged,
+  disabled,
+  onBusyChange,
 }: {
   record: CaseRecord;
   actorId: string;
   api: Api;
   onChanged: (r: Result) => Promise<void>;
+  disabled: boolean;
+  onBusyChange: (busy: boolean) => void;
 }) {
   const [snapshot, setSnapshot] = useState<FoundingRollView | null>(null),
     [error, setError] = useState(''),
-    [pending, setPending] = useState(false),
     [acknowledged, setAcknowledged] = useState(false),
     [scaleChoice, setScaleChoice] = useState<'yes' | 'no' | 'abstain'>('abstain'),
     [visibleResponses, setVisibleResponses] = useState(50);
   const larger = Array.isArray(record.data['units']) && record.data['units'].length > 2500;
-  const generation = useRef(0),
-    retry = useRef<{ input: string; key: string } | null>(null);
+  const generation = useRef(0);
+  const recovery = useMemberAction({
+    record,
+    path: 'memberships/respond',
+    api,
+    disabled,
+    onBusyChange,
+    onChanged,
+  });
+  const pending = disabled || recovery.busy || recovery.locked;
   async function refresh() {
     const n = ++generation.current;
     const result = FoundingRollViewSchema.parse(
@@ -260,34 +272,19 @@ export function FoundingConsentPanel({
       own &&
       ['submitted', 'review'].includes(record.state) &&
       own.closesOn >= new Date().toISOString().slice(0, 10);
-  async function respond(response: 'accepted' | 'declined') {
+  function respond(response: 'accepted' | 'declined') {
     if (!own || pending) return;
-    setPending(true);
-    setError('');
-    try {
-      const input = {
-        recordId: record.id,
-        invitationId: own.id,
-        expectedVersion: record.version,
-        response,
-        rightsAcknowledged: response === 'accepted' && acknowledged,
-        ...(larger ? { scaleChoice } : {}),
-      };
-      const encoded = JSON.stringify(input);
-      if (retry.current?.input !== encoded)
-        retry.current = { input: encoded, key: crypto.randomUUID() };
-      setAcknowledged(false);
-      await onChanged(
-        await api('memberships/respond', { ...input, idempotencyKey: retry.current.key }),
-      );
-      retry.current = null;
-      await refresh();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Your response could not be saved.');
-    } finally {
-      setPending(false);
-    }
+    recovery.submit({
+      recordId: record.id,
+      invitationId: own.id,
+      expectedVersion: record.version,
+      response,
+      rightsAcknowledged: response === 'accepted' && acknowledged,
+      ...(larger ? { scaleChoice } : {}),
+      idempotencyKey: crypto.randomUUID(),
+    });
   }
+
   return (
     <section className="action-panel founding-consent" style={{ marginTop: 25 }}>
       <h2>Voluntary founding membership</h2>
@@ -296,11 +293,12 @@ export function FoundingConsentPanel({
         contribute capital or take personal debt. A declined or unanswered invitation cannot create
         a founding unit.
       </p>
-      {error && (
+      {(error || recovery.error) && (
         <p className="error-panel" role="alert">
-          {error}
+          {recovery.error || error}
         </p>
       )}
+      {recovery.recovery}
       {own && <p className="badge">Your response: {own.response}</p>}
       {larger && own?.ownScaleChoice && <p>Your recorded scale choice: {own.ownScaleChoice}</p>}
       {canRespond && (
@@ -427,17 +425,28 @@ export function MemberBallotPanel({
   canVote,
   api,
   onChanged,
+  disabled,
+  onBusyChange,
 }: {
   record: CaseRecord;
   canVote: boolean;
   api: Api;
   onChanged: (r: Result) => Promise<void>;
+  disabled: boolean;
+  onBusyChange: (busy: boolean) => void;
 }) {
   const [view, setView] = useState<MemberBallotView | null>(null),
-    [error, setError] = useState(''),
-    [pending, setPending] = useState(false);
-  const generation = useRef(0),
-    retry = useRef<{ input: string; key: string } | null>(null);
+    [error, setError] = useState('');
+  const generation = useRef(0);
+  const recovery = useMemberAction({
+    record,
+    path: 'commands',
+    api,
+    disabled,
+    onBusyChange,
+    onChanged,
+  });
+  const pending = disabled || recovery.busy || recovery.locked;
   async function refresh() {
     const n = ++generation.current,
       result = MemberBallotViewSchema.parse(await api('governance?recordId=' + record.id));
@@ -456,31 +465,18 @@ export function MemberBallotPanel({
       unit &&
       view?.closesOn &&
       view.closesOn >= new Date().toISOString().slice(0, 10);
-  async function vote(e: FormEvent<HTMLFormElement>) {
+  function vote(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!unit || pending) return;
-    const form = e.currentTarget;
-    setPending(true);
-    setError('');
-    try {
-      const input = {
-        recordId: record.id,
-        expectedVersion: record.version,
-        action: 'record_vote',
-        input: { unitId: unit, choice: String(new FormData(form).get('choice')) },
-      };
-      const encoded = JSON.stringify(input);
-      if (retry.current?.input !== encoded)
-        retry.current = { input: encoded, key: crypto.randomUUID() };
-      await onChanged(await api('commands', { ...input, idempotencyKey: retry.current.key }));
-      retry.current = null;
-      await refresh();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Your ballot could not be saved.');
-    } finally {
-      setPending(false);
-    }
+    recovery.submit({
+      recordId: record.id,
+      expectedVersion: record.version,
+      action: 'record_vote',
+      input: { unitId: unit, choice: String(new FormData(e.currentTarget).get('choice')) },
+      idempotencyKey: crypto.randomUUID(),
+    });
   }
+
   return (
     <section className="action-panel member-ballot" style={{ marginTop: 25 }}>
       <h2>Your member vote</h2>
@@ -497,16 +493,17 @@ export function MemberBallotPanel({
         Other members cannot read your choice. Authorized reviewers can inspect stored ballots. This
         development vote has no legal effect.
       </p>
-      {error && (
+      {(error || recovery.error) && (
         <p className="error-panel" role="alert">
-          {error}
+          {recovery.error || error}
         </p>
       )}
+      {recovery.recovery}
       {open && (
         <form className="form-stack" onSubmit={vote}>
           <div className="field">
             <label htmlFor="member-choice">Your vote</label>
-            <select id="member-choice" name="choice" defaultValue="" required>
+            <select id="member-choice" name="choice" defaultValue="" required disabled={pending}>
               <option value="">Choose your vote</option>
               <option value="yes">Yes</option>
               <option value="no">No</option>

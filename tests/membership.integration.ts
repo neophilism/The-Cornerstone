@@ -276,6 +276,15 @@ try {
   assert.equal(one.receipt.id, two.receipt.id);
   await respond('member', association.id, 'declined', false);
   await respond('member', association.id, 'accepted');
+  const currentAfterResponses = (await get('member', association.id))!;
+  const historicalReplay = await members.respond(m, accepted);
+  assert.equal(historicalReplay.receipt.id, one.receipt.id);
+  assert.equal(historicalReplay.record?.version, one.record?.version);
+  assert.equal((await get('member', association.id))!.version, currentAfterResponses.version);
+  await assert.rejects(
+    members.respond(m, { ...accepted, response: 'declined', rightsAcknowledged: false }),
+  );
+  await assert.rejects(members.respond(p, accepted));
   day = addCalendarDays(today, 180);
   await assert.rejects(command('labor', association.id, 'close_roll', closeInput), {
     code: 'FOUNDING_PERIOD_OPEN',
@@ -309,6 +318,7 @@ try {
   ]);
   assert.equal((await members.list(await actor('member'))).units.length, 0);
   assert.equal(await get('member', association.id), null);
+  await assert.rejects(members.respond(await actor('member'), accepted), { code: 'NOT_FOUND' });
   assert.equal(
     await hasNotice('member', closed.receipt.id),
     false,

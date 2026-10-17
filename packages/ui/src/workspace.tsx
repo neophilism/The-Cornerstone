@@ -390,7 +390,9 @@ export function Workspace({
       onClickCapture={(event) => {
         if (
           evidenceBusyRef.current &&
-          !(event.target as HTMLElement).closest('.action-recovery, .evidence-recovery')
+          !(event.target as HTMLElement).closest(
+            '.action-recovery, .evidence-recovery, .membership-recovery',
+          )
         ) {
           event.preventDefault();
           event.stopPropagation();
@@ -867,11 +869,9 @@ export function Workspace({
                     record={selected}
                     actorId={session.actor.id}
                     api={api}
-                    onChanged={async (result) => {
-                      setReceipt(result.receipt);
-                      setSelected(result.record);
-                      await refresh();
-                    }}
+                    disabled={pending || editing || evidenceBusy}
+                    onBusyChange={evidenceBusyChanged}
+                    onChanged={confirmedAction}
                   />
                 )}
                 {selected.kind === 'resolution' && (
@@ -879,11 +879,9 @@ export function Workspace({
                     record={selected}
                     canVote={permitted.includes('record_vote')}
                     api={api}
-                    onChanged={async (result) => {
-                      setReceipt(result.receipt);
-                      setSelected(result.record);
-                      await refresh();
-                    }}
+                    disabled={pending || editing || evidenceBusy}
+                    onBusyChange={evidenceBusyChanged}
+                    onChanged={confirmedAction}
                   />
                 )}
                 <div className="record-evidence">

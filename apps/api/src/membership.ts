@@ -13,7 +13,7 @@ import {
 } from '@cornerstone/contracts';
 import { DomainError, requireCondition, addCalendarDays, majorityOfAll } from '@cornerstone/domain';
 import { Store, type Transaction } from '@cornerstone/store';
-import { digest, type Envelope } from '@cornerstone/security';
+import { canRead, digest, type Envelope } from '@cornerstone/security';
 import { draftPolicy } from '@cornerstone/policy';
 
 type BallotRow = {
@@ -134,11 +134,23 @@ export class MembershipService {
         input.idempotencyKey,
         requestDigest,
       );
-      if (previous)
-        return {
-          receipt: previous,
-          record: await this.store.getVersion(tx, previous.recordId, previous.version),
-        };
+      if (previous) {
+        const current = await this.store.get(tx, previous.recordId);
+        if (
+          !current ||
+          !canRead(
+            actor,
+            current,
+            await this.store.grants(tx, current.id),
+            new Date().toISOString(),
+          )
+        )
+          throw new DomainError('NOT_FOUND', 'Association not found or no longer accessible.', 404);
+        const historical = await this.store.getVersion(tx, previous.recordId, previous.version);
+        if (!historical)
+          throw new DomainError('NOT_FOUND', 'Association not found or no longer accessible.', 404);
+        return { receipt: previous, record: historical };
+      }
       const record = await this.store.get(tx, input.recordId, true);
       if (!record || record.kind !== 'association')
         throw new DomainError('NOT_FOUND', 'Association not found.', 404);
