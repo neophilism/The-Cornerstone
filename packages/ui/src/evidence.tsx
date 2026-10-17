@@ -14,6 +14,7 @@ import {
   type EvidenceAttempt,
 } from './evidence-recovery.js';
 import { EvidenceDownloader } from './evidence-downloader.js';
+import type { EvidenceDownload } from './evidence-download-session.js';
 import { actionFailure } from './action-recovery.js';
 type Result = { record: CaseRecord; receipt: Receipt };
 export function EvidencePanel({
@@ -21,6 +22,7 @@ export function EvidencePanel({
   actorId,
   canAttach,
   api,
+  download,
   onChanged,
   onBusyChange,
   disabled,
@@ -29,6 +31,7 @@ export function EvidencePanel({
   actorId: string;
   canAttach: boolean;
   api: (path: string, body?: unknown) => Promise<any>;
+  download: EvidenceDownload;
   onChanged: (result: Result) => Promise<void>;
   onBusyChange: (busy: boolean) => void;
   disabled: boolean;
@@ -313,6 +316,7 @@ export function EvidencePanel({
                   <EvidenceDownloader
                     item={item}
                     api={api}
+                    download={download}
                     disabled={disabled || pending || !!attempt}
                   />
                 )}

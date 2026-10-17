@@ -17,6 +17,7 @@ import { workflows, workflowGroups, workflow, actionUnavailable } from '@corners
 import { AccountPanel } from './account.js';
 import { DraftAccessPanel } from './draft-access.js';
 import { EvidencePanel } from './evidence.js';
+import { downloadSessionEvidence } from './evidence-download-session.js';
 import { MembershipPanel, FoundingConsentPanel, MemberBallotPanel } from './membership.js';
 import { isRecordReference } from './record-fields.js';
 import { PreparationGuide, RecordNextStep } from './journey.js';
@@ -975,6 +976,12 @@ export function Workspace({
                       disabled={pending || editing || evidenceBusy}
                       onBusyChange={evidenceBusyChanged}
                       api={api}
+                      download={(item, signal) =>
+                        downloadSessionEvidence(item, signal, {
+                          current: () => sessionGeneration.current,
+                          expire: clearSession,
+                        })
+                      }
                       onChanged={confirmedAction}
                     />
                   )}
