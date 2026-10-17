@@ -112,7 +112,7 @@ test('mismatched validation response remains recoverable and reloads current att
   await page.getByRole('button', { name: 'Retry exact evidence action', exact: true }).click();
   await expect(page.getByText('Simulation receipt · version 3', { exact: true })).toBeVisible();
   await expect(
-    page.getByRole('link', { name: 'Download synthetic text', exact: true }),
+    page.getByRole('button', { name: 'Download synthetic text', exact: true }),
   ).toBeVisible();
   expect(wires).toHaveLength(2);
   expect(new Set(wires).size).toBe(1);
