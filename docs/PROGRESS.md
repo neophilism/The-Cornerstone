@@ -89,3 +89,7 @@ Attachment downloads now require explicit disclosure consent, fresh metadata/acc
 ## 2026-10-17 — integrated stack and membership browser navigation
 
 The membership recovery browser journey now opens its exact resolution through the authenticated record-reference form. The previous first-page assumption timed out once accumulated suite fixtures moved that resolution beyond the page boundary; recovery, receipt correlation, one-ballot persistence and accessibility assertions remain intact. The attachment-download candidate also incorporates current main, preserving the owner-policy, public-deployment verification and shared registry changes. Required CI acceptance is recorded separately from this implementation note.
+
+## 2026-10-17 — exact access-change recovery
+
+Draft delegation now freezes the original grant or revocation request after an uncertain outcome, retains it across denied retries, checks receipt correlation and refreshes current permissions before another action. The workspace locks other mutations/navigation while recovering; confirmed grants require fresh consent for any later request. Added semantic unit coverage and actual synthetic desktop/mobile browser journeys for lost and substituted replies, denied retries, one-grant persistence, revoked state and accessibility. Candidate verification is separate from acceptance and hosted deployment.

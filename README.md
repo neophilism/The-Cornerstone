@@ -53,3 +53,5 @@ Private record printing uses a separate reviewed copy with fresh access and vers
 Personal founding consent and member ballots retain their exact request after an uncertain outcome, including denied retries. See [membership recovery](docs/MEMBERSHIP_RECOVERY.md) for current-access replay and the in-memory recovery boundary.
 
 Synthetic attachment downloads require disclosure consent, fresh access and exact byte verification. See [attachment download review](docs/EVIDENCE_DOWNLOAD.md).
+
+Draft delegation preserves exact uncertain grant/revocation requests and refreshes current access after receipt recovery. See [session and access controls](docs/SESSION_AND_ACCESS.md).

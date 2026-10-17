@@ -391,7 +391,7 @@ export function Workspace({
         if (
           evidenceBusyRef.current &&
           !(event.target as HTMLElement).closest(
-            '.action-recovery, .evidence-recovery, .membership-recovery',
+            '.action-recovery, .evidence-recovery, .membership-recovery, .access-recovery',
           )
         ) {
           event.preventDefault();
@@ -984,12 +984,9 @@ export function Workspace({
                       key={selected.id}
                       record={selected}
                       api={api}
-                      onChanged={async (result) => {
-                        setReceipt(result.receipt);
-                        setSelected(result.record);
-                        setEditing(false);
-                        await refresh();
-                      }}
+                      disabled={pending || editing || evidenceBusy}
+                      onBusyChange={evidenceBusyChanged}
+                      onChanged={confirmedAction}
                     />
                   )}
               </fieldset>
