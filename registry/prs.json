@@ -13,20 +13,20 @@
     "docs/ENGINE_ROOM_TRACKING.md"
   ],
   "implementation": {
-    "status": "accepted public/synthetic source through PR 44; full program unfinished",
+    "status": "Accepted public/synthetic revision is the PR 60 merge; full program unfinished.",
     "progressFile": "docs/PROGRESS.md",
-    "verifiedFunctionalCommit": "3fa24879d12066b5fb976a84bd1112a12a64e918",
-    "verificationRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39032086554",
+    "verifiedFunctionalCommit": "43c9c249b7489124cc788fac2c649e5a30a09ada",
+    "verificationRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39040084831",
     "publicWebsite": "https://cornerstone-policy-preview.onrender.com/",
-    "testedHead": "1949c920a6ac2f3b8ba6fb5dda15b35794c52d37",
-    "testedTree": "717c123ffcf954951c623b5f733deecdff945421",
-    "sourceEvidenceRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39032086521",
+    "testedHead": "d4b67cd8bdde9c73bd5b1296a6130604cd2694e3",
+    "testedTree": "f9450a2462287fe079b9906cb342c868eabbf036",
+    "sourceEvidenceRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39040084681",
     "continuationFile": "docs/CONTINUATION.md",
     "deploymentEvidenceFile": "docs/PROGRESS.json"
   },
   "schemaVersion": 1,
   "roadmapVersion": 2,
-  "observedAt": "2026-10-17T12:37:56Z",
+  "observedAt": "2026-10-17T14:40:48Z",
   "units": [
     {
       "id": "CS-01",
@@ -36,7 +36,7 @@
       "dependsOn": [],
       "externalDependencies": [],
       "externalPrerequisites": [],
-      "contributingPrs": [37, 39]
+      "contributingPrs": [37, 39, 47]
     },
     {
       "id": "CS-02",
@@ -84,7 +84,7 @@
       "dependsOn": [],
       "externalDependencies": [],
       "externalPrerequisites": [],
-      "contributingPrs": [19, 20, 27, 33, 35, 38]
+      "contributingPrs": [19, 20, 27, 33, 35, 38, 50, 52, 56, 59]
     },
     {
       "id": "CS-07",
@@ -93,7 +93,8 @@
       "prs": [7],
       "dependsOn": [],
       "externalDependencies": [],
-      "externalPrerequisites": []
+      "externalPrerequisites": [],
+      "contributingPrs": [49]
     },
     {
       "id": "CS-08",
@@ -151,8 +152,8 @@
       "dependsOn": [],
       "externalDependencies": [],
       "externalPrerequisites": [],
-      "contributingPrs": [13],
-      "remainingAcceptance": "New deceased-worker filing and contested estate paths, distinct from continuing an existing claim.",
+      "contributingPrs": [13, 48, 53],
+      "remainingAcceptance": "Contested estate/standing and complete claim lifecycle beyond the newly implemented original-worker-bound filing and existing-claim continuation.",
       "contributionScope": "PR 13 continues an existing claim. A newly filed deceased-worker claim remains distinct."
     },
     {
@@ -174,8 +175,8 @@
       "dependsOn": [],
       "externalDependencies": [],
       "externalPrerequisites": [],
-      "contributingPrs": [21, 23, 26, 28, 32, 40, 44, 45],
-      "remainingAcceptance": "Accept repaired access recovery, complete session/reference controls and hosted protected identity/recovery/delegation.",
+      "contributingPrs": [21, 23, 26, 28, 32, 40, 44, 45, 50, 51, 52, 54, 56, 59],
+      "remainingAcceptance": "Hosted protected identity, recipient/device/delegate authorization and key/account recovery; bounded request/session/disclosure fixes do not complete this unit.",
       "contributionScope": "Current contributions implement synthetic request recovery, access checks and bounded transport; protected identity/recipient recovery remains unfinished."
     },
     {
@@ -186,7 +187,7 @@
       "dependsOn": [],
       "externalDependencies": [],
       "externalPrerequisites": [],
-      "contributingPrs": [36, 42],
+      "contributingPrs": [36, 42, 51],
       "remainingAcceptance": "Real evidence storage, scanning, retention, custody and authorized recipient processing; current attachment adapter is synthetic text.",
       "contributionScope": "Current contributions cover synthetic text validation/recovery/download disclosure; real evidence custody is unfinished."
     },
@@ -220,7 +221,8 @@
       "dependsOn": [],
       "externalDependencies": [],
       "externalPrerequisites": [],
-      "remainingAcceptance": "Published voluntary offer and supervision journeys with current authority and immutable member-inspectable terms."
+      "remainingAcceptance": "Objection/supervision, complete authority/notice and institutional acceptance beyond immutable synthetic voluntary-offer publication.",
+      "contributingPrs": [55]
     },
     {
       "id": "CS-20",
@@ -230,7 +232,8 @@
       "dependsOn": [],
       "externalDependencies": [],
       "externalPrerequisites": [],
-      "remainingAcceptance": "Independent choice custody, constrained release, deterministic replay and witnessed draw integration."
+      "remainingAcceptance": "Authenticated independent sealed-choice custody, constrained release, witnessed draw and full replay; defensive continuation remains a pure library.",
+      "contributingPrs": [58]
     },
     {
       "id": "CS-21",
@@ -240,8 +243,8 @@
       "dependsOn": [],
       "externalDependencies": [],
       "externalPrerequisites": [],
-      "contributingPrs": [17],
-      "remainingAcceptance": "Complete within-offer delivery, renewal and final-settlement journeys beyond approved compact terms.",
+      "contributingPrs": [17, 55],
+      "remainingAcceptance": "Complete within-offer delivery, renewal and final settlement beyond published-offer binding and approved compact terms.",
       "contributionScope": "PR 17 approves exact compact terms; complete delivery, renewal and final settlement remain unfinished."
     },
     {
@@ -252,7 +255,8 @@
       "dependsOn": [],
       "externalDependencies": [],
       "externalPrerequisites": [],
-      "remainingAcceptance": "Reconcile source accounts, review exact ordered calculations and complete settlement/Treasury adapters."
+      "remainingAcceptance": "Source-account reconciliation and settlement/Treasury adapters beyond independent synthetic financial hearing, evidence and decision review.",
+      "contributingPrs": [49]
     },
     {
       "id": "CS-23",
@@ -272,8 +276,8 @@
       "dependsOn": [],
       "externalDependencies": [],
       "externalPrerequisites": [],
-      "contributingPrs": [14, 16, 24, 25, 29, 31, 37, 39, 41, 43],
-      "remainingAcceptance": "Compatible protected-provider release, recipient/key/account recovery drills and measured release provenance.",
+      "contributingPrs": [14, 16, 24, 25, 29, 31, 37, 39, 41, 43, 46, 47, 57, 60],
+      "remainingAcceptance": "Compatible private-provider migration/release and actual provider/account/recipient-key recovery; public HTTP evidence and disposable CI restore do not establish these.",
       "contributionScope": "Contributions establish tested source, schema/worker/local recovery and public-release procedures; no protected provider recovery is inferred."
     },
     {
@@ -284,26 +288,251 @@
       "dependsOn": [],
       "externalDependencies": [],
       "externalPrerequisites": [],
-      "contributingPrs": [25, 29, 43],
-      "remainingAcceptance": "Whole-program acceptance across the completed journeys; software merges do not supply legal authority.",
+      "contributingPrs": [25, 29, 43, 46, 57, 60],
+      "remainingAcceptance": "Whole-program acceptance across completed participant/staff journeys and authorized institutional release; partial source PRs do not supply this acceptance.",
       "contributionScope": "Contributions record current release and verification evidence; whole-program operational acceptance remains unfinished."
     }
   ],
   "pullRequests": [
     {
+      "id": 4900807054,
+      "number": 60,
+      "title": "Allow superseded browser acceptance jobs to cancel",
+      "url": "https://github.com/neophilism/The-Cornerstone/pull/60",
+      "state": "closed",
+      "draft": false,
+      "createdAt": "2026-10-17T14:17:00Z",
+      "updatedAt": "2026-10-17T14:34:44Z",
+      "closedAt": "2026-10-17T14:34:44Z",
+      "mergedAt": "2026-10-17T14:34:44Z",
+      "headSha": "d4b67cd8bdde9c73bd5b1296a6130604cd2694e3",
+      "baseRef": "main",
+      "mergeCommitSha": "43c9c249b7489124cc788fac2c649e5a30a09ada"
+    },
+    {
+      "id": 4900744601,
+      "number": 59,
+      "title": "Keep personal calendar downloads bound to the current session",
+      "url": "https://github.com/neophilism/The-Cornerstone/pull/59",
+      "state": "closed",
+      "draft": false,
+      "createdAt": "2026-10-17T14:09:24Z",
+      "updatedAt": "2026-10-17T14:34:09Z",
+      "closedAt": "2026-10-17T14:34:08Z",
+      "mergedAt": "2026-10-17T14:34:08Z",
+      "headSha": "a4089284bb96dbaeeae011a0c34d2b6635796328",
+      "baseRef": "main",
+      "mergeCommitSha": "ed236785d2956d85a06c58660d856dfb2c6fa5df"
+    },
+    {
+      "id": 4900685603,
+      "number": 58,
+      "title": "Validate failed-match continuation against frozen rankings and active allocations",
+      "url": "https://github.com/neophilism/The-Cornerstone/pull/58",
+      "state": "closed",
+      "draft": false,
+      "createdAt": "2026-10-17T14:01:54Z",
+      "updatedAt": "2026-10-17T14:33:37Z",
+      "closedAt": "2026-10-17T14:33:37Z",
+      "mergedAt": "2026-10-17T14:33:37Z",
+      "headSha": "0cecbe1e14e482ab67e2864f81b6e4f4d6bcbca2",
+      "baseRef": "main",
+      "mergeCommitSha": "6f6f307ed4c4f17312546980aab98771a50a9024"
+    },
+    {
+      "id": 4900575238,
+      "number": 57,
+      "title": "Run complete private browser projects in isolated parallel CI jobs",
+      "url": "https://github.com/neophilism/The-Cornerstone/pull/57",
+      "state": "closed",
+      "draft": false,
+      "createdAt": "2026-10-17T13:46:44Z",
+      "updatedAt": "2026-10-17T14:17:50Z",
+      "closedAt": "2026-10-17T14:17:50Z",
+      "mergedAt": "2026-10-17T14:17:50Z",
+      "headSha": "34cd75e69ed1e834fea2c22914e081c492d4d159",
+      "baseRef": "main",
+      "mergeCommitSha": "486c08bdb5ad3323354e959162ef2a04bc602a50"
+    },
+    {
+      "id": 4900524338,
+      "number": 56,
+      "title": "Keep record, receipt and print disclosure within the current session",
+      "url": "https://github.com/neophilism/The-Cornerstone/pull/56",
+      "state": "closed",
+      "draft": false,
+      "createdAt": "2026-10-17T13:40:04Z",
+      "updatedAt": "2026-10-17T14:32:59Z",
+      "closedAt": "2026-10-17T14:32:59Z",
+      "mergedAt": "2026-10-17T14:32:59Z",
+      "headSha": "4898d0e3a03c8f7969372be7d8db42c8b1ca0277",
+      "baseRef": "main",
+      "mergeCommitSha": "d1b13fbdeb36f61b68efc1d95eefbf59ada9aec1"
+    },
+    {
+      "id": 4900482316,
+      "number": 55,
+      "title": "Prepare verified state authority and immutable synthetic offers",
+      "url": "https://github.com/neophilism/The-Cornerstone/pull/55",
+      "state": "closed",
+      "draft": false,
+      "createdAt": "2026-10-17T13:34:16Z",
+      "updatedAt": "2026-10-17T14:27:57Z",
+      "closedAt": "2026-10-17T14:27:57Z",
+      "mergedAt": "2026-10-17T14:27:57Z",
+      "headSha": "9d3f7567dd122d0c7d3483d3250e4fa6cb18b8fc",
+      "baseRef": "main",
+      "mergeCommitSha": "30c491247dae11ed975a4bba3cea401bcfd6d474"
+    },
+    {
+      "id": 4900457134,
+      "number": 54,
+      "title": "Recover exact selected session revocations without widening retries",
+      "url": "https://github.com/neophilism/The-Cornerstone/pull/54",
+      "state": "closed",
+      "draft": false,
+      "createdAt": "2026-10-17T13:30:28Z",
+      "updatedAt": "2026-10-17T14:26:44Z",
+      "closedAt": "2026-10-17T14:26:44Z",
+      "mergedAt": "2026-10-17T14:26:44Z",
+      "headSha": "f5d040a085586b6011e4a82d0a843ea8a8484ad5",
+      "baseRef": "main",
+      "mergeCommitSha": "9c9e47302656dc85480a5519a97a82164a958983"
+    },
+    {
+      "id": 4900424132,
+      "number": 53,
+      "title": "Make claim standing and holder reviews easier to inspect",
+      "url": "https://github.com/neophilism/The-Cornerstone/pull/53",
+      "state": "closed",
+      "draft": false,
+      "createdAt": "2026-10-17T13:25:17Z",
+      "updatedAt": "2026-10-17T13:49:32Z",
+      "closedAt": "2026-10-17T13:49:31Z",
+      "mergedAt": "2026-10-17T13:49:31Z",
+      "headSha": "d84bd8076120514ba08f2935bfacfae385ebe1b3",
+      "baseRef": "main",
+      "mergeCommitSha": "5cd568fbc275bab0ad72339478113a38773ec1bb"
+    },
+    {
+      "id": 4900392179,
+      "number": 52,
+      "title": "Verify private references through final clipboard disclosure",
+      "url": "https://github.com/neophilism/The-Cornerstone/pull/52",
+      "state": "closed",
+      "draft": false,
+      "createdAt": "2026-10-17T13:20:16Z",
+      "updatedAt": "2026-10-17T13:42:36Z",
+      "closedAt": "2026-10-17T13:42:36Z",
+      "mergedAt": "2026-10-17T13:42:36Z",
+      "headSha": "758b07fcc28ce1290feff92da9c4e1bf75435469",
+      "baseRef": "main",
+      "mergeCommitSha": "db73fcef16985581d583b9d80474e470df5a211e"
+    },
+    {
+      "id": 4900332660,
+      "number": 51,
+      "title": "Keep attachment file release within the current session",
+      "url": "https://github.com/neophilism/The-Cornerstone/pull/51",
+      "state": "closed",
+      "draft": false,
+      "createdAt": "2026-10-17T13:12:04Z",
+      "updatedAt": "2026-10-17T13:34:52Z",
+      "closedAt": "2026-10-17T13:34:51Z",
+      "mergedAt": "2026-10-17T13:34:51Z",
+      "headSha": "a9a599731f26ac4cf323bd32f16064fa81018006",
+      "baseRef": "main",
+      "mergeCommitSha": "e655c84819e75ccb750a388de38295e0b2f38673"
+    },
+    {
+      "id": 4900303169,
+      "number": 50,
+      "title": "Bind private record opening and recovery to the current session",
+      "url": "https://github.com/neophilism/The-Cornerstone/pull/50",
+      "state": "closed",
+      "draft": false,
+      "createdAt": "2026-10-17T13:07:28Z",
+      "updatedAt": "2026-10-17T13:31:08Z",
+      "closedAt": "2026-10-17T13:31:08Z",
+      "mergedAt": "2026-10-17T13:31:08Z",
+      "headSha": "1270cd0ffd647338ef8343d6c83edb8450208bed",
+      "baseRef": "main",
+      "mergeCommitSha": "9389a593cb1620a3d26ed79ae292a81cd9ba5d60"
+    },
+    {
+      "id": 4900254748,
+      "number": 49,
+      "title": "Complete independent financial appeals with frozen calculations and hearing evidence",
+      "url": "https://github.com/neophilism/The-Cornerstone/pull/49",
+      "state": "closed",
+      "draft": false,
+      "createdAt": "2026-10-17T13:00:10Z",
+      "updatedAt": "2026-10-17T13:24:43Z",
+      "closedAt": "2026-10-17T13:24:43Z",
+      "mergedAt": "2026-10-17T13:24:43Z",
+      "headSha": "faad450ace4dcf89771d4915e921f7601ee42e85",
+      "baseRef": "main",
+      "mergeCommitSha": "1ac384f20b7a18f9839831054ccd3564bca7ddb8"
+    },
+    {
+      "id": 4900235547,
+      "number": 48,
+      "title": "Prepare a deceased-worker filing and open one claim after independent standing review",
+      "url": "https://github.com/neophilism/The-Cornerstone/pull/48",
+      "state": "closed",
+      "draft": false,
+      "createdAt": "2026-10-17T12:57:07Z",
+      "updatedAt": "2026-10-17T13:14:39Z",
+      "closedAt": "2026-10-17T13:14:39Z",
+      "mergedAt": "2026-10-17T13:14:39Z",
+      "headSha": "67fc98b793a5bc24b0c721c1ee6951e56a352842",
+      "baseRef": "main",
+      "mergeCommitSha": "6d5da81a752b516f92ce617d99e91db9647484d5"
+    },
+    {
+      "id": 4900170979,
+      "number": 47,
+      "title": "Verify all seven hosted source originals at the exact deployed revision",
+      "url": "https://github.com/neophilism/The-Cornerstone/pull/47",
+      "state": "closed",
+      "draft": false,
+      "createdAt": "2026-10-17T12:47:20Z",
+      "updatedAt": "2026-10-17T13:08:12Z",
+      "closedAt": "2026-10-17T13:08:12Z",
+      "mergedAt": "2026-10-17T13:08:12Z",
+      "headSha": "bd4df456abfc205c315514d57422f53f09158e17",
+      "baseRef": "main",
+      "mergeCommitSha": "8ccd48fb21fd0aecc947e3591b5bab46640ab398"
+    },
+    {
+      "id": 4900161456,
+      "number": 46,
+      "title": "Refresh accepted release evidence and preserve the canonical 25-unit plan",
+      "url": "https://github.com/neophilism/The-Cornerstone/pull/46",
+      "state": "closed",
+      "draft": false,
+      "createdAt": "2026-10-17T12:46:05Z",
+      "updatedAt": "2026-10-17T13:00:05Z",
+      "closedAt": "2026-10-17T13:00:05Z",
+      "mergedAt": "2026-10-17T13:00:05Z",
+      "headSha": "698c7383c8f2a64dca488524d6404ba2c8774d18",
+      "baseRef": "main",
+      "mergeCommitSha": "056340984c63c7b6bd6a16c579230539784f2744"
+    },
+    {
       "id": 4900015633,
       "number": 45,
       "title": "Preserve exact grant and revocation requests through uncertain outcomes",
       "url": "https://github.com/neophilism/The-Cornerstone/pull/45",
-      "state": "open",
+      "state": "closed",
       "draft": false,
       "createdAt": "2026-10-17T12:23:44Z",
-      "updatedAt": "2026-10-17T12:37:39Z",
-      "closedAt": null,
-      "mergedAt": null,
+      "updatedAt": "2026-10-17T12:55:03Z",
+      "closedAt": "2026-10-17T12:55:03Z",
+      "mergedAt": "2026-10-17T12:55:03Z",
       "headSha": "fbd639b8518bbf01dd5e4931ca17a7604851faef",
       "baseRef": "main",
-      "mergeCommitSha": null
+      "mergeCommitSha": "227fde99642f312e07a052f779c8158953fb406b"
     },
     {
       "id": 4891402369,
@@ -966,6 +1195,6 @@
       "mergeCommitSha": "1eafad19eaade7f7dbf518ff1ebfad4b51607cca"
     }
   ],
-  "observationSource": "https://api.github.com/repos/neophilism/The-Cornerstone/pulls?state=all&per_page=100&sort=created&direction=desc",
+  "observationSource": "https://api.github.com/repos/neophilism/The-Cornerstone/pulls?state=all&sort=created&direction=desc&per_page=100",
   "acceptancePolicy": "prs maps complete work-unit acceptance only; contributingPrs records partial implementation and does not complete a unit; live GitHub owns current PR state"
 }
