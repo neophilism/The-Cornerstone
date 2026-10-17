@@ -1,4 +1,4 @@
-// One ephemeral synthetic key across the database job; never uses a provider secret.
+// One ephemeral synthetic key within each isolated job; never uses a provider secret.
 import { randomBytes } from 'node:crypto';
 import { appendFileSync } from 'node:fs';
 if (
