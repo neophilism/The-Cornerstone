@@ -11,7 +11,12 @@ import {
   type Mode,
   type Realm,
 } from '@cornerstone/contracts';
-import { DomainError, requireCondition, workflow } from '@cornerstone/domain';
+import {
+  DomainError,
+  requireCondition,
+  evidencePreparationRoles,
+  evidencePreparationStanding,
+} from '@cornerstone/domain';
 import { canAct, digest, type Envelope } from '@cornerstone/security';
 import { Store, type Transaction } from '@cornerstone/store';
 
@@ -54,24 +59,30 @@ export class EvidenceService {
     const record = await this.store.get(tx, id, write);
     if (!record) throw new DomainError('NOT_FOUND', 'Record not found.', 404);
     if (write) {
+      const roles = evidencePreparationRoles(record);
       requireCondition(
-        record.state === 'draft' && !['sealed_ranking', 'draw', 'round'].includes(record.kind),
+        roles.length > 0,
         'EVIDENCE_STAGE',
-        'Attach and validate evidence while preparing an ordinary draft.',
+        'Attachments are open only for ordinary drafts or financial appeals before the hearing record closes.',
       );
       const grants = await this.store.grants(tx, id);
       requireCondition(
-        canAct(
-          actor,
-          record,
-          workflow(record.kind).createRoles,
-          grants,
-          'attach_evidence',
-          new Date().toISOString(),
-        ),
+        evidencePreparationStanding(actor, record) &&
+          canAct(actor, record, roles, grants, 'attach_evidence', new Date().toISOString()),
         'RECORD_PERMISSION',
-        'Draft attachment permission is required.',
+        'Current record attachment permission is required.',
       );
+      if (record.kind === 'financial_schedule' && record.state !== 'draft') {
+        const currentScope = await tx.query(
+          'SELECT simulation_financial_evidence_writer($1) AS allowed',
+          [record.id],
+        );
+        requireCondition(
+          currentScope.rows[0]?.allowed === true,
+          'RECORD_PERMISSION',
+          'Current member ownership or independent adjudicator standing is required for hearing evidence.',
+        );
+      }
     }
     return record;
   }
@@ -262,6 +273,17 @@ export class EvidenceService {
         409,
       );
     }
+    return result.rows
+      .map((row) => {
+        const metadata = this.view(row);
+        return {
+          id: metadata.id,
+          plaintextSha256: metadata.plaintextSha256,
+          checkedAt: metadata.checkedAt!,
+          checkMethod: 'synthetic_text_v1' as const,
+        };
+      })
+      .sort((a, b) => a.id.localeCompare(b.id));
   }
   async validate(actor: Actor, raw: unknown) {
     this.writable(actor);
@@ -285,7 +307,7 @@ export class EvidenceService {
       requireCondition(
         row.owner_id === actor.id || record.ownerId === actor.id,
         'RECORD_PERMISSION',
-        'Only the uploader or record owner may validate this draft attachment.',
+        'Only the uploader or record owner may validate this attachment.',
       );
       requireCondition(
         row.state === 'quarantined',

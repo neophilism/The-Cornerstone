@@ -64,4 +64,8 @@ export const schemaInventory = [
     name: '016-deceased-filings.sql',
     sha256: '296c72c70a777b6ab2e70944e731415ebc86c187acb3e0d6b810e12886b61217',
   },
+  {
+    name: '017-financial-calculation-review.sql',
+    sha256: '49cc757b50d8ac1e37526bcf4447268606caed8795b3424226161c0c93c94093',
+  },
 ] as const;

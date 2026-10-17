@@ -1,5 +1,12 @@
 import { RecordQuerySchema, RecordCapabilitiesSchema, type Actor } from '@cornerstone/contracts';
-import { DomainError, workflow } from '@cornerstone/domain';
+import {
+  DomainError,
+  workflow,
+  evidencePreparationRoles,
+  evidencePreparationStanding,
+  financialAdjudicationActions,
+  independentFinancialReviewer,
+} from '@cornerstone/domain';
 import { canRead, canAct } from '@cornerstone/security';
 import { Store } from '@cornerstone/store';
 
@@ -33,15 +40,18 @@ export class RecordReader {
         .filter(
           (action) =>
             action.from.includes(r.state) &&
+            (r.kind !== 'financial_schedule' ||
+              !financialAdjudicationActions.includes(action.key) ||
+              independentFinancialReviewer(actor, r)) &&
             canAct(actor, r, action.roles, grants, action.key, now),
         )
         .map((action) => action.key);
       if (r.state === 'draft' && canAct(actor, r, wf.createRoles, grants, 'save_draft', now))
         actions.push('save_draft');
       if (
-        r.state === 'draft' &&
-        !['sealed_ranking', 'draw', 'round'].includes(r.kind) &&
-        canAct(actor, r, wf.createRoles, grants, 'attach_evidence', now)
+        evidencePreparationRoles(r).length > 0 &&
+        evidencePreparationStanding(actor, r) &&
+        canAct(actor, r, evidencePreparationRoles(r), grants, 'attach_evidence', now)
       )
         actions.push('attach_evidence');
       return RecordCapabilitiesSchema.parse({ recordId: r.id, version: r.version, actions });

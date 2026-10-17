@@ -133,7 +133,9 @@ export function WorkflowAction({
           api={api}
           values={{
             evidenceIds: record.data['evidenceIds'],
-            ...(action.key === 'correct' ? { schedule: record.data['schedule'] } : {}),
+            ...(['correct', 'decide_calculation_review'].includes(action.key)
+              ? { schedule: record.data['schedule'] }
+              : {}),
           }}
         />
         <button className="button" disabled={disabled || busy || !!attempt}>

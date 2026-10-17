@@ -429,6 +429,90 @@ export const SurplusPreparationSchema = SurplusScheduleSchema.omit({
   year: true,
   terms: true,
 });
+export const FinancialCalculationBasisSchema = z
+  .object({
+    schemaVersion: z.literal(1),
+    recordId: IdSchema,
+    recordVersion: z.number().int().positive(),
+    actorId: IdSchema,
+    institutionId: IdSchema,
+    calculatedAt: InstantSchema,
+    noticeDate: DateSchema,
+    noticeReference: z.string().min(1).max(12000),
+    compactId: IdSchema,
+    compactVersion: z.number().int().positive(),
+    offerId: IdSchema,
+    offerVersion: z.number().int().positive(),
+    enterpriseId: IdSchema,
+    fiscalYear: z.number().int().min(1).max(9999),
+    terms: StateTermsSchema,
+    scheduleDigest: z.string().regex(/^[a-f0-9]{64}$/),
+    calculationDigest: z.string().regex(/^[a-f0-9]{64}$/),
+  })
+  .strict();
+export type FinancialCalculationBasis = z.infer<typeof FinancialCalculationBasisSchema>;
+export const FinancialReviewSchema = z
+  .object({
+    status: z.enum(['requested', 'scheduled', 'heard', 'decided']),
+    basis: FinancialCalculationBasisSchema,
+    requestedAt: InstantSchema,
+    requestedBy: IdSchema,
+    appealedVersion: z.number().int().positive(),
+    requestReasons: z.string().min(1).max(12000),
+    filingDeadline: DateSchema,
+    disputedAmount: MoneySchema,
+    undisputedAmount: MoneySchema,
+    originalSchedule: SurplusPreparationSchema,
+    originalCalculation: z.record(z.string(), z.unknown()),
+    reviewInstitutionId: IdSchema,
+    hearing: z
+      .object({ date: DateSchema, noticeReference: z.string().min(1).max(12000) })
+      .strict()
+      .optional(),
+    hearingRecord: z
+      .object({
+        recordedAt: InstantSchema,
+        reviewerId: IdSchema,
+        recordVersion: z.number().int().positive(),
+        account: z.string().min(1).max(12000),
+        evidence: z
+          .array(
+            z
+              .object({
+                id: IdSchema,
+                plaintextSha256: z.string().regex(/^[a-f0-9]{64}$/),
+                checkedAt: InstantSchema,
+                checkMethod: z.literal('synthetic_text_v1'),
+              })
+              .strict(),
+          )
+          .min(1)
+          .max(10),
+        evidenceDigest: z.string().regex(/^[a-f0-9]{64}$/),
+      })
+      .strict()
+      .optional(),
+    decision: z
+      .object({
+        disposition: z.enum(['affirm', 'correct']),
+        decidedAt: InstantSchema,
+        reviewerId: IdSchema,
+        hearingRecordVersion: z.number().int().positive(),
+        reasons: z.string().min(1).max(12000),
+        judicialReviewRoute: z.string().min(1).max(12000),
+        evidenceIds: z.array(IdSchema).min(1),
+        evidenceDigest: z.string().regex(/^[a-f0-9]{64}$/),
+        originalStatePayment: MoneySchema,
+        reviewedStatePayment: MoneySchema,
+        adjustment: z.string().regex(/^-?(0|[1-9][0-9]*)(\.[0-9]{2})$/),
+        scheduleDigest: z.string().regex(/^[a-f0-9]{64}$/),
+        calculationDigest: z.string().regex(/^[a-f0-9]{64}$/),
+      })
+      .strict()
+      .optional(),
+  })
+  .strict();
+export type FinancialReview = z.infer<typeof FinancialReviewSchema>;
 export const RatioSchema = z
   .object({ numerator: z.number().int().nonnegative(), denominator: z.number().int().positive() })
   .strict();

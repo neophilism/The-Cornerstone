@@ -126,6 +126,12 @@ test('a guided cash schedule reaches assigned calculation and member review', as
   await signIn(page, 'fiscal', true);
   await page.getByLabel('Find a record', { exact: true }).fill(title);
   await page.locator('.task-card').getByRole('button', { name: 'Open', exact: true }).click();
+  await page
+    .getByLabel('Synthetic calculation notice date', { exact: true })
+    .fill(new Date().toISOString().slice(0, 10));
+  await page
+    .getByLabel('Synthetic calculation notice reference', { exact: true })
+    .fill('Invented calculation notice; no legal service');
   await page.getByRole('button', { name: 'Calculate published state share', exact: true }).click();
   await expect(page.getByText('Simulation receipt · version 3', { exact: true })).toBeVisible();
   await expect(page.locator('.calculation-summary')).toContainText('45.00');
@@ -137,6 +143,7 @@ test('a guided cash schedule reaches assigned calculation and member review', as
   const appeal = page
     .locator('form')
     .filter({ has: page.getByRole('button', { name: 'Appeal calculation', exact: true }) });
+  await appeal.getByLabel('Amount disputed in this calculation', { exact: true }).fill('5.00');
   await appeal
     .getByLabel('Written reasons', { exact: true })
     .fill('Invented request to review the operating input under the same published rate.');

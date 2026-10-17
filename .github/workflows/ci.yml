@@ -132,6 +132,7 @@ jobs:
       - run: node --import tsx tests/record-export.integration.ts
       - run: node --import tsx tests/receipt-export.integration.ts
       - run: node --import tsx tests/financial-journey.integration.ts
+      - run: node --import tsx tests/financial-review.integration.ts
       - name: Rehearse isolated synthetic backup and restore
         run: node --import tsx tests/restore.integration.ts
         env:
