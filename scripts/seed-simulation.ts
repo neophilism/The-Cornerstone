@@ -62,6 +62,7 @@ try {
       'claim',
       'succession',
       'claim_survival',
+      'deceased_filing',
       'association',
       'opportunity',
       'launch',

@@ -6,7 +6,7 @@ export function ClaimSurvivalSummary({
   record: CaseRecord;
   onOpen: (id: string) => void;
 }) {
-  if (record.kind === 'claim' && record.data['claimControl']) {
+  if (record.kind === 'claim' && record.data['claimControl'] && !record.data['deceasedFilingId']) {
     return (
       <section className="action-panel" style={{ marginTop: 24 }}>
         <h2>The original claim continues</h2>
