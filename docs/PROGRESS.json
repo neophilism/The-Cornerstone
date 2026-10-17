@@ -1,30 +1,31 @@
 {
-  "updated": "2026-10-16",
-  "observedAt": "2026-10-16T16:25:30Z",
+  "updated": "2026-10-17",
+  "observedAt": "2026-10-17T12:37:56Z",
   "scope": "public proposal and synthetic preparation; full program unfinished; no deployment inferred",
-  "lastVerifiedCommit": "6784147d1a9a15b5357774d77108ae61632eacd3",
-  "lastVerifiedTree": "4a4cd16e5a34bef5a1f6890342219d81858456e0",
-  "testedHead": "6784147d1a9a15b5357774d77108ae61632eacd3",
-  "lastVerifiedRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/38928453821",
-  "sourceEvidenceRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/38928453590",
-  "releasePullRequest": "https://github.com/neophilism/The-Cornerstone/pull/39",
+  "lastVerifiedCommit": "3fa24879d12066b5fb976a84bd1112a12a64e918",
+  "lastVerifiedTree": "717c123ffcf954951c623b5f733deecdff945421",
+  "testedHead": "1949c920a6ac2f3b8ba6fb5dda15b35794c52d37",
+  "lastVerifiedRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39032086554",
+  "sourceEvidenceRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39032086521",
+  "releasePullRequest": "https://github.com/neophilism/The-Cornerstone/pull/44",
   "observedMergedPullRequests": [
     1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 23, 24, 25, 26, 27,
-    28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39
+    28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44
   ],
-  "openPullRequestsAtCheckpoint": [22, 40, 41, 42],
-  "localUnitTests": 354,
+  "openPullRequestsAtCheckpoint": [22, 45],
   "livePublicUrl": "https://cornerstone-policy-preview.onrender.com",
-  "deploymentVerifiedAtCheckpoint": true,
+  "deploymentVerifiedAtCheckpoint": false,
   "protectedIntake": false,
   "sourcePublicationApproved": true,
   "internalPlanPublicationApproved": false,
   "securityAssessment": "security/e2eesa-status.json",
   "pending": [
-    "final acceptance of membership recovery, database restore rehearsal and attachment download review",
+    "final-head acceptance of PR 45 access-form recovery",
     "new deceased-worker filings and complete program journeys",
-    "protected identity/recipient/custody integrations and provider capacity",
-    "separate CircleCI connection and exact-suite acceptance",
+    "remaining session/reference disclosure controls",
+    "protected identity/recipient/custody integrations and provider compatibility",
+    "delivery, settlement and financial reconciliation",
+    "CircleCI PR 22 remains separate and unverified; existing GitHub checks remain active",
     "independent human security review as deferred final follow-up"
   ],
   "repositoryMigrations": 15,
@@ -32,12 +33,17 @@
     "units": 25,
     "originalVerifiedMappings": 11,
     "changed": false,
-    "wholeProgramCompletionPercent": null
+    "wholeProgramCompletionPercent": null,
+    "activeRegistry": "registry/prs.json",
+    "observedMergedPrCount": 43
   },
   "verificationCounts": {
-    "unitTests": 342,
-    "privateBrowserCases": 104,
-    "scope": "PR 39 accepted combined synthetic source; public checks, actual database suites and Docker/bootstrap/API job passed; not independent security assessment"
+    "unitTests": 356,
+    "publicBrowserCases": 36,
+    "privateBrowserCases": 114,
+    "privateDesktopCases": 57,
+    "privateMobileCases": 57,
+    "scope": "PR 44 tested head; application/source workflows succeeded; builds, actual PostgreSQL integrations, logical restore, proxy, worker and Docker/bootstrap/API checks passed; counts are not additive across PRs"
   },
   "ciDatabaseImage": {
     "image": "postgis/postgis:18-3.6@sha256:60f6ad1d21ea86a67d47780b9a0d1e1d200500f62b19293fa834d0dea80b8677",
@@ -46,14 +52,95 @@
     "scope": "exact test image, not a production database or security certification"
   },
   "publicDeployment": {
-    "commit": "b6891ef2d1f0fe1a63dd1c4beedcfdd99fb0ea5c",
-    "httpVerifiedAt": "2026-10-16T15:40:31Z",
-    "scope": "public proposal only; newer merged source has not been observed deployed at this checkpoint"
+    "commit": "0da2d023b0421802f1b0464e9cc9908a47265f77",
+    "providerObservedAt": "2026-10-17T12:28:00Z",
+    "providerStatus": "live",
+    "providerObservationBasis": "authorized Render API observation; no new HTTP measurement at this checkpoint",
+    "lastHttpVerifiedAt": "2026-10-16T16:36:14Z",
+    "lastHttpVerificationRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/38933016935",
+    "lastHttpVerifiedCommit": "0da2d023b0421802f1b0464e9cc9908a47265f77",
+    "acceptedMainObservedDeployed": false,
+    "scope": "public proposal only; accepted main and current provider revision are separate"
   },
   "reviewPolicy": {
     "humanSecurityReviewRequiredBeforeDevelopment": false,
     "humanSecurityReviewRequiredBeforeTestDeployment": false,
     "technicalControlsAndRequiredChecksPreserved": true,
     "certificationClaimed": false
-  }
+  },
+  "acceptedChanges": [
+    {
+      "pullRequest": 40,
+      "testedHead": "d9c9954494077fbf75b436f8b38046a40ab6c62a",
+      "mergeCommit": "b6f4071b7b7874ccab84f22c2bc19a1b7ded1c9f",
+      "mergedAt": "2026-10-17T12:16:20Z",
+      "applicationRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/38930758816",
+      "sourceEvidenceRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/38930758835",
+      "checks": "success"
+    },
+    {
+      "pullRequest": 41,
+      "testedHead": "72659a5164b7661928d994e1ec809796f6f64495",
+      "mergeCommit": "3301357c42e507f0629bfca1b532298a16e2559f",
+      "mergedAt": "2026-10-17T12:33:13Z",
+      "applicationRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39031995820",
+      "sourceEvidenceRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39031995747",
+      "checks": "success",
+      "testedTree": "f21d4ab5eb9fc51aa70e938f93430f2e2d491170",
+      "mergeTreeMatchesTestedTree": true
+    },
+    {
+      "pullRequest": 42,
+      "testedHead": "921ca22fd8e45acdd05420b648981f232394f0ee",
+      "mergeCommit": "cdc8cdd20b9229b7b0c47c2ed7f7fbe000b99f3d",
+      "mergedAt": "2026-10-17T12:35:16Z",
+      "applicationRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39032146072",
+      "sourceEvidenceRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39032146089",
+      "checks": "success",
+      "testedTree": "c9e5a07beabb509dff6415f9fd954de5df497dda",
+      "mergeTreeMatchesTestedTree": true
+    },
+    {
+      "pullRequest": 43,
+      "testedHead": "53f8c2f8b8c26ba30952a702ecbcacbd0880ee15",
+      "mergeCommit": "661491c367b863628fd78060f19d7333b0a36729",
+      "mergedAt": "2026-10-17T12:35:51Z",
+      "applicationRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39032075729",
+      "sourceEvidenceRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39032075619",
+      "checks": "success",
+      "testedTree": "1fe7682cbfd6662f4b50001a49dc71aaa1464fef",
+      "mergeTreeMatchesTestedTree": true
+    },
+    {
+      "pullRequest": 44,
+      "testedHead": "1949c920a6ac2f3b8ba6fb5dda15b35794c52d37",
+      "mergeCommit": "3fa24879d12066b5fb976a84bd1112a12a64e918",
+      "mergedAt": "2026-10-17T12:36:12Z",
+      "applicationRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39032086554",
+      "sourceEvidenceRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39032086521",
+      "checks": "success",
+      "testedTree": "717c123ffcf954951c623b5f733deecdff945421",
+      "mergeTreeMatchesTestedTree": true
+    }
+  ],
+  "candidates": [
+    {
+      "pullRequest": 45,
+      "head": "fbd639b8518bbf01dd5e4931ca17a7604851faef",
+      "status": "implemented; repaired final-head CI pending",
+      "applicationRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39033272230",
+      "sourceEvidenceRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39033272265",
+      "accepted": false
+    }
+  ],
+  "restoreRehearsal": {
+    "applicationRun": "https://github.com/neophilism/The-Cornerstone/actions/runs/39032086554",
+    "job": 117394445723,
+    "backupMilliseconds": 1084,
+    "restoreMilliseconds": 1139,
+    "verificationMilliseconds": 136,
+    "checkedTables": 6,
+    "scope": "disposable synthetic same-cluster PostgreSQL; no provider disaster-recovery RPO/RTO claim"
+  },
+  "continuation": "docs/CONTINUATION.md"
 }
