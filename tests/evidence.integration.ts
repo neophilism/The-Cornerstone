@@ -92,6 +92,9 @@ try {
   assert.equal(one.receipt.id, two.receipt.id);
   assert.equal(one.record!.version, 2);
   let list = await evidence.list(actor, record.id);
+  assert.deepEqual(list.context, { actorId: actor.id, realm: actor.realm });
+  assert.equal(list.recordId, record.id);
+  assert.equal(list.version, one.record!.version);
   assert.equal(list.evidence.length, 1);
   const item = list.evidence[0]!;
   assert.equal(item.state, 'quarantined');
@@ -150,6 +153,10 @@ try {
     idempotencyKey: randomUUID(),
   });
   assert.deepEqual((await evidence.download(other, item.id)).bytes, bytes);
+  assert.deepEqual((await evidence.list(other, record.id)).context, {
+    actorId: other.id,
+    realm: other.realm,
+  });
   await assert.rejects(evidence.upload(other, uploadFor(record.id, 4)), /attachment permission/);
   const grantId = (await access.list(actor, record.id))[0]!.id;
   const revoked = await access.revoke(actor, {

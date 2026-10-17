@@ -2,8 +2,6 @@
 import { useMemberAction } from './member-action.js';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import {
-  MembershipSnapshotSchema,
-  RecordSchema,
   FoundingRollViewSchema,
   MemberBallotViewSchema,
   type MembershipSnapshot,
@@ -12,42 +10,28 @@ import {
   type CaseRecord,
   type Receipt,
 } from '@cornerstone/contracts';
+import { PrivateReferenceCopy } from './private-reference-copy.js';
+import {
+  currentMembershipReference,
+  verifiedMemberships,
+  preparePrivateReference,
+  type ReferenceRead,
+} from './private-reference.js';
+import { verifiedRecordOpening } from './record-opening.js';
 type Api = (path: string, body?: unknown) => Promise<any>;
 type Result = { record: CaseRecord; receipt: Receipt };
-function CopyId({ value, label = 'Copy ID' }: { value: string; label?: string }) {
-  const [message, setMessage] = useState('');
-  return (
-    <>
-      <p className="workspace-id">{value}</p>
-      <button
-        className="quiet-button"
-        onClick={async () => {
-          try {
-            await navigator.clipboard.writeText(value);
-            setMessage('Copied.');
-          } catch {
-            setMessage('Select and copy the ID above.');
-          }
-        }}
-      >
-        {label}
-      </button>
-      {message && (
-        <p className="hint" role="status">
-          {message}
-        </p>
-      )}
-    </>
-  );
-}
 export function MembershipPanel({
   records,
+  actorId,
   api,
+  readReference,
   onOpen,
   onRefresh,
 }: {
   records: CaseRecord[];
+  actorId: string;
   api: Api;
+  readReference: ReferenceRead;
   onOpen: (id: string) => void;
   onRefresh: () => Promise<unknown>;
 }) {
@@ -61,10 +45,11 @@ export function MembershipPanel({
     setPending(true);
     setError('');
     setAssociations([]);
+    setSnapshot(null);
     try {
       await onRefresh();
       if (current !== generation.current) return;
-      const next = MembershipSnapshotSchema.parse(await api('memberships'));
+      const next = verifiedMemberships(await api('memberships'), actorId);
       // Membership references outlive the first record page. Resolve a bounded
       // set with current authorization rather than depending on that page's cache.
       const ids = [
@@ -79,13 +64,11 @@ export function MembershipPanel({
           ids.slice(i, i + 5).map(async (id) => {
             try {
               const response = await api('records?recordId=' + encodeURIComponent(id));
-              if (!Array.isArray(response.records) || response.records.length !== 1) return null;
-              const record = RecordSchema.parse(response.records[0]);
-              return record.id === id &&
-                record.kind === 'association' &&
-                record.realm === 'simulation'
-                ? record
-                : null;
+              const { record } = verifiedRecordOpening(response, id, {
+                id: actorId,
+                realm: 'simulation',
+              });
+              return record.kind === 'association' ? record : null;
             } catch {
               return null;
             }
@@ -173,7 +156,26 @@ export function MembershipPanel({
                   First opportunity for funded training, qualified work or a member franchise.
                   Participation stays voluntary; work-based wages and patronage may differ.
                 </p>
-                <CopyId value={u.unitId} label="Copy founding unit ID" />
+                <PrivateReferenceCopy
+                  key={
+                    actorId +
+                    ':' +
+                    u.unitId +
+                    ':' +
+                    u.associationId +
+                    ':' +
+                    u.claimId +
+                    ':' +
+                    u.successor
+                  }
+                  label="founding unit"
+                  disabled={pending}
+                  verify={() =>
+                    preparePrivateReference(readReference, 'memberships', (raw) =>
+                      currentMembershipReference(raw, u, actorId),
+                    )
+                  }
+                />
                 <button
                   className="button button-secondary"
                   disabled={pending}

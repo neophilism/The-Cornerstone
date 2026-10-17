@@ -150,6 +150,20 @@ export function Workspace({
     }
     return data;
   }
+  async function referenceRead(path: string) {
+    const requestSession = sessionGeneration.current;
+    const isCurrent = () => requestSession === sessionGeneration.current;
+    const data = await api(path);
+    if (!isCurrent())
+      throw Error('The session changed before current reference access was confirmed.');
+    return { data, isCurrent };
+  }
+  async function referenceApi(path: string) {
+    const response = await referenceRead(path);
+    if (!response.isCurrent())
+      throw Error('The session changed before the reference read completed.');
+    return response.data;
+  }
   async function refresh() {
     cancelRecordOpening();
     setError('');
@@ -659,8 +673,11 @@ export function Workspace({
           )}
           {view === 'memberships' && !selected && !creating && (
             <MembershipPanel
+              key={session.actor.id + ':' + session.actor.realm + ':' + session.csrf}
               records={records}
-              api={api}
+              actorId={session.actor.id}
+              api={referenceApi}
+              readReference={referenceRead}
               onRefresh={refresh}
               onOpen={(id) => void openRecord(id)}
             />
@@ -813,7 +830,8 @@ export function Workspace({
                 <RecordReferenceCopy
                   key={session.actor.id + ':' + selected.id + ':' + selected.version}
                   record={selected}
-                  api={api}
+                  actorId={session.actor.id}
+                  readReference={referenceRead}
                   disabled={pending || editing || evidenceBusy}
                 />
               </div>
@@ -982,6 +1000,7 @@ export function Workspace({
                           expire: clearSession,
                         })
                       }
+                      readReference={referenceRead}
                       onChanged={confirmedAction}
                     />
                   )}

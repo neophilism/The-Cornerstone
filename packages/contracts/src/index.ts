@@ -178,6 +178,7 @@ export const FoundingMembershipViewSchema = z
 export type FoundingMembershipView = z.infer<typeof FoundingMembershipViewSchema>;
 export const MembershipSnapshotSchema = z
   .object({
+    context: RecordReadContextSchema,
     invitations: z.array(FoundingInvitationViewSchema),
     units: z.array(FoundingMembershipViewSchema),
     realm: z.literal('simulation'),
@@ -301,6 +302,16 @@ export const EvidenceViewSchema = EvidenceMetadataSchema.extend({
   legalAcceptance: z.literal(false),
 }).strict();
 export type EvidenceView = z.infer<typeof EvidenceViewSchema>;
+export const EvidencePageSchema = z
+  .object({
+    context: RecordReadContextSchema,
+    recordId: IdSchema,
+    version: z.number().int().positive(),
+    enabled: z.boolean(),
+    evidence: z.array(EvidenceViewSchema).max(MAX_SYNTHETIC_ATTACHMENTS),
+  })
+  .strict();
+export type EvidencePage = z.infer<typeof EvidencePageSchema>;
 export const MoneySchema = z.string().regex(/^(0|[1-9]\d{0,17})(\.\d{2})?$/);
 const LedgerIdSchema = z.string().min(1).max(200);
 export const FractionSchema = z

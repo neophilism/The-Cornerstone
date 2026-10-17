@@ -2,6 +2,7 @@ import { randomUUID, createHash } from 'node:crypto';
 import {
   EvidenceMetadataSchema,
   EvidenceViewSchema,
+  EvidencePageSchema,
   UploadSyntheticEvidenceSchema,
   ValidateSyntheticEvidenceSchema,
   MAX_SYNTHETIC_EVIDENCE_BYTES,
@@ -110,12 +111,18 @@ export class EvidenceService {
   }
   async list(actor: Actor, id: string) {
     return this.store.transaction(actor, async (tx) => {
-      await this.record(tx, actor, id);
+      const record = await this.record(tx, actor, id);
       const rows = await tx.query(
         'SELECT * FROM evidence_objects WHERE record_id=$1 ORDER BY created_at,id LIMIT 10',
         [id],
       );
-      return { enabled: this.enabled, evidence: rows.rows.map((row) => this.view(row)) };
+      return EvidencePageSchema.parse({
+        context: { actorId: actor.id, realm: actor.realm },
+        recordId: record.id,
+        version: record.version,
+        enabled: this.enabled,
+        evidence: rows.rows.map((row) => this.view(row)),
+      });
     });
   }
   private async save(
