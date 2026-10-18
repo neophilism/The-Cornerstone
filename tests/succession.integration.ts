@@ -27,13 +27,22 @@ try {
   assert.equal(await w.get(candidate, association.id), null);
   assert.equal(await w.get(candidate, firstUnit.claim_id), null);
   await assert.rejects(
-    w.command(labor, request.record, 'approve', { ...request.input, undivided: false }),
+    w.command(labor, request.record, 'approve', {
+      ...request.input,
+      undivided: false,
+    }),
   );
   await assert.rejects(
-    w.command(labor, request.record, 'approve', { ...request.input, deathEstablished: false }),
+    w.command(labor, request.record, 'approve', {
+      ...request.input,
+      deathEstablished: false,
+    }),
   );
   await assert.rejects(
-    w.command(labor, request.record, 'approve', { ...request.input, evidenceIds: [randomUUID()] }),
+    w.command(labor, request.record, 'approve', {
+      ...request.input,
+      evidenceIds: [randomUUID()],
+    }),
   );
   await w.owner.query('UPDATE actors SET conflicts=ARRAY[$2::uuid] WHERE id=$1', [
     labor.id,
@@ -128,7 +137,10 @@ try {
     0,
   );
   await assert.rejects(
-    w.command(candidate, resolution, 'record_vote', { unitId: firstUnit.id, choice: 'no' }),
+    w.command(candidate, resolution, 'record_vote', {
+      unitId: firstUnit.id,
+      choice: 'no',
+    }),
     { code: 'DUPLICATE_BALLOT' },
   );
   await assert.rejects(
@@ -190,7 +202,10 @@ try {
   });
   await w.attach(competitor, proposed);
   await assert.rejects(
-    w.command(competitor, proposed, 'submit', { attested: true, rightsAcknowledged: false }),
+    w.command(competitor, proposed, 'submit', {
+      attested: true,
+      rightsAcknowledged: false,
+    }),
   );
   await assert.rejects(
     new ProgramService(w.store, 'authorized', 'program').create(
@@ -237,7 +252,9 @@ try {
     0,
   );
   assert.equal(await w.get(representative, association.id), null);
-  await w.command(labor, competing.record, 'request_changes', { reasons: findings });
+  await w.command(labor, competing.record, 'request_changes', {
+    reasons: findings,
+  });
   await w.command(competitor, competing.record, 'revise_request');
   assert.equal((await w.get(competitor, competing.record.id))!.data['reviewedUnit'], undefined);
   // Competing, independently prepared requests cannot both transfer one unit.
@@ -259,6 +276,59 @@ try {
     (await w.owner.query('SELECT holder_version FROM founding_units WHERE id=$1', [firstUnit.id]))
       .rows[0].holder_version,
     5,
+  );
+
+  // Two different founding units cannot race into two votes for one successor.
+  const voteFirst = await w.person(),
+    voteSecond = await w.person(),
+    voteCandidate = await w.person();
+  const voteAssociation = await w.association(
+    voteFirst,
+    voteSecond,
+    labor,
+    'Invented concurrent single-vote association',
+  );
+  const voteFirstRequest = await w.request(voteCandidate, voteAssociation.firstUnit.id, labor);
+  const voteSecondRequest = await w.request(voteCandidate, voteAssociation.secondUnit.id, labor);
+  const voteApprovals = await Promise.allSettled([
+    w.command(labor, voteFirstRequest.record, 'approve', voteFirstRequest.input),
+    w.command(labor, voteSecondRequest.record, 'approve', voteSecondRequest.input),
+  ]);
+  assert.equal(voteApprovals.filter((result) => result.status === 'fulfilled').length, 1);
+  const voteFailure = voteApprovals.find((result) => result.status === 'rejected');
+  assert.equal(
+    voteFailure?.status === 'rejected' && voteFailure.reason.code,
+    'SUCCESSION_VOTE_COLLISION',
+  );
+  assert.equal(
+    (
+      await w.owner.query(
+        'SELECT count(*)::int AS n FROM founding_units WHERE association_id=$1 AND successor_id=$2',
+        [voteAssociation.association.id, voteCandidate.id],
+      )
+    ).rows[0].n,
+    1,
+  );
+  assert.equal(
+    (
+      await w.owner.query(
+        'SELECT count(*)::int AS n FROM unit_successions WHERE association_id=$1',
+        [voteAssociation.association.id],
+      )
+    ).rows[0].n,
+    1,
+  );
+  const deniedVoteRequest =
+    voteApprovals[0]?.status === 'rejected' ? voteFirstRequest.record : voteSecondRequest.record;
+  assert.equal((await w.get(voteCandidate, deniedVoteRequest.id))!.state, 'review');
+  assert.equal(
+    (
+      await w.owner.query(
+        "SELECT count(*)::int AS n FROM receipts WHERE record_id=$1 AND action='approve'",
+        [deniedVoteRequest.id],
+      )
+    ).rows[0].n,
+    0,
   );
 
   // Deliberate owner-only fixture mutation exercises the wait/recheck boundary.
