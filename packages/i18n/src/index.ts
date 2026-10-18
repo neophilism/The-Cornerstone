@@ -36,5 +36,25 @@ export const dictionary = {
   },
 } as const;
 export function translate(locale: Locale) {
+  if (!Object.prototype.hasOwnProperty.call(dictionary, locale)) {
+    throw new TypeError('Unsupported locale');
+  }
   return dictionary[locale];
+}
+/** Structural readiness is distinct from human reviewed translation acceptance. */
+export function translationCoverage() {
+  const sourceKeys = Object.keys(dictionary.en).sort();
+  return (['en', 'es'] as const).map((locale) => {
+    const value = dictionary[locale];
+    const missing = sourceKeys.filter((key) => !Object.prototype.hasOwnProperty.call(value, key));
+    const extra = Object.keys(value).filter((key) => !sourceKeys.includes(key));
+    return {
+      locale,
+      sourceKeys: sourceKeys.length,
+      missing,
+      extra,
+      structureComplete: missing.length === 0 && extra.length === 0,
+      humanReviewed: false,
+    };
+  });
 }
