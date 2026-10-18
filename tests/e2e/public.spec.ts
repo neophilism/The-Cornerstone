@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { mkdir, writeFile } from 'node:fs/promises';
 import AxeBuilder from '@axe-core/playwright';
 for (const route of [
   '/',
@@ -66,4 +67,39 @@ test('help search and the workspace tour work', async ({ page }) => {
   await page.getByRole('link', { name: 'Finance & oversight', exact: true }).click();
   await page.getByRole('button', { name: 'See the proposed steps' }).first().click();
   await expect(page.getByText('Approve fixed commitment')).toBeVisible();
+});
+
+test('public policy navigation records isolated browser timing without an SLO claim', async ({
+  page,
+}, info) => {
+  const response = await page.goto('/policy');
+  expect(response?.status()).toBe(200);
+  const timing = await page.evaluate(() => {
+    const navigation = performance.getEntriesByType('navigation')[0] as
+      PerformanceNavigationTiming | undefined;
+    if (!navigation) return null;
+    return {
+      responseMs: navigation.responseEnd - navigation.startTime,
+      domContentLoadedMs: navigation.domContentLoadedEventEnd - navigation.startTime,
+      loadMs: navigation.loadEventEnd - navigation.startTime,
+      transferBytes: navigation.transferSize,
+    };
+  });
+  expect(timing).not.toBeNull();
+  for (const value of Object.values(timing ?? {})) {
+    expect(Number.isFinite(value)).toBe(true);
+    expect(value).toBeGreaterThanOrEqual(0);
+  }
+  await mkdir('test-results', { recursive: true });
+  await writeFile(
+    `test-results/public-performance-${info.project.name}.json`,
+    JSON.stringify({
+      kind: 'isolated-ci-browser-navigation',
+      route: '/policy',
+      project: info.project.name,
+      commit: process.env['GITHUB_SHA'] ?? null,
+      timing,
+      productionSloVerified: false,
+    }),
+  );
 });
