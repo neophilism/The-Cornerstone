@@ -88,4 +88,8 @@ export const schemaInventory = [
     name: '022-independent-standing-reconsideration.sql',
     sha256: '6f5988c6dfe1a0996c44bbbd83464cbca63b8424db992e8db2d41e8c4bb751c8',
   },
+  {
+    name: '023-contested-appeal-hold.sql',
+    sha256: '704438848eb368bad8626836b839864e99e341ba84e0d72905f068ca9f85995a',
+  },
 ] as const;

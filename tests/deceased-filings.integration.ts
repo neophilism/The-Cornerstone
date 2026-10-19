@@ -258,12 +258,10 @@ try {
     reasons: findings,
     evidenceIds: secondPacket.input.evidenceIds,
   });
-  await w.command(labor, firstPacket.record, 'approve', firstPacket.input);
-  await assert.rejects(w.command(labor, secondPacket.record, 'approve', secondPacket.input), {
-    code: 'INVALID_TRANSITION',
-  });
-
   await w.command(second, secondPacket.record, 'request_review', { reasons: findings });
+  await assert.rejects(w.command(labor, firstPacket.record, 'approve', firstPacket.input), {
+    code: 'DECEASED_FILING_CONTESTED',
+  });
   await assert.rejects(
     w.command(labor, secondPacket.record, 'reconsider_denial', {
       reasons: findings,
@@ -283,6 +281,11 @@ try {
   assert.equal((await w.get(second, secondPacket.record.id))!.state, 'changes_requested');
   await w.command(second, secondPacket.record, 'revise_request');
   assert.equal((await w.get(second, secondPacket.record.id))!.state, 'draft');
+
+  await w.command(labor, firstPacket.record, 'approve', firstPacket.input);
+  await assert.rejects(w.command(labor, secondPacket.record, 'approve', secondPacket.input), {
+    code: 'INVALID_TRANSITION',
+  });
 
   // An unused approval can be withdrawn personally without erasing its decision.
   const withdrawnWorker = await w.person(),
