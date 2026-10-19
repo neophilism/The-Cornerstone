@@ -76,4 +76,8 @@ export const schemaInventory = [
     name: '019-contested-deceased-filings.sql',
     sha256: 'f8f013e38f08dbebf342799a0b85a1f84d56bfc43e2b80a57835f54d8885de38',
   },
+  {
+    name: '020-contested-claim-survival.sql',
+    sha256: 'c8cb5efa96429651663d71698ab8b5cf85d20b14e07b6145b2efb59c81ad9b0b',
+  },
 ] as const;

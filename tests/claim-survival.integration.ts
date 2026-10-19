@@ -86,6 +86,28 @@ try {
   ]);
   await assert.rejects(w.command(labor, request.record, 'approve', request.input));
   await w.owner.query("UPDATE actors SET conflicts='{}' WHERE id=$1", [labor.id]);
+  // Separate live reviewed successor requests must not be decided by race timing.
+  for (const packet of [request, competing])
+    await assert.rejects(w.command(labor, packet.record, 'approve', packet.input), {
+      code: 'CLAIM_SURVIVAL_CONTESTED',
+    });
+  assert.equal((await w.get(worker, before.id))!.ownerId, worker.id);
+  for (const packet of [request, competing]) {
+    assert.equal((await w.get(labor, packet.record.id))!.version, packet.record.version);
+    assert.equal(
+      (
+        await w.owner.query(
+          "SELECT count(*)::int n FROM receipts WHERE record_id=$1 AND action='approve'",
+          [packet.record.id],
+        )
+      ).rows[0].n,
+      0,
+    );
+  }
+  await w.command(labor, competing.record, 'deny', {
+    reasons: findings,
+    evidenceIds: competing.input.evidenceIds,
+  });
   const current = (await w.get(labor, request.record.id))!;
   const command = {
     recordId: current.id,
@@ -161,9 +183,9 @@ try {
     1,
   );
   await assert.rejects(w.command(labor, competing.record, 'approve', competing.input), {
-    code: 'CLAIM_SURVIVAL_STALE',
+    code: 'INVALID_TRANSITION',
   });
-  assert.equal((await w.get(competitor, competing.record.id))!.version, competing.record.version);
+  assert.equal((await w.get(competitor, competing.record.id))!.state, 'denied');
   assert.equal(
     (
       await w.owner.query(
