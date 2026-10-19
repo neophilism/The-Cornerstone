@@ -8,20 +8,65 @@ export type ReplayEvent = Readonly<{
   after: readonly Match[];
 }>;
 
-function isPair(value: unknown): value is Match {
-  if (typeof value !== 'object' || value === null) return false;
-  const pair = value as Record<string, unknown>;
-  return typeof pair.applicantId === 'string' && typeof pair.offerId === 'string';
-}
-
 const pairKey = (m: Match) => JSON.stringify([m.applicantId, m.offerId]);
 const ordered = (pairs: readonly Match[]) => pairs.map(pairKey).sort();
+
+function invalid(code: string): never {
+  throw new MatchingError(code, 'Recorded negotiation evidence is malformed.');
+}
+
+/** Take exactly one descriptor-backed copy; never reread caller-owned event fields. */
+function ownData(object: object, key: string, code: string): unknown {
+  const property = Object.getOwnPropertyDescriptor(object, key);
+  if (!property || !Object.hasOwn(property, 'value')) return invalid(code);
+  return property.value;
+}
+
+function snapshotPair(value: unknown, code: string): Match {
+  if (typeof value !== 'object' || value === null || Array.isArray(value))
+    return invalid(code);
+  const applicantId = ownData(value, 'applicantId', code);
+  const offerId = ownData(value, 'offerId', code);
+  if (typeof applicantId !== 'string' || typeof offerId !== 'string') return invalid(code);
+  return { applicantId, offerId };
+}
+
+function snapshotArray<T>(value: unknown, code: string, map: (value: unknown) => T): T[] {
+  if (!Array.isArray(value)) return invalid(code);
+  const length = ownData(value, 'length', code);
+  if (!Number.isSafeInteger(length) || (length as number) < 0) return invalid(code);
+  const result: T[] = [];
+  for (let index = 0; index < (length as number); index++)
+    result.push(map(ownData(value, String(index), code)));
+  return result;
+}
+
+function snapshotEvent(value: unknown): ReplayEvent {
+  const code = 'INVALID_REPLAY_EVENT';
+  if (typeof value !== 'object' || value === null || Array.isArray(value))
+    return invalid(code);
+  const sequence = ownData(value, 'sequence', code);
+  const failed = snapshotPair(ownData(value, 'failed', code), code);
+  const willingApplicantIds = snapshotArray(
+    ownData(value, 'willingApplicantIds', code),
+    code,
+    (id) => {
+      if (typeof id !== 'string') return invalid(code);
+      return id;
+    },
+  );
+  const before = snapshotArray(ownData(value, 'before', code), 'REPLAY_MISMATCH', (pair) =>
+    snapshotPair(pair, 'REPLAY_MISMATCH'),
+  );
+  const after = snapshotArray(ownData(value, 'after', code), 'REPLAY_MISMATCH', (pair) =>
+    snapshotPair(pair, 'REPLAY_MISMATCH'),
+  );
+  if (typeof sequence !== 'number') return invalid(code);
+  return { sequence, failed, willingApplicantIds, before, after };
+}
+
 function checkSnapshot(expected: readonly Match[], actual: readonly Match[]) {
-  if (
-    !Array.isArray(actual) ||
-    actual.length !== expected.length ||
-    !Array.from({ length: actual.length }, (_, index) => actual[index]).every(isPair)
-  )
+  if (actual.length !== expected.length)
     throw new MatchingError(
       'REPLAY_MISMATCH',
       'Recorded allocations diverge from frozen matching.',
@@ -35,21 +80,6 @@ function checkSnapshot(expected: readonly Match[], actual: readonly Match[]) {
     );
 }
 
-function checkEvent(event: unknown): asserts event is ReplayEvent {
-  if (typeof event !== 'object' || event === null)
-    throw new MatchingError('INVALID_REPLAY_EVENT', 'Negotiation event is malformed.');
-  const value = event as Record<string, unknown>;
-  const willing = value.willingApplicantIds;
-  if (
-    !isPair(value.failed) ||
-    !Array.isArray(willing) ||
-    !Array.from({ length: willing.length }, (_, index) => willing[index]).every(
-      (id: unknown) => typeof id === 'string',
-    )
-  )
-    throw new MatchingError('INVALID_REPLAY_EVENT', 'Negotiation event is malformed.');
-}
-
 /** Replay only declared frozen inputs; authentication and custody remain separate. */
 export function replayFailedMatches(round: Round, events: readonly ReplayEvent[]) {
   const initial = match(round).matches;
@@ -59,13 +89,15 @@ export function replayFailedMatches(round: Round, events: readonly ReplayEvent[]
     (count, applicant) => count + applicant.choices.length,
     0,
   );
-  if (events.length > maxDeclines)
+  const eventCount = ownData(events, 'length', 'INVALID_REPLAY_EVENT');
+  if (!Number.isSafeInteger(eventCount)) return invalid('INVALID_REPLAY_EVENT');
+  if ((eventCount as number) > maxDeclines)
     throw new MatchingError('REPLAY_TOO_LONG', 'Negotiation history exceeds frozen choices.');
   let current = initial;
   const declinedPairs: Match[] = [];
   const steps: { sequence: number; failed: Match; matches: Match[] }[] = [];
-  for (const [index, event] of events.entries()) {
-    checkEvent(event);
+  for (let index = 0; index < (eventCount as number); index++) {
+    const event = snapshotEvent(ownData(events, String(index), 'INVALID_REPLAY_EVENT'));
     if (!Number.isSafeInteger(event.sequence) || event.sequence !== index + 1)
       throw new MatchingError(
         'INVALID_REPLAY_SEQUENCE',
