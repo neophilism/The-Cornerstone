@@ -129,6 +129,8 @@ export function replayFailedMatches(round: Round, events: readonly ReplayEvent[]
   let current = initial;
   const declinedPairs: Match[] = [];
   const steps: { sequence: number; failed: Match; matches: Match[] }[] = [];
+  // Preserve the complete verified, detached transcript for reproducible receipts.
+  const verifiedEvents: ReplayEvent[] = [];
   for (let index = 0; index < (eventCount as number); index++) {
     const event = snapshotEvent(
       ownData(events, String(index), 'INVALID_REPLAY_EVENT'),
@@ -149,6 +151,13 @@ export function replayFailedMatches(round: Round, events: readonly ReplayEvent[]
       declinedPairs,
     );
     checkSnapshot(next, event.after);
+    verifiedEvents.push({
+      sequence: event.sequence,
+      failed: { ...event.failed },
+      willingApplicantIds: [...event.willingApplicantIds],
+      before: current.map((pair) => ({ ...pair })),
+      after: next.map((pair) => ({ ...pair })),
+    });
     declinedPairs.push({ ...event.failed });
     steps.push({
       sequence: event.sequence,
@@ -161,6 +170,7 @@ export function replayFailedMatches(round: Round, events: readonly ReplayEvent[]
     algorithm: frozenRound.algorithm,
     roundId: frozenRound.id,
     initial: initial.map((pair) => ({ ...pair })),
+    verifiedEvents,
     steps,
     matches: current.map((pair) => ({ ...pair })),
     declinedPairs,
