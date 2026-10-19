@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { MatchingError, replayFailedMatches, type ReplayEvent, type Round } from '@cornerstone/matching';
+import {
+  MatchingError,
+  replayFailedMatches,
+  type ReplayEvent,
+  type Round,
+} from '@cornerstone/matching';
 
 const pair = (applicantId: string, offerId: string) => ({ applicantId, offerId });
 const round: Round = {
