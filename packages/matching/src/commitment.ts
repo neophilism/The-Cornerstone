@@ -90,9 +90,8 @@ export async function hashVerifiedReplay(
   if (!subtle)
     throw new MatchingError('REPLAY_DIGEST_UNAVAILABLE', 'Cryptographic SHA-256 is unavailable.');
   const digest = await subtle.digest('SHA-256', new TextEncoder().encode(canonical));
-  const digestHex = Array.from(new Uint8Array(digest), (byte) =>
-    byte.toString(16).padStart(2, '0'),
-  ).join('');
+  const hexBytes = [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0'));
+  const digestHex = hexBytes.join('');
   const commitment: ReplayCommitment = {
     domain: REPLAY_COMMITMENT_DOMAIN,
     hashAlgorithm: 'SHA-256',
