@@ -103,13 +103,14 @@ export async function hashVerifiedReplay(
 }
 
 /**
- * Recompute a previously recorded digest against supplied source and events.
+ * Recompute a recorded digest against externally expected source and supplied events.
  * An attacker who can replace both the evidence and digest can still forge them.
  */
 export async function verifyVerifiedReplay(
   round: Round,
   events: readonly ReplayEvent[],
   claimed: ReplayCommitment,
+  expectedSourceCommitSha: string,
 ) {
   let isArray: boolean;
   try {
@@ -132,7 +133,15 @@ export async function verifyVerifiedReplay(
     !/^[a-f0-9]{64}$/.test(digestHex)
   )
     throw new MatchingError('INVALID_REPLAY_COMMITMENT', 'Replay commitment is malformed.');
-  const computed = await hashVerifiedReplay(round, events, sourceCommitSha);
+  // Receipt metadata does not establish its own trusted source-code revision.
+  // Callers must obtain this expected SHA from a separately authenticated release inventory.
+  requireSourceRevision(expectedSourceCommitSha);
+  if (sourceCommitSha !== expectedSourceCommitSha)
+    throw new MatchingError(
+      'REPLAY_COMMITMENT_SOURCE_MISMATCH',
+      'Replay receipt source revision does not match the trusted expected revision.',
+    );
+  const computed = await hashVerifiedReplay(round, events, expectedSourceCommitSha);
   // Fixed-size comparison does not early-return on a matching digest prefix.
   let difference = 0;
   for (let i = 0; i < digestHex.length; i++)

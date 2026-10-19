@@ -62,7 +62,9 @@ describe('CS-20 version-bound synthetic replay commitments', () => {
       'f34f76525f5471aa701b029a9ca6a88208353a3a252f95d939e753268a85fe7b',
     );
     expect(replay.matches).toEqual(third);
-    expect(await verifyVerifiedReplay(round, replay.verifiedEvents, commitment)).toEqual(replay);
+    expect(
+      await verifyVerifiedReplay(round, replay.verifiedEvents, commitment, sourceCommitSha),
+    ).toEqual(replay);
     const repeated = await hashVerifiedReplay(round, replay.verifiedEvents, sourceCommitSha);
     expect(repeated.commitment).toEqual(commitment);
   });
@@ -115,12 +117,12 @@ describe('CS-20 version-bound synthetic replay commitments', () => {
       code: 'REPLAY_MISMATCH',
     });
     const stale = { ...commitment, digestHex: '0'.repeat(64) };
-    await expect(verifyVerifiedReplay(round, events, stale)).rejects.toMatchObject({
+    await expect(verifyVerifiedReplay(round, events, stale, sourceCommitSha)).rejects.toMatchObject({
       code: 'REPLAY_COMMITMENT_MISMATCH',
     });
     const malformed = { ...commitment, sourceCommitSha: 'unverified' };
     await expect(
-      verifyVerifiedReplay(round, events, malformed as ReplayCommitment),
+      verifyVerifiedReplay(round, events, malformed as ReplayCommitment, sourceCommitSha),
     ).rejects.toMatchObject({ code: 'INVALID_REPLAY_COMMITMENT' });
     const getterReceipt = Object.create(null) as Record<string, unknown>;
     for (const key of ['domain', 'hashAlgorithm', 'sourceCommitSha', 'digestHex']) {
@@ -132,13 +134,28 @@ describe('CS-20 version-bound synthetic replay commitments', () => {
       });
     }
     await expect(
-      verifyVerifiedReplay(round, events, getterReceipt as ReplayCommitment),
+      verifyVerifiedReplay(round, events, getterReceipt as ReplayCommitment, sourceCommitSha),
     ).rejects.toMatchObject({ code: 'INVALID_REPLAY_COMMITMENT' });
     const revoked = Proxy.revocable({}, {});
     revoked.revoke();
     await expect(
-      verifyVerifiedReplay(round, events, revoked.proxy as ReplayCommitment),
+      verifyVerifiedReplay(round, events, revoked.proxy as ReplayCommitment, sourceCommitSha),
     ).rejects.toMatchObject({ code: 'INVALID_REPLAY_COMMITMENT' });
+  });
+
+  it('rejects a rehashed receipt for a different trusted source revision', async () => {
+    const original = await hashVerifiedReplay(round, events, sourceCommitSha);
+    const substitutedSha = 'b'.repeat(40);
+    const selfConsistentSubstitute = await hashVerifiedReplay(round, events, substitutedSha);
+    await expect(
+      verifyVerifiedReplay(round, events, selfConsistentSubstitute.commitment, sourceCommitSha),
+    ).rejects.toMatchObject({ code: 'REPLAY_COMMITMENT_SOURCE_MISMATCH' });
+    expect(
+      await verifyVerifiedReplay(round, events, original.commitment, sourceCommitSha),
+    ).toEqual(original.replay);
+    await expect(
+      verifyVerifiedReplay(round, events, original.commitment, 'not-an-exact-sha'),
+    ).rejects.toMatchObject({ code: 'INVALID_REPLAY_SOURCE_REVISION' });
   });
 
   it('returns detached verified evidence and distinguishes empty history', async () => {
