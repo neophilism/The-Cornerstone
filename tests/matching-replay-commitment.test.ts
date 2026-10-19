@@ -117,7 +117,9 @@ describe('CS-20 version-bound synthetic replay commitments', () => {
       code: 'REPLAY_MISMATCH',
     });
     const stale = { ...commitment, digestHex: '0'.repeat(64) };
-    await expect(verifyVerifiedReplay(round, events, stale, sourceCommitSha)).rejects.toMatchObject({
+    await expect(
+      verifyVerifiedReplay(round, events, stale, sourceCommitSha),
+    ).rejects.toMatchObject({
       code: 'REPLAY_COMMITMENT_MISMATCH',
     });
     const malformed = { ...commitment, sourceCommitSha: 'unverified' };
