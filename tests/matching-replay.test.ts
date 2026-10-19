@@ -140,9 +140,7 @@ describe('frozen negotiation history replay', () => {
       },
       offerId: 'x',
     };
-    fails('INVALID_REPLAY_EVENT', () =>
-      replayFailedMatches(round, [{ ...history[0], failed }]),
-    );
+    fails('INVALID_REPLAY_EVENT', () => replayFailedMatches(round, [{ ...history[0], failed }]));
 
     const before = [...history[0].before];
     Object.defineProperty(before, 0, {
@@ -150,9 +148,7 @@ describe('frozen negotiation history replay', () => {
         throw new Error('Untrusted allocation getter must not execute.');
       },
     });
-    fails('REPLAY_MISMATCH', () =>
-      replayFailedMatches(round, [{ ...history[0], before }]),
-    );
+    fails('REPLAY_MISMATCH', () => replayFailedMatches(round, [{ ...history[0], before }]));
 
     const events = [history[0]];
     Object.defineProperty(events, 0, {
@@ -178,5 +174,4 @@ describe('frozen negotiation history replay', () => {
     expect(verified.steps[0]!.failed).toEqual(pair('a', 'x'));
     expect(verified.initial).toEqual(first);
   });
-
 });
