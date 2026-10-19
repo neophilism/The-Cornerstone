@@ -1,0 +1,7 @@
+# Fail-closed malformed proxy replay evidence (CS-20 partial slice)
+
+A revoked Proxy can make `Array.isArray()` throw. An attacker-provided `getOwnPropertyDescriptor` trap can also throw during the otherwise bounded replay snapshot. Prior v33 returned an unclassified `TypeError` or attacker-originated `Error` in those cases, violating the typed rejection contract and potentially disrupting callers that distinguish malformed evidence from infrastructure failures.
+
+The adapter now catches these two reflection failures at their exact boundaries and consistently rejects with `MatchingError` using the existing `INVALID_REPLAY_EVENT` or `REPLAY_MISMATCH` code. Source round-cloning remains subject to its existing typed `INVALID_ROUND` guard; normal replay, prior accessor snapshotting, event limits and frozen-round continuity remain in place. It does not hide errors from trusted `match` or continuation computation.
+
+`tests/matching-replay-proxy-failures.test.ts` covers revoked event arrays, throwing length descriptors, revoked nested pairs, a throwing nested pair descriptor (with no continued element reads), and unchanged valid/empty replay. This is synthetic input validation, not source authentication, custody, institutional release or independently reviewed security conformance. Run actual repository tests, PostgreSQL and browser CI on the eventual authoritative GitHub head before acceptance.

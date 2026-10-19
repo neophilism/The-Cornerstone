@@ -1,0 +1,9 @@
+# Bounded synthetic matching replay evidence
+
+A valid frozen round limits the number of failed events by the total number of ranked applicant choices. That alone does **not** bound the amount of evidence inside one replay event: a purported before/after allocation can contain arbitrarily many pairs, and a purported willingness list can contain arbitrarily many applicants.
+
+This CS-20 contributing slice checks each own array `length` descriptor **before reading element descriptors**. The willingness list is limited by the frozen applicant count. The before and after allocation snapshots are limited by the smaller of the frozen applicant and offer counts, because an indivisible offer and applicant can each be active only once. Missing, sparse or accessor-backed elements remain invalid. An oversized allocation is rejected with `REPLAY_MISMATCH`; oversized willingness is rejected with `INVALID_REPLAY_EVENT`.
+
+`tests/matching-replay-single-event-bounds.test.ts` uses instrumented first-element descriptor traps on oversized arrays, asserts the getters are never invoked, checks typed failures and preserves a valid replay. The supplemental offline acceptance in the checkpoint is not the full repository test suite. This protects synthetic replay from oversized per-event data; it is not an authenticated provenance record, independently held sealed-choice service, storage quota, protected deployment or institutional acceptance.
+
+The outer transcript's own `length` must also be a nonnegative safe integer. A forged negative length previously caused the replay to report an empty, successful history even when the underlying array contained an event; it now fails with `INVALID_REPLAY_EVENT`. A legitimately empty event array remains supported. These defensive object-descriptor checks are not cryptographic authenticity of a caller-controlled transcript.
