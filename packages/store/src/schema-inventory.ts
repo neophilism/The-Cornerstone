@@ -72,4 +72,8 @@ export const schemaInventory = [
     name: '018-synthetic-state-offers.sql',
     sha256: '50845b90ddce5f4bfe7b0d205ec7007f3feb5bde08ee075e83c9496e31f3b84c',
   },
+  {
+    name: '019-contested-deceased-filings.sql',
+    sha256: 'f8f013e38f08dbebf342799a0b85a1f84d56bfc43e2b80a57835f54d8885de38',
+  },
 ] as const;

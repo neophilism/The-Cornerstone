@@ -19,6 +19,8 @@ export class DeceasedFilingService {
           'The reviewed worker or capacity changed. Request corrections and begin a fresh review.',
         DECEASED_FILING_RECEIPT:
           'This operation requires receipts bound to the exact standing review and new claim.',
+        DECEASED_FILING_CONTESTED:
+          'Another reviewed standing packet names this worker. Resolve the conflicting packet through assigned review before approval; no standing was granted.',
         DECEASED_WORKER_ALREADY_RECORDED:
           'A claim or approved filing already exists for this worker. Continue the existing case through its proper review route; no additional claim was created.',
         DECEASED_FILING_PERSONAL:

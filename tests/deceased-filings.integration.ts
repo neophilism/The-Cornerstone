@@ -231,7 +231,7 @@ try {
     1,
   );
 
-  // Competing requests serialize on the original worker; only one approval survives.
+  // Two live reviewed packets for one worker are held; neither applicant wins a race.
   const contestedWorker = await w.person(),
     first = await w.person(),
     second = await w.person();
@@ -243,17 +243,25 @@ try {
     w.command(labor, firstPacket.record, 'approve', firstPacket.input),
     w.command(labor, secondPacket.record, 'approve', secondPacket.input),
   ]);
-  assert.equal(competition.filter((result) => result.status === 'fulfilled').length, 1);
-  assert.equal(
-    competition.find((result) => result.status === 'rejected')?.reason.code,
-    'DECEASED_WORKER_ALREADY_RECORDED',
-  );
-  const losing = competition[0]!.status === 'rejected' ? firstPacket.record : secondPacket.record;
-  assert.equal((await w.get(labor, losing.id))!.state, 'review');
-  assert.deepEqual(
-    await counts(losing.id),
-    losing.id === firstPacket.record.id ? beforeFirst : beforeSecond,
-  );
+  assert.equal(competition.filter((result) => result.status === 'fulfilled').length, 0);
+  for (const result of competition)
+    assert.equal(
+      result.status === 'rejected' ? result.reason.code : '',
+      'DECEASED_FILING_CONTESTED',
+    );
+  assert.deepEqual(await counts(firstPacket.record.id), beforeFirst);
+  assert.deepEqual(await counts(secondPacket.record.id), beforeSecond);
+  assert.equal((await w.get(first, firstPacket.record.id))!.state, 'review');
+  assert.equal((await w.get(second, secondPacket.record.id))!.state, 'review');
+  // Resolution is a recorded staff decision, not an automatic choice of applicant.
+  await w.command(labor, secondPacket.record, 'deny', {
+    reasons: findings,
+    evidenceIds: secondPacket.input.evidenceIds,
+  });
+  await w.command(labor, firstPacket.record, 'approve', firstPacket.input);
+  await assert.rejects(w.command(labor, secondPacket.record, 'approve', secondPacket.input), {
+    code: 'INVALID_TRANSITION',
+  });
 
   // A simultaneous ordinary personal claim cannot bypass the worker reservation.
   const racingWorker = await w.person(),
@@ -479,7 +487,7 @@ try {
     { code: 'PROTECTED_INTAKE_DISABLED' },
   );
   console.log(
-    'PASS: receipt-bound standing, personal one-claim creation, separate injury evidence, exact replay, current-access denial, immutable review, competing/ordinary-claim races, correction rebinding, historical survival detection and estate enrollment.',
+    'PASS: receipt-bound standing, personal one-claim creation, separate injury evidence, exact replay, current-access denial, immutable review, contested-standing hold and ordinary-claim race, correction rebinding, historical survival detection and estate enrollment.',
   );
 } finally {
   await w.close();
