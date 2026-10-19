@@ -121,6 +121,33 @@ describe('published common-priority matching', () => {
     expect(continued.filter((m) => m.applicantId === 'a2')).toHaveLength(1);
     expect(continued).not.toContainEqual(failure);
   });
+  it('requires literal boolean readiness through matching and continuation', () => {
+    const r = round([['o0']]);
+    const active = [{ applicantId: 'a0', offerId: 'o0' }];
+    const requireNotReady = (operation: () => unknown) => {
+      try {
+        operation();
+      } catch (error) {
+        expect(error).toMatchObject({ code: 'NOT_READY' });
+        return;
+      }
+      throw new Error('Invalid readiness passed validation.');
+    };
+    expect(match(r).matches).toEqual(active);
+    expect(continueFailedMatch(r, active, active[0]!, [], [])).toEqual([]);
+    for (const field of ['ready', 'unremedied'] as const) {
+      for (const value of ['true', 'false', 1, [], {}, false, null, undefined]) {
+        const malformed = {
+          ...r,
+          applicants: r.applicants.map((a) => ({ ...a, [field]: value })),
+        } as unknown as Round;
+        requireNotReady(() => match(malformed));
+        requireNotReady(() =>
+          continueFailedMatch(malformed, active, active[0]!, ['a0'], []),
+        );
+      }
+    }
+  });
   it('rejects overlapping rights, duplicate constituents and invalid loss dates', () => {
     const r = round([['o0'], ['o1']]);
     expect(() =>

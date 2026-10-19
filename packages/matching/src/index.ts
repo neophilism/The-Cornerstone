@@ -86,8 +86,8 @@ function validate(round: Round) {
       );
     const date = new Date(`${a.priorityDate}T00:00:00Z`);
     if (
-      !a.ready ||
-      !a.unremedied ||
+      a.ready !== true ||
+      a.unremedied !== true ||
       !/^\d{4}-\d{2}-\d{2}$/.test(a.priorityDate) ||
       Number.isNaN(date.valueOf()) ||
       date.toISOString().slice(0, 10) !== a.priorityDate

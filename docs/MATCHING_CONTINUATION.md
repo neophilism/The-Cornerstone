@@ -6,6 +6,8 @@ The matching package now validates the complete supplied continuation state befo
 
 The approved [Federal Cornerstone draft](../policy/Federal_Cornerstone_Bill.docx), §5(b)–(c), supplies the common priority rule, fixed public tie order, original acceptable rankings, protection of surviving matches and one active match per Association. On failure, the unsuccessful Association advances to its next choice while the returned offer is available to the next willing eligible Association without an active match. The paired [Model State draft](../policy/Model_State_Cornerstone_Enabling_Act.docx), §3(d), preserves that Exchange process. Both documents are proposals, and their original bytes remain unchanged.
 
+The frozen readiness flags must be literal booleans: only `ready: true` and `unremedied: true` are accepted. Truthy strings, numbers and objects are rejected before either initial matching or failed-negotiation continuation; synthetically typed clients do not establish runtime validity.
+
 The pure calculation uses the original round's applicant identities, constituent identities, publication versions, non-overlapping rights, eligibility lists, actual priority dates and fixed draw order. It cannot establish whether a caller has supplied the authoritative current version of those facts. The future custody and workflow adapter must bind them to authenticated immutable records and independently released choices before real use.
 
 ## Input contract
