@@ -263,6 +263,27 @@ try {
     code: 'INVALID_TRANSITION',
   });
 
+  await w.command(second, secondPacket.record, 'request_review', { reasons: findings });
+  await assert.rejects(
+    w.command(labor, secondPacket.record, 'reconsider_denial', {
+      reasons: findings,
+      evidenceIds: secondPacket.input.evidenceIds,
+    }),
+    { code: 'DECEASED_FILING_SCOPE' },
+  );
+  const appealReviewer = await w.person('labor');
+  await w.owner.query(
+    'UPDATE actors SET institution_id=$2, assignments=array_append(assignments,$3::uuid) WHERE id=$1',
+    [appealReviewer.id, secondPacket.record.institutionId, secondPacket.record.id],
+  );
+  await w.command(appealReviewer, secondPacket.record, 'reconsider_denial', {
+    reasons: findings,
+    evidenceIds: secondPacket.input.evidenceIds,
+  });
+  assert.equal((await w.get(second, secondPacket.record.id))!.state, 'changes_requested');
+  await w.command(second, secondPacket.record, 'revise_request');
+  assert.equal((await w.get(second, secondPacket.record.id))!.state, 'draft');
+
   // An unused approval can be withdrawn personally without erasing its decision.
   const withdrawnWorker = await w.person(),
     withdrawing = await w.person(),

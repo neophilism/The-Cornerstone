@@ -612,6 +612,16 @@ export const workflows: WorkflowDefinition[] = [
       ),
       deny('labor', 'claim'),
       appeal(),
+      action(
+        'reconsider_denial',
+        'Reopen after independent administrative review',
+        ['review_requested'],
+        'changes_requested',
+        ['labor'],
+        'claim',
+        [reasons, evidence],
+        'A different assigned reviewer records why the denied packet may be corrected. No standing or claim control is granted.',
+      ),
     ],
   ),
   w(
@@ -745,6 +755,16 @@ export const workflows: WorkflowDefinition[] = [
       ),
       deny('labor', 'claim'),
       appeal(),
+      action(
+        'reconsider_denial',
+        'Reopen after independent administrative review',
+        ['review_requested'],
+        'changes_requested',
+        ['labor'],
+        'claim',
+        [reasons, evidence],
+        'A different assigned reviewer records why the denied packet may be corrected. No standing or claim control is granted.',
+      ),
     ],
   ),
   w(

@@ -195,6 +195,26 @@ try {
     ).rows[0].n,
     0,
   );
+  await w.command(competitor, competing.record, 'request_review', { reasons: findings });
+  await assert.rejects(
+    w.command(labor, competing.record, 'reconsider_denial', {
+      reasons: findings,
+      evidenceIds: competing.input.evidenceIds,
+    }),
+    { code: 'CLAIM_SURVIVAL_SCOPE' },
+  );
+  const independent = await w.person('labor');
+  await w.owner.query(
+    'UPDATE actors SET institution_id=$2, assignments=array_append(array_append(assignments,$3::uuid),$4::uuid) WHERE id=$1',
+    [independent.id, current.institutionId, competing.record.id, before.id],
+  );
+  await w.command(independent, competing.record, 'reconsider_denial', {
+    reasons: findings,
+    evidenceIds: competing.input.evidenceIds,
+  });
+  assert.equal((await w.get(competitor, competing.record.id))!.state, 'changes_requested');
+  await w.command(competitor, competing.record, 'revise_request');
+  assert.equal((await w.get(competitor, competing.record.id))!.state, 'draft');
   await assert.rejects(respondFixture(w, worker, oldCohort), { code: 'FOUNDING_HOLDER_CHANGED' });
   await assert.rejects(closeAssociationFixture(w, labor, oldCohort), {
     code: 'FOUNDING_CLAIM_REQUIRED',

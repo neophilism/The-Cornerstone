@@ -52,6 +52,19 @@ export class ClaimSurvivalService {
         rightsHolderId: context.rights_holder_id,
       };
     }
+    if (action === 'reconsider_denial') {
+      const context = (
+        await tx.query('SELECT * FROM simulation_claim_survival_context($1,$2)', [
+          record.id,
+          IdSchema.parse(data['claimId']),
+        ])
+      ).rows[0];
+      requireCondition(
+        context && !context.enrolled,
+        'CLAIM_SURVIVAL_SCOPE',
+        'A newly assigned independent reviewer and an un-enrolled existing claim are required to reopen a denied request.',
+      );
+    }
     if (action === 'approve') {
       const context = data['reviewedClaim'] as Record<string, unknown> | undefined;
       requireCondition(
