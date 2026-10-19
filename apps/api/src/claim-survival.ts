@@ -52,6 +52,19 @@ export class ClaimSurvivalService {
         rightsHolderId: context.rights_holder_id,
       };
     }
+    if (action === 'reconsider_denial' || action === 'affirm_denial') {
+      const context = (
+        await tx.query('SELECT * FROM simulation_claim_survival_context($1,$2)', [
+          record.id,
+          IdSchema.parse(data['claimId']),
+        ])
+      ).rows[0];
+      requireCondition(
+        context && !context.enrolled,
+        'CLAIM_SURVIVAL_SCOPE',
+        'A newly assigned independent reviewer and an un-enrolled existing claim are required to reopen a denied request.',
+      );
+    }
     if (action === 'approve') {
       const context = data['reviewedClaim'] as Record<string, unknown> | undefined;
       requireCondition(
@@ -79,6 +92,13 @@ export class ClaimSurvivalService {
     }
     return data;
   }
+  async recordReview(tx: Transaction, request: CaseRecord, receipt: Receipt) {
+    await tx.query('SELECT simulation_record_claim_survival_review($1,$2,$3)', [
+      request.id,
+      IdSchema.parse(request.data['claimId']),
+      receipt.id,
+    ]);
+  }
   async finish(tx: Transaction, actor: Actor, request: CaseRecord, approval: Receipt) {
     const context = request.data['reviewedClaim'] as Record<string, unknown>;
     const claimId = IdSchema.parse(context['claimId']);
@@ -105,6 +125,8 @@ export class ClaimSurvivalService {
           'The assigned review or claim permissions changed. No claim was transferred.',
         CLAIM_ALREADY_ENROLLED:
           'This claim has entered a founding roll. Use the unit-succession route; no second claim or unit was created.',
+        CLAIM_SURVIVAL_CONTESTED:
+          'Another live reviewed successor request names this claim. Resolve the competing request through assigned review before approval; no holder was changed.',
         CLAIM_SURVIVAL_STALE:
           'The original claim or its holder changed. Reopen review; the decision and transfer were rolled back.',
         CLAIM_SURVIVAL_RECIPIENT:

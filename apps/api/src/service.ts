@@ -254,6 +254,8 @@ export class ProgramService {
         await new GovernanceService(this.store).share(tx, next, receipt);
       if (record.kind === 'succession' && a.key === 'approve')
         await new SuccessionService().finish(tx, next, receipt);
+      if (record.kind === 'claim_survival' && a.key === 'begin_review')
+        await new ClaimSurvivalService(this.store).recordReview(tx, next, receipt);
       if (record.kind === 'claim_survival' && a.key === 'approve')
         await new ClaimSurvivalService(this.store).finish(tx, actor, next, receipt);
       if (record.kind === 'deceased_filing')
