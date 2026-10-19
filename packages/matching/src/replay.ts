@@ -76,8 +76,11 @@ function snapshotEvent(value: unknown, maxPairs: number, maxApplicants: number):
       return id;
     },
   );
-  const before = snapshotArray(ownData(value, 'before', code), 'REPLAY_MISMATCH', maxPairs, (pair) =>
-    snapshotPair(pair, 'REPLAY_MISMATCH'),
+  const before = snapshotArray(
+    ownData(value, 'before', code),
+    'REPLAY_MISMATCH',
+    maxPairs,
+    (pair) => snapshotPair(pair, 'REPLAY_MISMATCH'),
   );
   const after = snapshotArray(ownData(value, 'after', code), 'REPLAY_MISMATCH', maxPairs, (pair) =>
     snapshotPair(pair, 'REPLAY_MISMATCH'),
