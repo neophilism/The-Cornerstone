@@ -25,6 +25,8 @@ export class DeceasedFilingService {
           'A claim or approved filing already exists for this worker. Continue the existing case through its proper review route; no additional claim was created.',
         DECEASED_FILING_PERSONAL:
           'Only the approved applicant with current access may personally open this claim.',
+        DECEASED_FILING_ALREADY_USED:
+          'This standing has already opened a claim or was withdrawn. No second action was recorded.',
         DECEASED_CLAIM_ALREADY_OPENED:
           'This standing decision already opened its one claim. Open the recorded claim instead.',
       };
@@ -64,7 +66,11 @@ export class DeceasedFilingService {
         );
       }
       if (record.kind === 'claim') return data;
-      if (['submit', 'revise_request', 'save_draft', 'open_claim'].includes(action))
+      if (
+        ['submit', 'revise_request', 'save_draft', 'open_claim', 'withdraw_standing'].includes(
+          action,
+        )
+      )
         requireCondition(
           actor.id === record.ownerId,
           'DECEASED_FILING_PERSONAL',
@@ -143,6 +149,11 @@ export class DeceasedFilingService {
         await tx.query('SELECT simulation_approve_deceased_filing($1,$2,$3)', [
           record.id,
           (record.data['reviewedFiling'] as Record<string, unknown>)['reviewVersion'],
+          receipt.id,
+        ]);
+      if (receipt.action === 'withdraw_standing')
+        await tx.query('SELECT simulation_withdraw_deceased_filing($1,$2)', [
+          record.id,
           receipt.id,
         ]);
       if (receipt.action !== 'open_claim') return;

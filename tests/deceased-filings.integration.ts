@@ -263,6 +263,46 @@ try {
     code: 'INVALID_TRANSITION',
   });
 
+  // An unused approval can be withdrawn personally without erasing its decision.
+  const withdrawnWorker = await w.person(),
+    withdrawing = await w.person(),
+    replacement = await w.person();
+  const unused = await deceasedFilingFixture(w, withdrawing, withdrawnWorker, labor);
+  await w.command(labor, unused.record, 'approve', unused.input);
+  const replacementPacket = await deceasedFilingFixture(w, replacement, withdrawnWorker, labor);
+  await w.command(withdrawing, unused.record, 'withdraw_standing', { reasons: findings });
+  assert.equal((await w.get(withdrawing, unused.record.id))!.state, 'withdrawn');
+  await assert.rejects(
+    w.command(withdrawing, unused.record, 'open_claim', eligibilityPreparation(event)),
+    { code: 'INVALID_TRANSITION' },
+  );
+  await w.command(labor, replacementPacket.record, 'approve', replacementPacket.input);
+  assert.equal(
+    (
+      await w.owner.query(
+        'SELECT count(*)::int n FROM deceased_filing_standing WHERE worker_id=$1',
+        [withdrawnWorker.id],
+      )
+    ).rows[0].n,
+    2,
+    'The prior approval remains in immutable history',
+  );
+  assert.equal(
+    (
+      await w.owner.query(
+        'SELECT count(*)::int n FROM deceased_filing_withdrawals WHERE worker_id=$1',
+        [withdrawnWorker.id],
+      )
+    ).rows[0].n,
+    1,
+  );
+  const replacementEvent = await eventFixture(w, replacement, labor);
+  await open(replacement, replacementPacket.record, replacementEvent);
+  await assert.rejects(
+    w.command(replacement, replacementPacket.record, 'withdraw_standing', { reasons: findings }),
+    { code: 'INVALID_TRANSITION' },
+  );
+
   // A simultaneous ordinary personal claim cannot bypass the worker reservation.
   const racingWorker = await w.person(),
     racingApplicant = await w.person();
@@ -487,7 +527,7 @@ try {
     { code: 'PROTECTED_INTAKE_DISABLED' },
   );
   console.log(
-    'PASS: receipt-bound standing, personal one-claim creation, separate injury evidence, exact replay, current-access denial, immutable review, contested-standing hold and ordinary-claim race, correction rebinding, historical survival detection and estate enrollment.',
+    'PASS: receipt-bound standing, personal one-claim creation, separate injury evidence, exact replay, current-access denial, immutable review, contested-standing hold, unused approval withdrawal, and ordinary-claim race, correction rebinding, historical survival detection and estate enrollment.',
   );
 } finally {
   await w.close();

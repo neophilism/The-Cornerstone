@@ -80,4 +80,8 @@ export const schemaInventory = [
     name: '020-contested-claim-survival.sql',
     sha256: 'c8cb5efa96429651663d71698ab8b5cf85d20b14e07b6145b2efb59c81ad9b0b',
   },
+  {
+    name: '021-deceased-standing-withdrawal.sql',
+    sha256: 'd2f423f89a4a71ec160acae2ded2a2d61c77b0c2d33aceb8f901c46361ff2300',
+  },
 ] as const;
