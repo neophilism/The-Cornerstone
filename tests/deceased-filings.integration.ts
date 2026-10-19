@@ -550,6 +550,38 @@ try {
     }),
     { code: 'PROTECTED_INTAKE_DISABLED' },
   );
+  const finalWorker = await w.person(),
+    finalApplicant = await w.person();
+  const finalPacket = await deceasedFilingFixture(w, finalApplicant, finalWorker, labor);
+  await w.command(labor, finalPacket.record, 'deny', {
+    reasons: findings,
+    evidenceIds: finalPacket.input.evidenceIds,
+  });
+  await w.command(finalApplicant, finalPacket.record, 'request_review', { reasons: findings });
+  const finalReviewer = await w.person('labor');
+  await w.owner.query(
+    'UPDATE actors SET institution_id=$2, assignments=array_append(assignments,$3::uuid) WHERE id=$1',
+    [finalReviewer.id, finalPacket.record.institutionId, finalPacket.record.id],
+  );
+  await w.command(finalReviewer, finalPacket.record, 'affirm_denial', {
+    reasons: findings,
+    evidenceIds: finalPacket.input.evidenceIds,
+  });
+  assert.equal((await w.get(finalApplicant, finalPacket.record.id))!.state, 'review_affirmed');
+  assert.equal(
+    (
+      await w.owner.query(
+        'SELECT count(*)::int n FROM deceased_filing_standing WHERE request_id=$1',
+        [finalPacket.record.id],
+      )
+    ).rows[0].n,
+    0,
+  );
+  await assert.rejects(
+    w.command(finalApplicant, finalPacket.record, 'request_review', { reasons: findings }),
+    { code: 'INVALID_TRANSITION' },
+  );
+
   console.log(
     'PASS: receipt-bound standing, personal one-claim creation, separate injury evidence, exact replay, current-access denial, immutable review, contested-standing hold, unused approval withdrawal, and ordinary-claim race, correction rebinding, historical survival detection and estate enrollment.',
   );

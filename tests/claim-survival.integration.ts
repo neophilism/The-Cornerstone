@@ -471,6 +471,37 @@ try {
       2,
     );
   }
+  // Independent review can affirm a denial without changing the original claim.
+  const deniedWorker = await w.person(),
+    deniedApplicant = await w.person();
+  const deniedClaim = await claimFixture(w, deniedWorker, labor, event);
+  const deniedPacket = await survivingRequestFixture(w, deniedApplicant, labor, deniedClaim.record);
+  await w.command(labor, deniedPacket.record, 'deny', {
+    reasons: findings,
+    evidenceIds: deniedPacket.input.evidenceIds,
+  });
+  await w.command(deniedApplicant, deniedPacket.record, 'request_review', { reasons: findings });
+  const affirmReviewer = await w.person('labor');
+  await w.owner.query(
+    'UPDATE actors SET institution_id=$2, assignments=array_append(array_append(assignments,$3::uuid),$4::uuid) WHERE id=$1',
+    [
+      affirmReviewer.id,
+      deniedPacket.record.institutionId,
+      deniedPacket.record.id,
+      deniedClaim.record.id,
+    ],
+  );
+  await w.command(affirmReviewer, deniedPacket.record, 'affirm_denial', {
+    reasons: findings,
+    evidenceIds: deniedPacket.input.evidenceIds,
+  });
+  assert.equal((await w.get(deniedApplicant, deniedPacket.record.id))!.state, 'review_affirmed');
+  assert.equal((await w.get(deniedWorker, deniedClaim.record.id))!.ownerId, deniedWorker.id);
+  await assert.rejects(
+    w.command(deniedApplicant, deniedPacket.record, 'request_review', { reasons: findings }),
+    { code: 'INVALID_TRANSITION' },
+  );
+
   console.log(
     'PASS: one existing claim, personal survival proof, scoped case access, unchanged eligibility and historical receipts, stale rollback, estate designation, independent consent, and serialized enrollment/holder races.',
   );

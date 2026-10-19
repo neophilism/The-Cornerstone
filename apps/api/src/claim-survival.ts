@@ -52,7 +52,7 @@ export class ClaimSurvivalService {
         rightsHolderId: context.rights_holder_id,
       };
     }
-    if (action === 'reconsider_denial') {
+    if (action === 'reconsider_denial' || action === 'affirm_denial') {
       const context = (
         await tx.query('SELECT * FROM simulation_claim_survival_context($1,$2)', [
           record.id,
