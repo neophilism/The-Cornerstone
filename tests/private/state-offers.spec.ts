@@ -157,9 +157,6 @@ test('a state publishes independently verified immutable terms, recovers its rec
     ])
       await publication.getByLabel(label, { exact: false }).check();
     await publication
-      .getByLabel('Synthetic publication date (today)', { exact: true })
-      .fill(w.today);
-    await publication
       .getByLabel('Findings disclosed with the published terms', { exact: true })
       .fill('Invented public findings; original rights protected.');
     await publication
@@ -175,6 +172,11 @@ test('a state publishes independently verified immutable terms, recovers its rec
       if (wires.length === 1) return route.abort('failed');
       await route.fulfill({ response });
     });
+    // Fixture setup can cross midnight UTC during a long-running mobile journey.
+    // Set today's date immediately before the immutable publication command.
+    await publication
+      .getByLabel('Synthetic publication date (today)', { exact: true })
+      .fill(new Date().toISOString().slice(0, 10));
     await publication
       .getByRole('button', { name: 'Approve and publish immutable offer', exact: true })
       .click();

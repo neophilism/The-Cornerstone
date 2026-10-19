@@ -75,9 +75,9 @@ test('public policy navigation records isolated browser timing without an SLO cl
   const response = await page.goto('/policy');
   expect(response?.status()).toBe(200);
   const timing = await page.evaluate(() => {
-    const navigation = performance.getEntriesByType('navigation')[0] as
-      PerformanceNavigationTiming | undefined;
-    if (!navigation) return null;
+    const entry = performance.getEntriesByType('navigation')[0];
+    if (!entry) return null;
+    const navigation = entry as PerformanceNavigationTiming;
     return {
       responseMs: navigation.responseEnd - navigation.startTime,
       domContentLoadedMs: navigation.domContentLoadedEventEnd - navigation.startTime,
