@@ -69,20 +69,18 @@ test('help search and the workspace tour work', async ({ page }) => {
   await expect(page.getByText('Approve fixed commitment')).toBeVisible();
 });
 
-test('public policy navigation records isolated browser timing without an SLO claim', async ({
-  page,
-}, info) => {
+test('public navigation timing is an isolated browser sample', async ({ page }, info) => {
   const response = await page.goto('/policy');
   expect(response?.status()).toBe(200);
   const timing = await page.evaluate(() => {
-    const navigation = performance.getEntriesByType('navigation')[0] as
-      PerformanceNavigationTiming | undefined;
+    const navigation = performance.getEntriesByType('navigation')[0];
     if (!navigation) return null;
+    const entry = navigation as PerformanceNavigationTiming;
     return {
-      responseMs: navigation.responseEnd - navigation.startTime,
-      domContentLoadedMs: navigation.domContentLoadedEventEnd - navigation.startTime,
-      loadMs: navigation.loadEventEnd - navigation.startTime,
-      transferBytes: navigation.transferSize,
+      responseMs: entry.responseEnd - entry.startTime,
+      domContentLoadedMs: entry.domContentLoadedEventEnd - entry.startTime,
+      loadMs: entry.loadEventEnd - entry.startTime,
+      transferBytes: entry.transferSize,
     };
   });
   expect(timing).not.toBeNull();
