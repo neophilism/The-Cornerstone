@@ -102,4 +102,23 @@ describe('frozen negotiation history replay', () => {
       replayFailedMatches(round, [history[0], { ...history[1], failed: history[0].failed }]),
     );
   });
+
+  it('rejects malformed event objects, pairs and allocation snapshots without runtime errors', () => {
+    fails('INVALID_REPLAY_EVENT', () => replayFailedMatches(round, [null] as never));
+    fails('INVALID_REPLAY_EVENT', () =>
+      replayFailedMatches(round, [{ ...history[0], failed: null }] as never),
+    );
+    fails('INVALID_REPLAY_EVENT', () =>
+      replayFailedMatches(round, [{ ...history[0], willingApplicantIds: null }] as never),
+    );
+    fails('REPLAY_MISMATCH', () =>
+      replayFailedMatches(round, [{ ...history[0], before: [null, ...first.slice(1)] }] as never),
+    );
+    fails('INVALID_REPLAY_EVENT', () => replayFailedMatches(round, null as never));
+  });
+
+  it('rejects excessive synthetic replay steps before processing the proposed transcript', () => {
+    fails('REPLAY_TOO_LONG', () => replayFailedMatches(round, Array(32).fill(history[0])));
+  });
+
 });
