@@ -63,12 +63,11 @@ describe('CS-20 version-bound synthetic replay commitments', () => {
     );
     expect(replay.matches).toEqual(third);
     expect(await verifyVerifiedReplay(round, replay.verifiedEvents, commitment)).toEqual(replay);
-    expect((await hashVerifiedReplay(round, replay.verifiedEvents, sourceCommitSha)).commitment).toEqual(
-      commitment,
-    );
+    const repeated = await hashVerifiedReplay(round, replay.verifiedEvents, sourceCommitSha);
+    expect(repeated.commitment).toEqual(commitment);
   });
 
-  it('normalizes sets but binds ordered rankings, public draw and exact source revision', async () => {
+  it('normalizes sets but binds ordered choices, draw and source revision', async () => {
     const original = await hashVerifiedReplay(round, events, sourceCommitSha);
     const reordered: Round = {
       ...round,
@@ -88,9 +87,8 @@ describe('CS-20 version-bound synthetic replay commitments', () => {
       (await hashVerifiedReplay(reordered, reorderedEvidence, sourceCommitSha)).commitment,
     ).toEqual(original.commitment);
     const changedDraw: Round = { ...round, tieOrder: ['b', 'a', 'c', 'd'] };
-    expect((await hashVerifiedReplay(changedDraw, events, sourceCommitSha)).commitment.digestHex).not.toBe(
-      original.commitment.digestHex,
-    );
+    const changedDrawDigest = await hashVerifiedReplay(changedDraw, events, sourceCommitSha);
+    expect(changedDrawDigest.commitment.digestHex).not.toBe(original.commitment.digestHex);
     const changedVersion: Round = {
       ...round,
       offers: round.offers.map((offer, index) =>
@@ -108,7 +106,7 @@ describe('CS-20 version-bound synthetic replay commitments', () => {
     });
   });
 
-  it('rejects forged events and stale or malformed receipts before reporting verification', async () => {
+  it('rejects forged events, stale and malformed receipts', async () => {
     const { commitment } = await hashVerifiedReplay(round, events, sourceCommitSha);
     const forged = events.map((event, index) =>
       index === 0 ? { ...event, after: first } : event,
@@ -150,9 +148,8 @@ describe('CS-20 version-bound synthetic replay commitments', () => {
     }));
     const { commitment, replay } = await hashVerifiedReplay(round, submitted, sourceCommitSha);
     submitted[0]!.failed.applicantId = 'tampered-after-call';
-    expect((await hashVerifiedReplay(round, replay.verifiedEvents, sourceCommitSha)).commitment).toEqual(
-      commitment,
-    );
+    const repeated = await hashVerifiedReplay(round, replay.verifiedEvents, sourceCommitSha);
+    expect(repeated.commitment).toEqual(commitment);
     const empty = await hashVerifiedReplay(round, [], sourceCommitSha);
     expect(empty.replay.verifiedEvents).toEqual([]);
     expect(empty.commitment.digestHex).not.toBe(commitment.digestHex);
