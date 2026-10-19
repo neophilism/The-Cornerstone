@@ -93,17 +93,10 @@ describe('frozen negotiation history replay', () => {
   });
 
   it('rejects forged before/after states, changed willingness and repeated failures', () => {
+    fails('REPLAY_MISMATCH', () => replayFailedMatches(round, [{ ...history[0], before: second }]));
+    fails('REPLAY_MISMATCH', () => replayFailedMatches(round, [{ ...history[0], after: first }]));
     fails('REPLAY_MISMATCH', () =>
-      replayFailedMatches(round, [{ ...history[0], before: second }]),
-    );
-    fails('REPLAY_MISMATCH', () =>
-      replayFailedMatches(round, [{ ...history[0], after: first }]),
-    );
-    fails('REPLAY_MISMATCH', () =>
-      replayFailedMatches(round, [
-        history[0],
-        { ...history[1], willingApplicantIds: ['d'] },
-      ]),
+      replayFailedMatches(round, [history[0], { ...history[1], willingApplicantIds: ['d'] }]),
     );
     fails('INACTIVE_FAILURE', () =>
       replayFailedMatches(round, [history[0], { ...history[1], failed: history[0].failed }]),
