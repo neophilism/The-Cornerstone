@@ -102,4 +102,76 @@ describe('frozen negotiation history replay', () => {
       replayFailedMatches(round, [history[0], { ...history[1], failed: history[0].failed }]),
     );
   });
+
+  it('rejects malformed event objects, pairs and allocation snapshots without runtime errors', () => {
+    fails('INVALID_REPLAY_EVENT', () => replayFailedMatches(round, [null] as never));
+    fails('INVALID_REPLAY_EVENT', () =>
+      replayFailedMatches(round, [{ ...history[0], failed: null }] as never),
+    );
+    fails('INVALID_REPLAY_EVENT', () =>
+      replayFailedMatches(round, [{ ...history[0], willingApplicantIds: null }] as never),
+    );
+    fails('REPLAY_MISMATCH', () =>
+      replayFailedMatches(round, [{ ...history[0], before: [null, ...first.slice(1)] }] as never),
+    );
+    fails('INVALID_REPLAY_EVENT', () => replayFailedMatches(round, null as never));
+  });
+
+  it('rejects excessive synthetic replay steps before processing the proposed transcript', () => {
+    fails('REPLAY_TOO_LONG', () => replayFailedMatches(round, Array(32).fill(history[0])));
+  });
+
+  it('rejects evidence accessors before they can substitute a different reported failure', () => {
+    let reads = 0;
+    const event = { ...history[0] };
+    Object.defineProperty(event, 'failed', {
+      enumerable: true,
+      get() {
+        reads++;
+        return reads < 3 ? pair('a', 'x') : pair('b', 'y');
+      },
+    });
+    fails('INVALID_REPLAY_EVENT', () => replayFailedMatches(round, [event]));
+    expect(reads).toBe(0);
+
+    const failed = {
+      get applicantId() {
+        throw new Error('Untrusted pair getter must not execute.');
+      },
+      offerId: 'x',
+    };
+    fails('INVALID_REPLAY_EVENT', () => replayFailedMatches(round, [{ ...history[0], failed }]));
+
+    const before = [...history[0].before];
+    Object.defineProperty(before, 0, {
+      get() {
+        throw new Error('Untrusted allocation getter must not execute.');
+      },
+    });
+    fails('REPLAY_MISMATCH', () => replayFailedMatches(round, [{ ...history[0], before }]));
+
+    const events = [history[0]];
+    Object.defineProperty(events, 0, {
+      get() {
+        throw new Error('Untrusted event-list getter must not execute.');
+      },
+    });
+    fails('INVALID_REPLAY_EVENT', () => replayFailedMatches(round, events));
+  });
+
+  it('detaches accepted events from later modifications to caller-owned evidence', () => {
+    const mutable = history.map((event) => ({
+      ...event,
+      failed: { ...event.failed },
+      before: event.before.map((m) => ({ ...m })),
+      after: event.after.map((m) => ({ ...m })),
+      willingApplicantIds: [...event.willingApplicantIds],
+    }));
+    const verified = replayFailedMatches(round, mutable);
+    mutable[0]!.failed.applicantId = 'tampered-after-verification';
+    mutable[0]!.before[0]!.applicantId = 'tampered-after-verification';
+    expect(verified.declinedPairs[0]).toEqual(pair('a', 'x'));
+    expect(verified.steps[0]!.failed).toEqual(pair('a', 'x'));
+    expect(verified.initial).toEqual(first);
+  });
 });
