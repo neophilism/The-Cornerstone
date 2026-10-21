@@ -81,7 +81,11 @@ describe('CS-19 synthetic prospective state offer objections', () => {
     const accepted = history.decide(finding, reviewer(), publishedAt);
     expect(history.decide(finding, reviewer(), publishedAt)).toEqual(accepted);
     expect(() =>
-      history.decide({ ...finding, requestKey: 'again', expectedRevision: 2 }, reviewer(), publishedAt),
+      history.decide(
+        { ...finding, requestKey: 'again', expectedRevision: 2 },
+        reviewer(),
+        publishedAt,
+      ),
     ).toThrowError(expect.objectContaining({ code: 'OBJECTION_ALREADY_DECIDED' }));
     expect(() =>
       history.file(
@@ -130,5 +134,50 @@ describe('CS-19 synthetic prospective state offer objections', () => {
     expect(history.existingCompactsUnaffected).toBe(true);
     expect(history.binding.publicationDigest).toBe(digest);
     expect(history.allRecords[0]?.status).toBe('harm_found');
+  });
+
+  it('isolates actor receipts from composite delimiter collisions and overlapping institutional IDs', () => {
+    const history = new SyntheticStateOfferObjections(binding());
+    const firstActor = { ...actor(), id: 'member:one' };
+    const secondActor = { ...actor(), id: 'member' };
+    const first = history.file({ ...petition(), requestKey: 'key' }, firstActor, publishedAt);
+    const second = history.file({ ...petition(), requestKey: 'one:key' }, secondActor, publishedAt);
+    const third = history.file(
+      { ...petition(), requestKey: 'key' },
+      { ...firstActor, institutionId: 'other-association' },
+      publishedAt,
+    );
+    expect(first.actorId).toBe(firstActor.id);
+    expect(second.actorId).toBe(secondActor.id);
+    expect(first.objectionId).toBe('synthetic-objection-1');
+    expect(second.objectionId).toBe('synthetic-objection-2');
+    expect(third.objectionId).toBe('synthetic-objection-3');
+    expect(history.revision).toBe(3);
+  });
+
+  it('isolates independent supervisor receipt keys containing delimiters', () => {
+    const history = new SyntheticStateOfferObjections(binding());
+    const first = history.file(petition(), actor(), publishedAt);
+    const second = history.file(
+      { ...petition(), requestKey: 'submission-2' },
+      { ...actor(), id: 'other-member' },
+      publishedAt,
+    );
+    const reviewerA = { ...reviewer(), id: 'reviewer:one' };
+    const reviewerB = { ...reviewer(), id: 'reviewer' };
+    const receiptA = history.decide(
+      { ...decision(first.objectionId, history.revision), requestKey: 'key' },
+      reviewerA,
+      publishedAt,
+    );
+    const receiptB = history.decide(
+      { ...decision(second.objectionId, history.revision), requestKey: 'one:key' },
+      reviewerB,
+      publishedAt,
+    );
+    expect(receiptA.objectionId).toBe(first.objectionId);
+    expect(receiptB.objectionId).toBe(second.objectionId);
+    expect(receiptB.revision).toBe(4);
+    expect(history.prospectiveObjectionHold).toBe(false);
   });
 });

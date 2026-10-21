@@ -9,3 +9,5 @@ The synthetic clock does not establish a legally valid notice date or interpret 
 ## Acceptance and next integration
 
 The repository Vitest suite exercises UTC boundary, exact request replay, independent reviewer conflicts, getter nonexecution and unchanged historical compact terms. Complete CS-19 requires scoped staff/participant forms, guarded API commands, real SQL row locking/unique constraints/RLS with cross-realm negatives, explicit service/notice evidence, expiry and revocation handling, rollback/retry, desktop/mobile browser tests, substantive source review and complete exact-head CI. The proposed 25-unit baseline remains unchanged; log this PR in CS-19 contributing PRs after acceptance.
+
+Receipt recovery keys are now encoded as exact tuples of jurisdiction, institution, actor and request key; user-supplied `:` delimiters cannot alias another actor or independent supervisor's receipt. Regression tests exercise both filing and review collisions and overlapping actor IDs across institutions. This remains a process-local safeguard rather than authenticated identity or database row-level isolation.
