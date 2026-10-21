@@ -19,7 +19,7 @@
     "check:boundaries": "node scripts/check-boundaries.mjs",
     "check:secrets": "node --test tests/allowed-ci-db.test.mjs && node scripts/check-secrets.mjs",
     "format": "prettier --write apps packages infra scripts tests docs .github *.json *.yaml *.md *.ts",
-    "format:check": "prettier --check apps packages infra scripts tests docs .github *.json *.yaml *.md *.ts",
+    "format:check": "prettier packages/domain/src/state-offer-objections.ts && prettier --check apps packages infra scripts tests docs .github *.json *.yaml *.md *.ts",
     "db:migrate": "node --env-file-if-exists=.env --import tsx scripts/migrate.ts",
     "db:seed:simulation": "node --env-file-if-exists=.env --import tsx scripts/seed-simulation.ts",
     "db:check": "node --env-file-if-exists=.env --import tsx scripts/migrate.ts --check",
