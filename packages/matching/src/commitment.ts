@@ -1,5 +1,6 @@
 import { MatchingError, type Match, type Round } from './index.js';
 import { replayFailedMatches, type ReplayEvent } from './replay.js';
+import { copyCheckedRound } from './round-snapshot.js';
 
 /** Domain separation forbids accidental reuse as an authorization or signing token. */
 export const REPLAY_COMMITMENT_DOMAIN = 'cornerstone-synthetic-replay-v1' as const;
@@ -47,12 +48,7 @@ export async function hashVerifiedReplay(
   sourceCommitSha: string,
 ) {
   requireSourceRevision(sourceCommitSha);
-  let frozen: Round;
-  try {
-    frozen = structuredClone(round);
-  } catch {
-    throw new MatchingError('INVALID_ROUND', 'Frozen matching inputs must be cloneable data.');
-  }
+  const frozen = copyCheckedRound(round);
   // The same detached round supplies both the replay calculation and its canonical digest.
   // Replay validates the supplied events and clones them through guarded descriptors.
   const replay = replayFailedMatches(frozen, events);

@@ -80,9 +80,23 @@ describe('CS-20 replay must preserve a single detached frozen matching round', (
     expect(replay.declinedPairs).toEqual([pair('a', 'x')]);
   });
 
-  it('returns a typed failure for non-cloneable round records', () => {
+  it('returns a typed failure for non-data proxy descriptors without invoking accessors', () => {
     const round = frozenRound();
-    round.applicants[0] = new Proxy(round.applicants[0]!, {});
+    let accessorCalls = 0;
+    round.applicants[0] = new Proxy(round.applicants[0]!, {
+      getOwnPropertyDescriptor(target, key) {
+        if (key === 'id')
+          return {
+            configurable: true,
+            enumerable: true,
+            get() {
+              accessorCalls++;
+              return 'a';
+            },
+          };
+        return Reflect.getOwnPropertyDescriptor(target, key);
+      },
+    });
     try {
       replayFailedMatches(round, [failed]);
       throw new Error('Expected invalid frozen round.');
@@ -90,6 +104,7 @@ describe('CS-20 replay must preserve a single detached frozen matching round', (
       expect(error).toBeInstanceOf(MatchingError);
       expect((error as MatchingError).code).toBe('INVALID_ROUND');
     }
+    expect(accessorCalls).toBe(0);
   });
 
   it('preserves normal replay and legitimate empty history', () => {

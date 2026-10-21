@@ -1,4 +1,5 @@
 import { match, continueFailedMatch, MatchingError, type Match, type Round } from './index.js';
+import { copyCheckedRound } from './round-snapshot.js';
 
 export type ReplayEvent = Readonly<{
   sequence: number;
@@ -108,12 +109,7 @@ function checkSnapshot(expected: readonly Match[], actual: readonly Match[]) {
 export function replayFailedMatches(round: Round, events: readonly ReplayEvent[]) {
   // Keep every continuation and reported identity on one detached copy of the round.
   // Event descriptor traps must not be able to rewrite inputs after the first match.
-  let frozenRound: Round;
-  try {
-    frozenRound = structuredClone(round);
-  } catch {
-    throw new MatchingError('INVALID_ROUND', 'Frozen matching inputs must be cloneable data.');
-  }
+  const frozenRound = copyCheckedRound(round);
   const initial = match(frozenRound).matches;
   if (!checkedArray(events, 'INVALID_REPLAY_EVENT'))
     throw new MatchingError('INVALID_REPLAY_EVENT', 'Negotiation events must be an array.');
