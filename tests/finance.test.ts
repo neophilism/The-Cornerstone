@@ -121,6 +121,77 @@ describe('exact cash calculations (all rates are synthetic fixtures)', () => {
     );
     expect(r.payment).toBe(300n);
   });
+  it('rejects impossible Fund receipt exclusions before calculating repayment', () => {
+    const account = {
+      terms: {
+        principal: 1000n,
+        fixedReturn: 0n,
+        receiptRate: rate(1n, 2n),
+        version: 'synthetic',
+      },
+      collected: 0n,
+      released: false,
+    };
+    const contradiction = {
+      operating: 100n,
+      financing: 60n,
+      refunds: 30n,
+      collectedTaxes: 11n,
+    };
+    expect(() => fundRemittance(account, contradiction)).toThrow(/exceed gross operating receipts/);
+    expect(
+      fundRemittance(account, { ...contradiction, collectedTaxes: 10n }).payment,
+    ).toBe(0n);
+    expect(
+      fundRemittance(account, {
+        operating: 100n,
+        financing: 60n,
+        refunds: 20n,
+        collectedTaxes: 10n,
+      }).payment,
+    ).toBe(5n);
+    expect(() =>
+      fundRemittance({ ...account, collected: 1000n, released: true }, contradiction),
+    ).toThrow(/exceed gross operating receipts/);
+  });
+
+  it('rejects receipt getters and malformed values before computing a Fund payment', () => {
+    const account = {
+      terms: {
+        principal: 1000n,
+        fixedReturn: 0n,
+        receiptRate: rate(1n, 2n),
+        version: 'synthetic',
+      },
+      collected: 0n,
+      released: false,
+    };
+    const receipts = { operating: 100n, financing: 0n, refunds: 0n, collectedTaxes: 0n };
+    let getterCalls = 0;
+    Object.defineProperty(receipts, 'financing', {
+      get() {
+        getterCalls += 1;
+        return 0n;
+      },
+    });
+    expect(() => fundRemittance(account, receipts)).toThrow(
+      expect.objectContaining({ code: 'INVALID_RECEIPTS' }),
+    );
+    expect(getterCalls).toBe(0);
+    const missing = { operating: 100n, financing: 0n, refunds: 0n };
+    expect(() =>
+      fundRemittance(account, missing as Parameters<typeof fundRemittance>[1]),
+    ).toThrow(expect.objectContaining({ code: 'INVALID_RECEIPTS' }));
+    const revoked = Proxy.revocable(
+      { operating: 100n, financing: 0n, refunds: 0n, collectedTaxes: 0n },
+      {},
+    );
+    revoked.revoke();
+    expect(() => fundRemittance(account, revoked.proxy)).toThrow(
+      expect.objectContaining({ code: 'INVALID_RECEIPTS' }),
+    );
+  });
+
   it('uses expenses, prior losses FIFO and required payments in the prescribed order', () => {
     const b = base();
     const r = stateSurplus({

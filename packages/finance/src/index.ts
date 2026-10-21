@@ -53,8 +53,29 @@ export function fundRemittance(
   account: FundAccount,
   receipts: { operating: Money; financing: Money; refunds: Money; collectedTaxes: Money },
 ) {
-  for (const v of Object.values(receipts))
-    check(v >= 0n, 'NEGATIVE_RECEIPTS', 'Receipt components cannot be negative.');
+  // Capture each declared receipt field once, before calculating or releasing an obligation.
+  // Accessor-backed and missing fields cannot supply a stable exact-cent financial basis.
+  const captured = {} as typeof receipts;
+  for (const field of ['operating', 'financing', 'refunds', 'collectedTaxes'] as const) {
+    let descriptor: PropertyDescriptor | undefined;
+    try {
+      descriptor = Object.getOwnPropertyDescriptor(receipts, field);
+    } catch {
+      throw new FinanceError('INVALID_RECEIPTS', 'Receipt fields must be plain exact-cent data.');
+    }
+    check(
+      descriptor && Object.hasOwn(descriptor, 'value') && typeof descriptor.value === 'bigint',
+      'INVALID_RECEIPTS',
+      'Receipt fields must be plain exact-cent data.',
+    );
+    captured[field] = descriptor.value;
+    check(captured[field] >= 0n, 'NEGATIVE_RECEIPTS', 'Receipt components cannot be negative.');
+  }
+  check(
+    captured.financing + captured.refunds + captured.collectedTaxes <= captured.operating,
+    'RECEIPT_COMPONENTS',
+    'Excluded Fund receipt components cannot exceed gross operating receipts.',
+  );
   const total = account.terms.principal + account.terms.fixedReturn;
   check(
     account.terms.principal >= 0n &&
@@ -74,7 +95,7 @@ export function fundRemittance(
   }
   // Operating is gross actual receipts; the excluded components are included in that gross.
   const base = positive(
-    receipts.operating - receipts.financing - receipts.refunds - receipts.collectedTaxes,
+    captured.operating - captured.financing - captured.refunds - captured.collectedTaxes,
   );
   const payment = min(multiply(base, account.terms.receiptRate), total - account.collected);
   const collected = account.collected + payment;
