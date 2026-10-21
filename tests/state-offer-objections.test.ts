@@ -214,4 +214,57 @@ describe('CS-19 synthetic prospective state offer objections', () => {
     expect(history.revision).toBe(2);
     expect(history.decide(finding, reviewer(), later).revision).toBe(3);
   });
+  it('rejects a prior petitioner who switches institutions to review another docket filing', () => {
+    const history = new SyntheticStateOfferObjections(binding());
+    const first = history.file(petition(), actor(), publishedAt);
+    const second = history.file(
+      { ...petition(), requestKey: 'second-filing' },
+      { ...actor(), id: 'second-petitioner' },
+      publishedAt,
+    );
+    const finding = { ...decision(second.objectionId, history.revision), requestKey: 'role-pivot' };
+    expect(() =>
+      history.decide(finding, { ...reviewer(), id: 'objector' }, publishedAt),
+    ).toThrowError(expect.objectContaining({ code: 'INDEPENDENT_REVIEW_REQUIRED' }));
+    expect(history.revision).toBe(2);
+    expect(history.allRecords.find((record) => record.id === second.objectionId)?.status).toBe(
+      'pending',
+    );
+    expect(history.decide(finding, reviewer(), publishedAt).revision).toBe(3);
+    expect(history.file(petition(), actor(), publishedAt)).toEqual(first);
+  });
+
+  it('rejects a prior reviewer who switches institutions to file a member objection', () => {
+    const history = new SyntheticStateOfferObjections(binding());
+    const first = history.file(petition(), actor(), publishedAt);
+    const finding = decision(first.objectionId, first.revision);
+    const accepted = history.decide(finding, reviewer(), publishedAt);
+    const nextPetition = { ...petition(), requestKey: 'new-petition' };
+    expect(() =>
+      history.file(
+        nextPetition,
+        { ...actor(), id: 'independent-reviewer', institutionId: 'new-association' },
+        publishedAt,
+      ),
+    ).toThrowError(expect.objectContaining({ code: 'OBJECTION_NOT_AUTHORIZED' }));
+    expect(history.revision).toBe(2);
+    expect(
+      history.file(nextPetition, { ...actor(), id: 'another-petitioner' }, publishedAt).revision,
+    ).toBe(3);
+    expect(history.decide(finding, reviewer(), publishedAt)).toEqual(accepted);
+  });
+
+  it('does not let the appointed supervision institution submit a conflicting petition', () => {
+    const history = new SyntheticStateOfferObjections(binding());
+    expect(() =>
+      history.file(
+        petition(),
+        { ...actor(), institutionId: 'independent-supervision' },
+        publishedAt,
+      ),
+    ).toThrowError(expect.objectContaining({ code: 'OBJECTION_NOT_AUTHORIZED' }));
+    expect(history.revision).toBe(0);
+    expect(history.file(petition(), actor(), publishedAt).revision).toBe(1);
+  });
+
 });

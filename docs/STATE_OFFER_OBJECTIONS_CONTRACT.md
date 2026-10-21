@@ -15,3 +15,9 @@ Receipt recovery keys are now encoded as exact tuples of jurisdiction, instituti
 ## Monotonic synthetic acceptance times
 
 New accepted filings and findings must not carry an `acceptedAt` before the most recent committed ledger event. Canonical UTC instants are compared after input authorization, exact-request recovery and the existing publication-window/filer chronology checks, so earlier exact retries still return their original immutable receipt and pre-publication filings retain the window error. The accepted high-watermark advances only with a committed event; rejected attempts leave both revision and chronology unchanged. This process-local rule is not a trusted clock, legal service timestamp or substitute for transactionally sequenced authenticated database time.
+
+## Docket-wide separation of petitioner and adjudicator roles
+
+In the process-local synthetic docket, a stable actor ID that has filed any objection may not later decide another objection, even if supplied with a new institution and supervisor role. Conversely, an actor who has adjudicated an objection may not later file as a member/representative under a different institution. The appointed supervising institution is also ineligible to submit a member objection. These guards apply across all objections within one docket, not only to the reviewed objection. Membership in the filer/reviewer sets is recorded only after a successful event, preserving failed-command rollback and exact-request recovery. Tests cover both role-switch directions, revision preservation, independent review and retries.
+
+These checks rely on the supplied synthetic actor identifier. They do not authenticate identity or prevent an actor from presenting an unlinked identifier. Production requires independent identity binding, current delegation/appointment checks, durable cross-role constraints and audited, atomic transactions before lawful supervision or protected intake.

@@ -160,6 +160,7 @@ function participant(actor: ObjectionActor, binding: ObjectionBinding) {
     !actor.active ||
     actor.jurisdiction !== binding.jurisdiction ||
     actor.institutionId === binding.publishingInstitutionId ||
+    actor.institutionId === binding.supervisingInstitutionId ||
     actor.conflicts.includes(binding.offerId) ||
     actor.roles.some((role) => ['state', 'supervisor', 'provider', 'investor'].includes(role)) ||
     !actor.roles.some((role) => role === 'member' || role === 'representative')
@@ -191,6 +192,8 @@ export class SyntheticStateOfferObjections {
   readonly objectionWindowClosesAt: string;
   private records = new Map<string, ObjectionRecord>();
   private receipts = new Map<string, { signature: string; receipt: ObjectionReceipt }>();
+  private filerActorIds = new Set<string>();
+  private reviewerActorIds = new Set<string>();
   private currentRevision = 0;
   private latestAcceptedAt: string;
 
@@ -251,6 +254,7 @@ export class SyntheticStateOfferObjections {
       evidenceRefs,
     ]);
     participant(actor, this.binding);
+    if (this.reviewerActorIds.has(actor.id)) reject('OBJECTION_NOT_AUTHORIZED');
     if (offerId !== this.binding.offerId || publicationDigest !== this.binding.publicationDigest) {
       reject('OBJECTION_OFFER_MISMATCH');
     }
@@ -287,6 +291,7 @@ export class SyntheticStateOfferObjections {
     };
     this.records.set(objectionId, record);
     this.receipts.set(key, { signature, receipt });
+    this.filerActorIds.add(actor.id);
     this.currentRevision = revision;
     this.latestAcceptedAt = now;
     return { ...receipt };
@@ -314,6 +319,7 @@ export class SyntheticStateOfferObjections {
     const record = this.records.get(objectionId);
     if (!record) reject('OBJECTION_NOT_FOUND');
     supervisor(actor, this.binding, record);
+    if (this.filerActorIds.has(actor.id)) reject('INDEPENDENT_REVIEW_REQUIRED');
 
     const key = JSON.stringify([actor.jurisdiction, actor.institutionId, actor.id, requestKey]);
     const signature = JSON.stringify([
@@ -357,6 +363,7 @@ export class SyntheticStateOfferObjections {
     };
     this.records.set(objectionId, next);
     this.receipts.set(key, { signature, receipt });
+    this.reviewerActorIds.add(actor.id);
     this.currentRevision = revision;
     this.latestAcceptedAt = now;
     return { ...receipt };
