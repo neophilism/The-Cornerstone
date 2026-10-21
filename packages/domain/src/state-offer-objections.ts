@@ -249,7 +249,12 @@ export class SyntheticStateOfferObjections {
     if (offerId !== this.binding.offerId || publicationDigest !== this.binding.publicationDigest) {
       reject('OBJECTION_OFFER_MISMATCH');
     }
-    const key = JSON.stringify([actor.jurisdiction, actor.institutionId, actor.id, requestKey]);
+    const key = JSON.stringify([
+      actor.jurisdiction,
+      actor.institutionId,
+      actor.id,
+      requestKey,
+    ]);
     const recovered = this.recover(key, signature);
     if (recovered) return recovered;
     if (now < this.binding.publishedAt || now >= this.objectionWindowClosesAt) {
@@ -308,7 +313,12 @@ export class SyntheticStateOfferObjections {
     if (!record) reject('OBJECTION_NOT_FOUND');
     supervisor(actor, this.binding, record);
 
-    const key = JSON.stringify([actor.jurisdiction, actor.institutionId, actor.id, requestKey]);
+    const key = JSON.stringify([
+      actor.jurisdiction,
+      actor.institutionId,
+      actor.id,
+      requestKey,
+    ]);
     const signature = JSON.stringify([
       'decide',
       objectionId,
