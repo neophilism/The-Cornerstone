@@ -180,4 +180,38 @@ describe('CS-19 synthetic prospective state offer objections', () => {
     expect(receiptB.revision).toBe(4);
     expect(history.prospectiveObjectionHold).toBe(false);
   });
+
+  it('rejects new out-of-order filings but recovers the exact original receipt', () => {
+    const history = new SyntheticStateOfferObjections(binding());
+    const later = '2026-10-20T12:02:00.000Z';
+    const earlier = '2026-10-20T12:01:00.000Z';
+    const first = history.file(petition(), actor(), later);
+    expect(history.file(petition(), actor(), earlier)).toEqual(first);
+    expect(() =>
+      history.file(
+        { ...petition(), requestKey: 'new-earlier-filing' },
+        { ...actor(), id: 'another-member' },
+        earlier,
+      ),
+    ).toThrowError(expect.objectContaining({ code: 'OBJECTION_TIME_REWIND' }));
+    expect(history.revision).toBe(1);
+  });
+
+  it('prevents supervisory decisions from predating another already accepted filing', () => {
+    const history = new SyntheticStateOfferObjections(binding());
+    const first = history.file(petition(), actor(), publishedAt);
+    const later = '2026-10-20T12:02:00.000Z';
+    const earlier = '2026-10-20T12:01:00.000Z';
+    history.file(
+      { ...petition(), requestKey: 'second' },
+      { ...actor(), id: 'another-member' },
+      later,
+    );
+    const finding = decision(first.objectionId, history.revision);
+    expect(() => history.decide(finding, reviewer(), earlier)).toThrowError(
+      expect.objectContaining({ code: 'OBJECTION_TIME_REWIND' }),
+    );
+    expect(history.revision).toBe(2);
+    expect(history.decide(finding, reviewer(), later).revision).toBe(3);
+  });
 });

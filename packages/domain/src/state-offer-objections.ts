@@ -189,9 +189,11 @@ export class SyntheticStateOfferObjections {
   private records = new Map<string, ObjectionRecord>();
   private receipts = new Map<string, { signature: string; receipt: ObjectionReceipt }>();
   private currentRevision = 0;
+  private latestAcceptedAt: string;
 
   constructor(binding: unknown) {
     this.binding = Object.freeze(snapshotBinding(binding));
+    this.latestAcceptedAt = this.binding.publishedAt;
     if (this.binding.supervisingInstitutionId === this.binding.publishingInstitutionId) {
       reject('INDEPENDENT_SUPERVISION_REQUIRED');
     }
@@ -260,6 +262,7 @@ export class SyntheticStateOfferObjections {
     if (now < this.binding.publishedAt || now >= this.objectionWindowClosesAt) {
       reject('OBJECTION_WINDOW_CLOSED');
     }
+    if (now < this.latestAcceptedAt) reject('OBJECTION_TIME_REWIND');
     if (this.records.size >= 10_000) reject('OBJECTION_CAPACITY');
 
     const revision = this.currentRevision + 1;
@@ -287,6 +290,7 @@ export class SyntheticStateOfferObjections {
     this.records.set(objectionId, record);
     this.receipts.set(key, { signature, receipt });
     this.currentRevision = revision;
+    this.latestAcceptedAt = now;
     return { ...receipt };
   }
 
@@ -333,6 +337,7 @@ export class SyntheticStateOfferObjections {
     if (recovered) return recovered;
     if (record.status !== 'pending') reject('OBJECTION_ALREADY_DECIDED');
     if (now < record.filedAt) reject('INVALID_INSTANT');
+    if (now < this.latestAcceptedAt) reject('OBJECTION_TIME_REWIND');
     if (expectedRevision !== this.currentRevision) reject('STALE_OBJECTION_REVISION');
 
     const revision = this.currentRevision + 1;
@@ -360,6 +365,7 @@ export class SyntheticStateOfferObjections {
     this.records.set(objectionId, next);
     this.receipts.set(key, { signature, receipt });
     this.currentRevision = revision;
+    this.latestAcceptedAt = now;
     return { ...receipt };
   }
 }
