@@ -61,20 +61,24 @@ export async function hashVerifiedReplay(
     sourceCommitSha,
     frozen.algorithm,
     frozen.id,
-    [...frozen.applicants].sort((a, b) => compare(a.id, b.id)).map((a) => [
-      a.id,
-      a.priorityDate,
-      [...a.choices],
-      a.ready,
-      a.unremedied,
-      [...a.constituents].sort(compare),
-    ]),
-    [...frozen.offers].sort((a, b) => compare(a.id, b.id)).map((o) => [
-      o.id,
-      o.publishedVersion,
-      [...o.exclusiveRights].sort(compare),
-      [...o.eligibleApplicantIds].sort(compare),
-    ]),
+    [...frozen.applicants]
+      .sort((a, b) => compare(a.id, b.id))
+      .map((a) => [
+        a.id,
+        a.priorityDate,
+        [...a.choices],
+        a.ready,
+        a.unremedied,
+        [...a.constituents].sort(compare),
+      ]),
+    [...frozen.offers]
+      .sort((a, b) => compare(a.id, b.id))
+      .map((o) => [
+        o.id,
+        o.publishedVersion,
+        [...o.exclusiveRights].sort(compare),
+        [...o.eligibleApplicantIds].sort(compare),
+      ]),
     [...frozen.tieOrder],
     allocations(replay.initial),
     replay.verifiedEvents.map((event) => [
