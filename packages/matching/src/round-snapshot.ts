@@ -53,11 +53,7 @@ function ownData(source: unknown, name: string): unknown {
   return invalid('INVALID_ROUND');
 }
 
-function checkedArray<T>(
-  source: unknown,
-  budget: Budget,
-  snapshot: (value: unknown) => T,
-): T[] {
+function checkedArray<T>(source: unknown, budget: Budget, snapshot: (value: unknown) => T): T[] {
   let isArray = false;
   try {
     isArray = Array.isArray(source);

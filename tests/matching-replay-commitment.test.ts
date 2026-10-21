@@ -112,9 +112,7 @@ describe('CS-20 version-bound synthetic replay commitments', () => {
 
   it('rejects forged events, stale and malformed receipts', async () => {
     const { commitment } = await hashVerifiedReplay(round, events, sourceCommitSha);
-    const forged = events.map((event, index) =>
-      index === 0 ? { ...event, after: first } : event,
-    );
+    const forged = events.map((event, index) => (index === 0 ? { ...event, after: first } : event));
     await expect(hashVerifiedReplay(round, forged, sourceCommitSha)).rejects.toMatchObject({
       code: 'REPLAY_MISMATCH',
     });

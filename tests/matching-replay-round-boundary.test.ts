@@ -5,20 +5,24 @@ const sha = 'a'.repeat(40);
 const validRound = (): Round => ({
   id: 'synthetic-bounded-input',
   algorithm: 'cornerstone-da-1',
-  applicants: [{
-    id: 'person-a',
-    priorityDate: '1900-01-01',
-    choices: ['offer-a'],
-    ready: true,
-    unremedied: true,
-    constituents: ['unit-a'],
-  }],
-  offers: [{
-    id: 'offer-a',
-    publishedVersion: 'v1',
-    exclusiveRights: ['right-a'],
-    eligibleApplicantIds: ['person-a'],
-  }],
+  applicants: [
+    {
+      id: 'person-a',
+      priorityDate: '1900-01-01',
+      choices: ['offer-a'],
+      ready: true,
+      unremedied: true,
+      constituents: ['unit-a'],
+    },
+  ],
+  offers: [
+    {
+      id: 'offer-a',
+      publishedVersion: 'v1',
+      exclusiveRights: ['right-a'],
+      eligibleApplicantIds: ['person-a'],
+    },
+  ],
   tieOrder: ['person-a'],
 });
 
