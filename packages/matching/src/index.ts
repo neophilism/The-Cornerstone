@@ -304,3 +304,10 @@ export function continueFailedMatch(
 }
 
 export { replayFailedMatches, type ReplayEvent } from './replay.js';
+
+export {
+  hashVerifiedReplay,
+  verifyVerifiedReplay,
+  REPLAY_COMMITMENT_DOMAIN,
+  type ReplayCommitment,
+} from './commitment.js';
