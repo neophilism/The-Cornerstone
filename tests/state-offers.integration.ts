@@ -552,13 +552,16 @@ try {
   const plan = (resolution.data['compactBinding'] as { plan: { offer: { publication: unknown } } })
     .plan;
   assert.deepEqual(plan.offer.publication, snapshot);
-  await w.command(first, resolution, 'open_vote', { closesAt: w.today });
+  // The simulated clock is captured at construction; PostgreSQL CURRENT_DATE
+  // can advance across UTC midnight. Give this synthetic vote a future close.
+  const voteClosesAt = addCalendarDays(w.today, 2);
+  await w.command(first, resolution, 'open_vote', { closesAt: voteClosesAt });
   await w.command(first, resolution, 'record_vote', { unitId: group.firstUnit.id, choice: 'yes' });
   await w.command(second, resolution, 'record_vote', {
     unitId: group.secondUnit.id,
     choice: 'yes',
   });
-  w.day = addCalendarDays(w.today, 1);
+  w.day = addCalendarDays(voteClosesAt, 1);
   const approval = (await w.command(labor, resolution, 'tally')).record!;
   w.day = w.today;
   await w.command(first, compact, 'submit', { attested: true, memberResolutionId: approval.id });
