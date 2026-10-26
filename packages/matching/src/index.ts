@@ -302,3 +302,5 @@ export function continueFailedMatch(
     ...match(reduced).matches,
   ].sort((a, b) => compareIds(a.offerId, b.offerId));
 }
+
+export { replayFailedMatches, type ReplayEvent } from './replay.js';
