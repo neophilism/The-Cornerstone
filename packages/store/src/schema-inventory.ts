@@ -72,4 +72,24 @@ export const schemaInventory = [
     name: '018-synthetic-state-offers.sql',
     sha256: '50845b90ddce5f4bfe7b0d205ec7007f3feb5bde08ee075e83c9496e31f3b84c',
   },
+  {
+    name: '019-contested-deceased-filings.sql',
+    sha256: 'f8f013e38f08dbebf342799a0b85a1f84d56bfc43e2b80a57835f54d8885de38',
+  },
+  {
+    name: '020-contested-claim-survival.sql',
+    sha256: 'c8cb5efa96429651663d71698ab8b5cf85d20b14e07b6145b2efb59c81ad9b0b',
+  },
+  {
+    name: '021-deceased-standing-withdrawal.sql',
+    sha256: 'd2f423f89a4a71ec160acae2ded2a2d61c77b0c2d33aceb8f901c46361ff2300',
+  },
+  {
+    name: '022-independent-standing-reconsideration.sql',
+    sha256: '6f5988c6dfe1a0996c44bbbd83464cbca63b8424db992e8db2d41e8c4bb751c8',
+  },
+  {
+    name: '023-contested-appeal-hold.sql',
+    sha256: '704438848eb368bad8626836b839864e99e341ba84e0d72905f068ca9f85995a',
+  },
 ] as const;

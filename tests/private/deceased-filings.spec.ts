@@ -2,6 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { Simulation, findings } from '../helpers/simulation.js';
 import { eventFixture } from '../helpers/claim-fixtures.js';
+import { deceasedFilingFixture } from '../helpers/deceased-filings.js';
 
 async function signIn(page: Page, persona: string, staff = false) {
   const origin = 'http://127.0.0.1:' + (staff ? '3002' : '3001');
@@ -222,6 +223,52 @@ test('personal standing opens one deceased-worker eligibility draft and recovers
     ).toBe(404);
     expect(await w.get(worker, claimId)).toBeNull();
     expect(await w.get(labor, claimId)).toBeNull();
+  } finally {
+    await w.close();
+  }
+});
+
+test('approved unused standing can be withdrawn from the private workspace', async ({ page }) => {
+  const w = await new Simulation().connect();
+  try {
+    const applicant = await w.persona('successor'),
+      worker = await w.person(),
+      labor = await w.persona('labor');
+    const packet = await deceasedFilingFixture(w, applicant, worker, labor);
+    await w.command(labor, packet.record, 'approve', packet.input);
+    await signIn(page, 'successor');
+    await openReference(page, packet.record.id);
+    const withdrawal = page.locator('form.action-panel').filter({
+      has: page.getByRole('heading', {
+        name: 'Withdraw my unused standing decision',
+        exact: true,
+      }),
+    });
+    await expect(withdrawal).toBeVisible();
+    await withdrawal.getByLabel('Written reasons', { exact: true }).fill(findings);
+    await withdrawal
+      .getByRole('button', { name: 'Withdraw my unused standing decision', exact: true })
+      .click();
+    await expect(
+      page.getByRole('button', { name: 'Prepare the worker’s eligibility claim', exact: true }),
+    ).toHaveCount(0);
+    expect((await w.get(applicant, packet.record.id))!.state).toBe('withdrawn');
+    expect(
+      (
+        await w.owner.query(
+          'SELECT count(*)::int n FROM deceased_filing_withdrawals WHERE request_id=$1',
+          [packet.record.id],
+        )
+      ).rows[0].n,
+    ).toBe(1);
+    expect(
+      (
+        await w.owner.query(
+          'SELECT count(*)::int n FROM deceased_filing_claims WHERE request_id=$1',
+          [packet.record.id],
+        )
+      ).rows[0].n,
+    ).toBe(0);
   } finally {
     await w.close();
   }

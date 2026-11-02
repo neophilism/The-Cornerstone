@@ -86,7 +86,52 @@ try {
   ]);
   await assert.rejects(w.command(labor, request.record, 'approve', request.input));
   await w.owner.query("UPDATE actors SET conflicts='{}' WHERE id=$1", [labor.id]);
+  // Separate live reviewed successor requests must not be decided by race timing.
+  for (const packet of [request, competing])
+    await assert.rejects(w.command(labor, packet.record, 'approve', packet.input), {
+      code: 'CLAIM_SURVIVAL_CONTESTED',
+    });
+  assert.equal((await w.get(worker, before.id))!.ownerId, worker.id);
+  for (const packet of [request, competing]) {
+    assert.equal((await w.get(labor, packet.record.id))!.version, packet.record.version);
+    assert.equal(
+      (
+        await w.owner.query(
+          "SELECT count(*)::int n FROM receipts WHERE record_id=$1 AND action='approve'",
+          [packet.record.id],
+        )
+      ).rows[0].n,
+      0,
+    );
+  }
+  await w.command(labor, competing.record, 'deny', {
+    reasons: findings,
+    evidenceIds: competing.input.evidenceIds,
+  });
   const current = (await w.get(labor, request.record.id))!;
+  await w.command(competitor, competing.record, 'request_review', { reasons: findings });
+  await assert.rejects(w.command(labor, request.record, 'approve', request.input), {
+    code: 'CLAIM_SURVIVAL_CONTESTED',
+  });
+  await assert.rejects(
+    w.command(labor, competing.record, 'reconsider_denial', {
+      reasons: findings,
+      evidenceIds: competing.input.evidenceIds,
+    }),
+    { code: 'CLAIM_SURVIVAL_SCOPE' },
+  );
+  const independent = await w.person('labor');
+  await w.owner.query(
+    'UPDATE actors SET institution_id=$2, assignments=array_append(array_append(assignments,$3::uuid),$4::uuid) WHERE id=$1',
+    [independent.id, current.institutionId, competing.record.id, before.id],
+  );
+  await w.command(independent, competing.record, 'reconsider_denial', {
+    reasons: findings,
+    evidenceIds: competing.input.evidenceIds,
+  });
+  assert.equal((await w.get(competitor, competing.record.id))!.state, 'changes_requested');
+  await w.command(competitor, competing.record, 'revise_request');
+  assert.equal((await w.get(competitor, competing.record.id))!.state, 'draft');
   const command = {
     recordId: current.id,
     expectedVersion: current.version,
@@ -161,9 +206,9 @@ try {
     1,
   );
   await assert.rejects(w.command(labor, competing.record, 'approve', competing.input), {
-    code: 'CLAIM_SURVIVAL_STALE',
+    code: 'INVALID_TRANSITION',
   });
-  assert.equal((await w.get(competitor, competing.record.id))!.version, competing.record.version);
+  assert.equal((await w.get(competitor, competing.record.id))!.state, 'draft');
   assert.equal(
     (
       await w.owner.query(
@@ -426,6 +471,37 @@ try {
       2,
     );
   }
+  // Independent review can affirm a denial without changing the original claim.
+  const deniedWorker = await w.person(),
+    deniedApplicant = await w.person();
+  const deniedClaim = await claimFixture(w, deniedWorker, labor, event);
+  const deniedPacket = await survivingRequestFixture(w, deniedApplicant, labor, deniedClaim.record);
+  await w.command(labor, deniedPacket.record, 'deny', {
+    reasons: findings,
+    evidenceIds: deniedPacket.input.evidenceIds,
+  });
+  await w.command(deniedApplicant, deniedPacket.record, 'request_review', { reasons: findings });
+  const affirmReviewer = await w.person('labor');
+  await w.owner.query(
+    'UPDATE actors SET institution_id=$2, assignments=array_append(array_append(assignments,$3::uuid),$4::uuid) WHERE id=$1',
+    [
+      affirmReviewer.id,
+      deniedPacket.record.institutionId,
+      deniedPacket.record.id,
+      deniedClaim.record.id,
+    ],
+  );
+  await w.command(affirmReviewer, deniedPacket.record, 'affirm_denial', {
+    reasons: findings,
+    evidenceIds: deniedPacket.input.evidenceIds,
+  });
+  assert.equal((await w.get(deniedApplicant, deniedPacket.record.id))!.state, 'review_affirmed');
+  assert.equal((await w.get(deniedWorker, deniedClaim.record.id))!.ownerId, deniedWorker.id);
+  await assert.rejects(
+    w.command(deniedApplicant, deniedPacket.record, 'request_review', { reasons: findings }),
+    { code: 'INVALID_TRANSITION' },
+  );
+
   console.log(
     'PASS: one existing claim, personal survival proof, scoped case access, unchanged eligibility and historical receipts, stale rollback, estate designation, independent consent, and serialized enrollment/holder races.',
   );
