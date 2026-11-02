@@ -2123,12 +2123,19 @@ export function validateAction(
     );
     validateCapitalRights(r);
   }
-  if (record.kind === 'compact' && key === 'execute')
+  if (record.kind === 'compact' && key === 'execute') {
     requireCondition(
       today >= addCalendarDays(String(d['publishedDate']), 30),
       'NOTICE_PERIOD',
       'The compact publication period is still open.',
     );
+    requireCondition(
+      String(d['effectiveDate']) >= addCalendarDays(String(d['publishedDate']), 30) &&
+        String(d['effectiveDate']) <= today,
+      'COMPACT_EFFECTIVE_DATE',
+      'The effective date must follow the full publication period and cannot be in the future.',
+    );
+  }
   if (record.kind === 'fund_commitment' && key === 'approve')
     yes('enterpriseOnly', 'No member debt or personal guarantee is permitted.');
   if (record.kind === 'launch' && key === 'approve')
