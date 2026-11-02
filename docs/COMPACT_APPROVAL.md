@@ -27,3 +27,11 @@ No migration is added for this slice. It uses the existing encrypted versioned r
 `tests/private/compact.spec.ts` creates the draft and selects each published choice in the browser, starts a consented bound vote, records a personal ballot, submits the resulting approval and checks the visible summary. Desktop and mobile variants include accessibility, overflow and three screenshot checks each. Actual CI results and screenshot inspection must be recorded after execution, not inferred from the existence of these tests.
 
 The new integration uses explicitly labeled owner-seeded published-offer and accepted-match fixtures only to reach this downstream journey. Association formation, personal consent, voting, tally, compact submission and publication use the real synthetic application services. These prerequisites are not evidence that the upstream institutional or independent exchange adapters work. The `EXCHANGE_RESULT_REQUIRED` gate remains unchanged. No claim of whole-program acceptance follows from this test.
+
+## Synthetic execution binding
+
+The execution command now rechecks the same frozen member mandate against the current published offer and accepted match, holding their shared locks through the receipted transition. A withdrawn or revised offer, failed match, altered substantive term or missing approval cannot become effective. Delivery staff use the bounded aggregate approval already stored at submission; they receive no access to individual ballots or the private source resolution.
+
+The effective date must be reached and must follow the full 30-day publication period. An exact retry recovers the same execution receipt; a second execution command cannot record another transition. Once effective, later prospective offer withdrawal does not replace the frozen financial basis. The PostgreSQL compact test covers these transitions and rollback/retry boundaries; added unit cases cover source and mandate changes. Current-head CI remains required for acceptance.
+
+Signatures in these fixtures are explicitly invented references. This development does not validate an actual signer, deliver an official compact, enable protected intake or activate government authority. Real signature/provider and institutional acceptance remain separate prerequisites.

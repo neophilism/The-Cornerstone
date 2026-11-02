@@ -5,6 +5,7 @@ import { digest } from '@cornerstone/security';
 import { type CaseRecord } from '@cornerstone/contracts';
 import { Simulation, findings } from './helpers/simulation.js';
 import { compactPrerequisites } from './helpers/compact-fixture.js';
+import { frozenCompactFinancialSource } from '../apps/api/src/compacts.js';
 const w = await new Simulation().connect();
 try {
   const first = await w.person(),
@@ -66,7 +67,8 @@ try {
     };
     assert.equal(binding.digest, digest(binding.plan));
     assert.equal(binding.version, (await w.get(first, record.id))!.version);
-    await w.command(first, resolution, 'open_vote', { closesAt: w.today });
+    const closesAt = addCalendarDays(w.today, 2);
+    await w.command(first, resolution, 'open_vote', { closesAt });
     assert.ok(
       (await w.get(second, resolution.id))!.data['compactBinding'],
       'The member can inspect all frozen terms',
@@ -84,7 +86,7 @@ try {
       unitId: group.secondUnit.id,
       choice: yes ? 'yes' : 'no',
     });
-    w.day = addCalendarDays(w.today, 1);
+    w.day = addCalendarDays(closesAt, 1);
     const tally = (await w.command(labor, resolution, 'tally')).record!;
     w.day = w.today;
     return tally;
@@ -171,6 +173,70 @@ try {
     submitted.record!.data['approvedCompactDigest'],
   );
   await assert.rejects(w.command(first, draft, 'save_draft', f.input), /unavailable/);
+  // Execution is a separate receipted decision against the same unchanged member mandate.
+  // This actor, signatures and downstream match are synthetic fixtures, not real authority.
+  const executing = await w.person();
+  await w.owner.query(
+    "UPDATE actors SET roles=ARRAY['state'],assurance='privileged',institution_id=$2,assignments=$3::uuid[] WHERE id=$1",
+    [executing.id, published.institutionId, [draft.id, f.offer.id, f.match.id]],
+  );
+  const executor = await w.actor(executing.id),
+    effectiveDate = addCalendarDays(w.today, 30);
+  const execution = {
+    recordId: draft.id,
+    expectedVersion: published.version,
+    action: 'execute',
+    input: { effectiveDate, signatures: 'Invented synthetic signature reference; no execution' },
+    idempotencyKey: randomUUID(),
+  };
+  await assert.rejects(w.program.command(executor, execution), { code: 'NOTICE_PERIOD' });
+  w.day = effectiveDate;
+  await assert.rejects(
+    w.program.command(executor, {
+      ...execution,
+      input: { ...execution.input, effectiveDate: w.today },
+      idempotencyKey: randomUUID(),
+    }),
+    { code: 'COMPACT_EFFECTIVE_DATE' },
+  );
+  await w.owner.query("UPDATE case_records SET state='failed' WHERE id=$1", [f.match.id]);
+  await assert.rejects(w.program.command(executor, execution), /published offer.*accepted match/);
+  assert.equal((await w.get(executor, draft.id))!.version, published.version);
+  assert.equal(
+    (
+      await w.owner.query(
+        "SELECT count(*)::int n FROM receipts WHERE record_id=$1 AND action='execute'",
+        [draft.id],
+      )
+    ).rows[0].n,
+    0,
+    'Rejected delivery leaves no execution receipt',
+  );
+  await w.owner.query("UPDATE case_records SET state='accepted' WHERE id=$1", [f.match.id]);
+  const [executed, executionReplay] = await Promise.all([
+    w.program.command(executor, execution),
+    w.program.command(executor, execution),
+  ]);
+  assert.equal(executed.receipt.id, executionReplay.receipt.id);
+  assert.equal(executed.record!.state, 'effective');
+  assert.equal(
+    executed.record!.data['approvedCompactDigest'],
+    published.data['approvedCompactDigest'],
+  );
+  assert.deepEqual(executed.record!.data['compactApproval'], published.data['compactApproval']);
+  assert.equal(
+    (
+      await w.owner.query(
+        "SELECT count(*)::int n FROM receipts WHERE record_id=$1 AND action='execute'",
+        [draft.id],
+      )
+    ).rows[0].n,
+    1,
+  );
+  await assert.rejects(w.command(executor, draft, 'execute', execution.input), {
+    code: 'INVALID_TRANSITION',
+  });
+  w.day = w.today;
   const stale = await create('Invented offer later withdrawn');
   const staleResolution = await w.create(first, 'resolution', 'Invented obsolete offer decision', {
     ...resolutionInput,
@@ -178,6 +244,15 @@ try {
   });
   // Downstream fixture transition only; actual authority and exchange gates remain unchanged.
   await w.owner.query("UPDATE case_records SET state='withdrawn' WHERE id=$1", [f.offer.id]);
+  assert.deepEqual(
+    frozenCompactFinancialSource(executed.record!),
+    {
+      id: f.offer.id,
+      version: f.offer.version,
+      data: { financialTerms: executed.record!.data['financialTerms'] },
+    },
+    'Later prospective withdrawal does not rewrite an already effective compact',
+  );
   await assert.rejects(
     w.command(first, staleResolution, 'open_vote', { closesAt: w.today }),
     /published offer/,

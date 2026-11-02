@@ -3,11 +3,22 @@ import { describe, expect, it } from 'vitest';
 import {
   CommercialMenuSchema,
   CompactBindingSchema,
+  type Actor,
   type CaseRecord,
 } from '@cornerstone/contracts';
-import { parseFields, validateCommercialTerms, workflow } from '@cornerstone/domain';
+import {
+  parseFields,
+  validateAction,
+  validateCommercialTerms,
+  workflow,
+} from '@cornerstone/domain';
+import type { Store, Transaction } from '@cornerstone/store';
 import { digest } from '@cornerstone/security';
-import { compactPlan, frozenCompactFinancialSource } from '../apps/api/src/compacts.js';
+import {
+  CompactService,
+  compactPlan,
+  frozenCompactFinancialSource,
+} from '../apps/api/src/compacts.js';
 import { compactDraftDetails } from './helpers/compact-fixture.js';
 function fixture() {
   const associationId = randomUUID(),
@@ -98,6 +109,105 @@ describe('published commercial choices', () => {
   });
 });
 describe('compact mandate integrity', () => {
+  function delivery() {
+    const { compact, offer, match } = fixture(),
+      plan = compactPlan(compact, offer, match),
+      resolutionId = randomUUID();
+    const binding = {
+      recordId: compact.id,
+      associationId: plan.associationId,
+      version: compact.version,
+      digest: digest(plan),
+      plan,
+    };
+    const published: CaseRecord = {
+      ...compact,
+      state: 'published',
+      version: 5,
+      data: {
+        ...compact.data,
+        publishedDate: '2026-01-01',
+        memberResolutionId: resolutionId,
+        approvedCompactVersion: binding.version,
+        approvedCompactDigest: binding.digest,
+        approvedResolutionVersion: 6,
+        compactApproval: {
+          resolutionId,
+          resolutionVersion: 6,
+          resolutionDigest: 'a'.repeat(64),
+          associationId: plan.associationId,
+          binding,
+          unitCount: 2,
+          yes: 2,
+          no: 0,
+          abstain: 0,
+          notCast: 0,
+          rollDigest: 'b'.repeat(64),
+          source: 'verified-terminal-tally-at-submission',
+        },
+      },
+    };
+    // No access to the private source resolution is available to delivery staff.
+    const records = new Map([
+      [offer.id, offer],
+      [match.id, match],
+    ]);
+    const store = {
+      get: async (_tx: unknown, id: string) => records.get(id) ?? null,
+    } as unknown as Store;
+    const tx = { query: async () => ({ rows: [{ offer: null }] }) } as unknown as Transaction;
+    const execute = (data = published.data) =>
+      new CompactService(store).requireApproval(tx, {} as Actor, published, 'execute', data);
+    return { published, offer, match, execute };
+  }
+  it('rechecks the complete member mandate at execution without reading private ballots', async () => {
+    const { published, execute } = delivery();
+    await expect(execute()).resolves.toBeUndefined();
+    expect(published.data['initialYears']).toBe(30);
+    expect(published.data['approvedCompactVersion']).toBe(1);
+  });
+  it.each([
+    { services: 'Altered after publication' },
+    { launchMilestones: 'Altered launch obligation' },
+    { publicProtections: 'Altered protection' },
+    { terms: { Lease: 'Short', Reporting: 'Quarterly' } },
+    { approvedCompactVersion: 99 },
+    { approvedCompactDigest: 'c'.repeat(64) },
+    { memberResolutionId: randomUUID() },
+    { compactApproval: undefined },
+  ])('rejects altered or missing mandate at execution: %j', async (change) => {
+    const { published, execute } = delivery();
+    await expect(execute({ ...published.data, ...change })).rejects.toThrow();
+  });
+  it.each(['withdrawn', 'draft'])('refuses execution against a %s offer', async (state) => {
+    const { offer, execute } = delivery();
+    offer.state = state;
+    await expect(execute()).rejects.toThrow();
+  });
+  it.each(['failed', 'declined'])('refuses execution against a %s match', async (state) => {
+    const { match, execute } = delivery();
+    match.state = state;
+    await expect(execute()).rejects.toThrow();
+  });
+  it('refuses an offer revision even when its commercial choices still match', async () => {
+    const { offer, execute } = delivery();
+    offer.version++;
+    await expect(execute()).rejects.toThrow(/exact unchanged/);
+  });
+  it('records effect only after the full publication period and on a reached date', () => {
+    const { published } = delivery();
+    const input = { effectiveDate: '2026-01-31', signatures: 'Invented signature reference' };
+    expect(() => validateAction(published, 'execute', input, '2026-01-30')).toThrow(/period/);
+    expect(() =>
+      validateAction(published, 'execute', { ...input, effectiveDate: '2026-01-30' }, '2026-02-01'),
+    ).toThrow(/effective date/);
+    expect(() =>
+      validateAction(published, 'execute', { ...input, effectiveDate: '2026-02-02' }, '2026-02-01'),
+    ).toThrow(/future/);
+    expect(validateAction(published, 'execute', input, '2026-01-31')['effectiveDate']).toBe(
+      '2026-01-31',
+    );
+  });
   it('preserves effective compact financial terms without reopening a withdrawn offer', () => {
     const { compact, offer, match } = fixture(),
       plan = compactPlan(compact, offer, match);

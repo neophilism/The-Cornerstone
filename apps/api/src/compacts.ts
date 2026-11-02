@@ -253,7 +253,9 @@ export class CompactService {
     action: string,
     data: Record<string, unknown>,
   ) {
-    if (!['submit', 'publish'].includes(action)) return;
+    // Execution is the last point before the compact becomes effective. Recheck the
+    // same member mandate and lock its current offer/match through that transaction.
+    if (!['submit', 'publish', 'execute'].includes(action)) return;
     if (action === 'submit') await this.member(tx, actor, data['associationId']);
     const plan = await this.snapshot(tx, { ...record, data });
     const id = IdSchema.parse(data['memberResolutionId']);
