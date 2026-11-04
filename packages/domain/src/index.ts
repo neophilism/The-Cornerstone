@@ -175,3 +175,14 @@ export {
   financialAdjudicationActions,
   independentFinancialReviewer,
 } from './evidence-stage.js';
+
+export {
+  SyntheticStateOfferObjections,
+  ObjectionError,
+  type ObjectionActor,
+  type ObjectionBinding,
+  type ObjectionFinding,
+  type ObjectionStatus,
+  type ObjectionRecord,
+  type ObjectionReceipt,
+} from './state-offer-objections.js';
